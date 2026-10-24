@@ -1,5 +1,23 @@
 # G2 provisional index mapping and Windows acceptance
 
+## Current decision: retain provisional hover; implement explicit-path fallback next
+
+The native class capture confirms SHELLDLL_DefView/DirectUIHWND, rather than a
+standard native list view. Existing successful candidate tests still lack an
+independent visual-row-to-Shell identity bridge. See D-011 and
+[the identity review](G2_IDENTITY_REVIEW.md): the next baseline is explicit Shell
+path passing. It requires a user-invoked Shell menu action; Mouse3 remains passive
+diagnostics. No trusted hover target, fallback installation, GUI or converter is
+enabled by this decision. G2-F implementation/Windows validation are still pending.
+
+The same capture rejected because an inactive tab had51 items, capped32 in the
+diagnostic. Core now permits that exact bounded prefix only after positive native
+HWND exclusion; the matched tab remains complete<=32, and all unknown/error/
+contradictory/global-truncation evidence rejects. Linux replay/tests cover the
+correction; no live assessment of it has been supplied. No new click batch is
+required to proceed with the independent explicit-path diagnostic task.
+Earlier protocols below are historical; use NEXT_TASK.md for the current job.
+
 ## Current result: Unicode/hidden-label checks pass; identity review next
 
 g2-names-2 preserves the full unicode-æøå.txt Shell candidate from UIA's hidden

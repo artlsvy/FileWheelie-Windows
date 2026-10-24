@@ -1,10 +1,13 @@
 # Filewheel — Codex starter package
 
-Private Windows 11 Explorer file converter. **Current phase: Explorer Mouse3 target detection only.** Not yet an executable app or completed converter.
+Private Windows 11 file converter prototype. **Current phase: headless explicit-path
+launcher complete; PySide6 radial GUI is next.** Conversion is not implemented.
 
 G0-A now includes portable contracts/tests and an opt-in Windows diagnostic
 scaffold. See [diagnostic instructions and limitations](docs/DIAGNOSTIC_POC.md).
-Windows behavior remains unverified; the diagnostic emits no resolved targets.
+Experimental Mouse3 remains available and emits no trusted hover targets.
+The [explicit-path/Send to launcher](docs/SEND_TO.md) validates one file through
+the shared controller; its real Windows Shell integration still needs validation.
 
 ## What this bundle contains
 - `AGENTS.md`: current project-wide rules, replacing older versions.

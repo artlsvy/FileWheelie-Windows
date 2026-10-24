@@ -20,8 +20,11 @@ class MouseEvent:
 class TargetResolution:
     """Adapter-attested filesystem file identity, never a selected-item guess.
 
-    The adapter must prove Explorer content provenance, point/bounds correspondence,
-    Shell identity, and current file existence/type before creating this object.
+    For explorer_hover the adapter must prove Explorer content provenance,
+    point/bounds correspondence, Shell identity and current file existence/type.
+    For shell_explicit the controller validates the explicitly supplied path;
+    window_id is zero because no Explorer provenance inference is required.
+    Both invocation sources return this DTO for the same future UI consumer.
     PureWindowsPath keeps Windows path semantics in Linux contract tests.
     """
 
@@ -29,7 +32,7 @@ class TargetResolution:
     window_id: int
     point: tuple[int, int]
     timestamp: float
-    source: Literal["explorer_hover"] = "explorer_hover"
+    source: Literal["explorer_hover", "shell_explicit"] = "explorer_hover"
 
     def __post_init__(self) -> None:
         if not isinstance(self.path, PureWindowsPath) or not self.path.is_absolute():

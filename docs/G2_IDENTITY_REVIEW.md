@@ -1,5 +1,26 @@
 # G2 identity review — 2026-10-25
 
+## Probe result and decision
+
+The supplied g2-control-class-1 capture reports native view=SHELLDLL_DefView,
+items_view=DirectUIHWND and browser=ShellTabWindowClass. No standard SysListView32
+content was observed. The standard list-view hit-test route is therefore not
+applicable to this sampled surface under the current documented-control guard.
+Do not send LVM messages to it or infer compatibility from UIA's DUIListView label.
+
+The capture separately hit a conservative diagnostic guard: an inactive tab had
+51 entries, with the expected32 logged. Positive native HWND exclusion identifies
+that tab as unrelated to the hovered view. The assessor now permits a consistent
+bounded prefix for that excluded peer; it still requires the hovered candidate
+set to be complete. Replay yields provisional tests/a.txt, not a new native run.
+
+The missing identity bridge remains. D-011 selects the explicit Shell-path
+fallback as the next implementation baseline, with hover retained diagnostic-only.
+This is a workflow compromise, not a claim that hover is impossible. G2-F must
+be implemented and verified independently before UI/converter work. Do not repeat
+the control-class/filename experiments to seek a guarantee they cannot establish.
+The probe setup below is retained as historical evidence, not the next task.
+
 ## What the supplied Windows evidence establishes
 
 Build26200/DPI96, Python3.15.0/comtypes1.4.17, UIA MTA and Shell STA:
@@ -69,4 +90,5 @@ identity mechanism impossible. A LegacyIAccessible hit alone would establish
 another visual row, not an IShellItem identity. Scope further work only around a
 documented independently comparable identity; otherwise make the G2-F explicit
 Shell-path fallback decision required by EXPLORER_HIT_TEST.md. No fallback change
-is made by this review, and no unsupported scenario is silently enabled.
+was made by the initial review; the subsequent D-011 decision above now selects
+the next baseline. No unsupported hover scenario is silently enabled.

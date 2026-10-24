@@ -126,6 +126,94 @@ class TabMappingTests(unittest.TestCase):
         self.record["shell_candidates"]["windows_truncated"] = True
         self.assert_rejected("truncated_shell_windows")
 
+    def bounded_candidates(self, count=51):
+        return [
+            {
+                "enumeration_index": index,
+                "candidate_path": f"C:\\fixture\\inactive\\item-{index}.txt",
+                "is_folder": False, "is_filesystem": True,
+            }
+            for index in range(min(count, 32))
+        ]
+
+    def set_bounded_inactive(self):
+        inactive = self.windows()[0]
+        inactive.update(item_count=51, truncated=True, candidates=self.bounded_candidates())
+        return inactive
+
+    def test_bounded_listing_of_positively_excluded_inactive_tab_is_allowed(self):
+        self.set_bounded_inactive()
+        result = self.assess()
+        self.assertEqual(result["status"], "provisional")
+        self.assertEqual(result["candidate_path"], "C:\\fixture\\project\\tests\\a.txt")
+        self.assertEqual(result["checks"]["selected_shell_window_index"], 1)
+        self.assertFalse(result["checks"]["identity_correspondence"])
+        self.windows().reverse()
+        self.assertEqual(self.assess()["candidate_path"], result["candidate_path"])
+
+    def test_control_class_capture_replays_with_large_inactive_tab(self):
+        fixture = FIXTURE.with_name("windows_control_class_1_sanitized.json")
+        record = json.loads(fixture.read_text(encoding="utf-8"))["record"]
+        self.assertEqual(record["rejection"], "ambiguous_shell_windows")
+        self.assertTrue(record["shell_candidates"]["matching_windows"][1]["truncated"])
+        result = self.assess(record)
+        self.assertEqual(result["status"], "provisional")
+        self.assertEqual(result["candidate_path"], "C:\\fixture\\project\\tests\\a.txt")
+        self.assertEqual(result["checks"]["shell_window_count"], 3)
+        self.assertEqual(result["checks"]["selected_shell_window_index"], 2)
+        self.assertFalse(result["checks"]["identity_correspondence"])
+        self.assertIsNone(record["resolved_path"])
+
+    def test_bounded_listing_of_matched_tab_still_rejects(self):
+        self.windows()[1].update(item_count=51, truncated=True, candidates=self.bounded_candidates())
+        self.assert_rejected()
+
+    def test_inactive_prefix_does_not_relax_global_registration_truncation(self):
+        self.set_bounded_inactive()
+        self.record["shell_candidates"]["windows_truncated"] = True
+        self.assert_rejected("truncated_shell_windows")
+
+    def test_inactive_prefix_requires_consistent_count_length_and_flags(self):
+        for update in (
+            {"item_count": None}, {"item_count": True}, {"item_count": -1},
+            {"item_count": 31}, {"item_count": 32},
+            {"truncated": False}, {"truncated": "true"},
+            {"candidates": self.bounded_candidates()[:-1]},
+            {"candidates": self.bounded_candidates() + [self.bounded_candidates()[0]]},
+        ):
+            with self.subTest(update=update):
+                self.record = copy.deepcopy(self.capture["records"][0])
+                self.set_bounded_inactive().update(update)
+                self.assert_rejected()
+
+    def test_inactive_prefix_candidate_metadata_and_indices_still_validate(self):
+        for update in (
+            {"enumeration_index": 32}, {"enumeration_index": True},
+            {"candidate_path": None}, {"candidate_path": ""},
+            {"candidate_path": "x" * 2049}, {"is_folder": "false"},
+            {"is_filesystem": None},
+        ):
+            with self.subTest(update=update):
+                self.record = copy.deepcopy(self.capture["records"][0])
+                inactive = self.set_bounded_inactive()
+                inactive["candidates"][0].update(update)
+                self.assert_rejected()
+        self.record = copy.deepcopy(self.capture["records"][0])
+        inactive = self.set_bounded_inactive()
+        inactive["candidates"][0]["enumeration_index"] = 1
+        self.assert_rejected()
+
+    def test_bounded_inactive_listing_cannot_substitute_for_hwnd_exclusion(self):
+        for update in (
+            {"error_type": "COMError"}, {"status": "matched"},
+            {"browser_hwnd": 0}, {"view_hwnd": 0},
+            {"browser_hwnd": 2361942}, {"view_hwnd": 527006},
+        ):
+            with self.subTest(update=update):
+                self.record = copy.deepcopy(self.capture["records"][0])
+                self.set_bounded_inactive()["active_view_association"].update(update)
+                self.assert_rejected()
+
     def test_unstable_or_missing_selected_native_evidence_rejects(self):
         native = self.windows()[1].pop("native_view_candidate")
         self.assert_rejected("native_checks_incomplete")

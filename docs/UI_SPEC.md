@@ -1,7 +1,14 @@
-# UI specification — radial wheel (after target resolver gate)
+# UI specification — next prototype milestone
 
 ## Activation
-Mouse3 over a verified Windows Explorer *file* at position `(x,y)`. Suppress activation on all other windows, panes, folders, background and unsupported targets. Show a compact frameless translucent wheel centered as close as possible to click point while staying inside current monitor work area; default diameter 260–320 logical pixels, DPI-aware.
+The primary prototype entry is an explicit path from Send to through
+InvocationController. Future verified Mouse3 invocations use the same controller
+and TargetResolution DTO. Hover diagnostics currently return None and must not
+activate a wheel. No path lookup from selection or UIA is added for the GUI.
+Show a compact frameless translucent wheel near the invocation's cursor point,
+clamped within the monitor work area; default diameter260–320 logical pixels.
+Convert the DTO's physical desktop coordinates at the Qt boundary, including
+scaled displays and negative monitor coordinates.
 
 ## Stages
 1. **Category**: dynamic available outputs for the detected input (Image, Document, Markdown/Text, Audio, Video); do not show empty categories.

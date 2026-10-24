@@ -6,10 +6,10 @@ States: `NOT STARTED` · `IMPLEMENTED/UNVERIFIED` · `MOCK-TESTED` · `WINDOWS-V
 | --- | --- | --- |
 | **G0** | Repo, interfaces, offline tests and diagnostic schema | Codex loads project rules; Linux tests pass; diagnostic records are reproducible |
 | **G1** | Hook POC on Windows 11 | Mouse3 events captured, minimal callback, no unrelated-app interference; real Windows evidence |
-| **G2** | **Exact file-under-cursor resolver** | `docs/EXPLORER_HIT_TEST.md` test matrix passes on Win11; selected file must not be substituted |
-| **G2-F** | **Fallback decision if G2 fails** | Shell `Send to`/context menu passes exact path; document UX compromise; no guessing |
-| G3 | Headless invocation/controller contract | Event → verified Path or None; debounce and cancellation tests; mocks on Linux |
-| G4 | Two-stage radial UI | UI categories/format choices, cancel/back/edge/DPI; Windows validation of overlay |
+| **G2** | Exact file-under-cursor resolver — experimental/deprioritized | Preserve implementation and evidence; expand only for a specific blocking issue; no trusted path promotion |
+| **G2-F** | Explicit-path launcher + personal Send to — IMPLEMENTED/MOCK-TESTED | Real Win11 shortcut/path delivery still pending; see SEND_TO.md |
+| G3 | Shared invocation/controller — IMPLEMENTED/MOCK-TESTED | Hover and explicit paths produce the same source-aware TargetResolution; cancellation/validation tests pass |
+| **G4 NEXT** | Usable PySide6 two-stage radial prototype | Near cursor, compatible category→format choices, Escape/Back/outside cancel, shared controller; no conversion |
 | G5 | Conversion registry + first smoke converter | Stubbed registry then image PNG→JPEG, background processing, tested output |
 | G6 | Document/Markdown MVP | PDF→DOCX, DOCX→PDF, MarkItDown (DOCX/PDF/PPTX/XLSX/HTML→MD); capability tests |
 | G7 | Remaining image MVP | HEIC/JPEG/PNG/WebP, images→PDF, PDF→raster; representative real files |
@@ -17,7 +17,18 @@ States: `NOT STARTED` · `IMPLEMENTED/UNVERIFIED` · `MOCK-TESTED` · `WINDOWS-V
 | G9 | Optional expansion | MD→DOCX, PPTX→PDF, XLSX→PDF, CSV↔XLSX; OCR/media deferred |
 
 ## Current focus
-**G0/G1/G2 only.** The primary risk is Explorer item identity. A pixel-perfect wheel atop an unreliable resolver is wasted work.
+**User priority updated 2026-10-25:** headless G2-F launcher is implemented;
+the NEXT development job is the usable PySide6 radial GUI (G4), using the shared
+controller and explicit-path invocation. Mouse3 remains desired and experimental;
+preserve it without further diagnostic expansion unless an actual blocker demands
+it. No actual converters yet. A prototype preview registry may demonstrate tested
+compatible category/format pairs, clearly marked as previews rather than claiming
+installed conversion engines.
+
+Windows Send to/cursor and GUI acceptance remain queued independently. Build and
+test portable UI state/fixtures on Kubuntu; do not wait for an offline Windows
+host or treat Linux checks as Windows verification. D-011's fallback decision
+permits this GUI work; the strict hover trust gate remains unchanged.
 
 ## Definition of G2 success
 - Middle-click on a **different unselected file** returns the hovered file, not the previous selection.

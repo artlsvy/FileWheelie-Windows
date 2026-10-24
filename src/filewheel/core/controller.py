@@ -1,7 +1,10 @@
 """Synchronous routing; a caller-owned worker performs potentially slow resolution."""
 
+import math
+from collections.abc import Sequence
 from threading import Lock
 
+from filewheel.core.explicit_paths import ExplicitInvocationResult, FileInspector, validate_explicit_paths
 from filewheel.core.models import MouseEvent, TargetResolution, TargetResolver
 
 
@@ -12,7 +15,7 @@ class InvocationController:
     its own COM thread ownership. No lock is held while resolving.
     """
 
-    def __init__(self, resolver: TargetResolver, debounce_seconds: float = 0.15):
+    def __init__(self, resolver: TargetResolver | None = None, debounce_seconds: float = 0.15):
         if debounce_seconds < 0:
             raise ValueError("debounce_seconds must be nonnegative")
         self._resolver = resolver
@@ -25,6 +28,38 @@ class InvocationController:
     def cancel(self) -> None:
         with self._lock:
             self._generation += 1
+
+    def handle_explicit(
+        self, arguments: Sequence[str], *, point: tuple[int, int], timestamp: float,
+        inspect_file: FileInspector,
+    ) -> ExplicitInvocationResult:
+        """Route one Shell-supplied path through the shared target DTO boundary.
+
+        Explicit requests replace pending hover/explicit work without applying
+        mouse sequence or debounce rules. Inspection runs outside the lock;
+        cancellation or a newer request discards its eventual result.
+        """
+        with self._lock:
+            self._generation += 1
+            generation = self._generation
+        if (
+            not isinstance(point, (tuple, list)) or len(point) != 2
+            or any(type(coordinate) is not int for coordinate in point)
+            or type(timestamp) not in (int, float) or not math.isfinite(timestamp)
+            or timestamp < 0
+        ):
+            return ExplicitInvocationResult(None, "invalid_invocation_context")
+        validation = validate_explicit_paths(arguments, inspect_file)
+        with self._lock:
+            if generation != self._generation:
+                return ExplicitInvocationResult(None, "invocation_cancelled")
+            if validation.path is None:
+                return ExplicitInvocationResult(None, validation.rejection)
+            target = TargetResolution(
+                validation.path, window_id=0, point=tuple(point), timestamp=timestamp,
+                source="shell_explicit",
+            )
+            return ExplicitInvocationResult(target, None)
 
     def handle(self, event: MouseEvent) -> TargetResolution | None:
         with self._lock:

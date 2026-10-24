@@ -1,9 +1,11 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-25
-Current gate: non-ASCII hidden-name candidate and duplicate-label rejection observed.
-Trusted G2 remains pending an independent identity bridge; native control-class
-feasibility probe implemented, Windows validation pending.
+Current priority: G2-F headless explicit-path launcher is implemented and
+Linux-tested; Windows shortcut delivery remains unverified. NEXT is the usable
+PySide6 radial GUI prototype (D-012), independently of that validation queue.
+Mouse3 remains desired, preserved and diagnostic-only; stop expanding its probes
+unless a specific blocker requires it. No conversion implemented.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -57,7 +59,7 @@ feasibility probe implemented, Windows validation pending.
 
 ## Tests actually run
 - Kubuntu Python 3.14.4: `PYTHONPATH=src python3 -m unittest discover -s tests/unit -v`:
-  104 tests passed, exit 0. Fake hovered vs
+  139 tests passed, exit 0 (latest G2-F checkpoint below). Fake hovered vs
   selected path, None/no stale fallback, cancellation/reentrant invalidation,
   deduplication/debounce, timeout rejection, import isolation/platform guard,
   unconditional mapping rejection, generated point-type seam, UIA process/window
@@ -95,9 +97,11 @@ feasibility probe implemented, Windows validation pending.
   Changes for this task are uncommitted; no commit fabricated.
 
 ## Required Windows validation (keep until genuinely tested)
-- `WINDOWS_VALIDATION_REQUIRED`: one existing-file click with native-class
-  diagnostics per G2_IDENTITY_REVIEW.md; inspect actual HWND classes before
-  scoping independent hit-test feasibility. Completed filename trials need no repeat.
+- `WINDOWS_VALIDATION_REQUIRED`: explicit Shell-path delivery/validation once
+  the G2-F diagnostic is implemented; no automatic Shell installation. Hover
+  identity/DPI/race matrix stays pending for any future return to trusted hover.
+- `WINDOWS_VALIDATION_REQUIRED`: inactive-prefix assessor correction is replay-
+  tested only; validate live if that diagnostic policy is relied on later.
   then continue the broader operator-annotated matrix in
   `G2_MAPPING.md` now that one native STA hit completed. Begin with A hovered/B
   selected in Details/icons; then ascending/descending sorts, hidden extensions,
@@ -354,3 +358,66 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   reviewer independently reproduced104 tests and checks, no material findings.
   Pytest/Ruff unavailable at last probes; no lint pass claimed. No Windows/MCP
   execution by Codex. Interrupted agent files were inspected and checks rerun.
+
+## Twelfth supplied Windows run: native class probe
+- Source: user-pasted g2-control-class-1 JSONL/console. One event/record, queue0,
+  drops0, latency190.785ms; exit code not supplied. Selected tab is tests, hidden
+  UIA label a, index1, correct native candidate tests/a.txt. Three registrations.
+- Native classes observed: view=SHELLDLL_DefView, content=DirectUIHWND,
+  browser=ShellTabWindowClass. No standard SysListView32 content was observed;
+  do not apply its documented hit-test messages to this DirectUI HWND. This
+  rules out that route for the sampled surface, not every possible hover method.
+- ambiguous_shell_windows was caused by a distinct inactive tab with count51,
+  capped32 candidates/truncated=true. Core previously demanded complete candidate
+  lists even for tabs positively excluded by native browser/view HWNDs.
+- Corrected only that diagnostic condition: positively excluded peers may carry
+  the exact consistent min(count,32) prefix; matched tab still complete<=32.
+  Unknown/error/contradictory/malformed peers and globally truncated registration
+  lists still reject. Captured replay now produces provisional tests/a.txt from
+  entry2, never a trusted path. New assessment is Windows-unverified.
+- Added sanitized source projection; ALL unrelated filenames redacted, preserving
+  counts/indices/type flags/classes/geometry/timing. Independent review found no
+  material defects and reproduced111 tests, compileall and diff checks exit0.
+  No Windows/Windows-MCP execution by Codex; no new native API or hook behavior.
+- D-011 selects G2-F explicit Shell-path invocation as the next safe baseline.
+  Hover stays research-only; fallback is not yet implemented/Windows-verified.
+  No further equivalent click trials requested; no GUI/converters authorized yet.
+
+## G2-F headless launcher and personal Send to integration
+- User authorized explicit-path fallback now, with usable PySide6 radial GUI as
+  the NEXT development priority. D-012 supersedes the earlier hover-only priority;
+  existing Mouse3 implementation, diagnostics and strict trust barrier remain.
+- Implemented portable explicit-path validation and InvocationController.handle_explicit.
+  Exactly one ordinary absolute drive-letter file path is required; Unicode and
+  spaces remain literal. Missing files, directories, reparse points, device/UNC
+  paths, traversal, alternate streams and multiple arguments fail closed. No UIA,
+  selected/focused-item lookup or file contents are used. Both invocation routes
+  share TargetResolution; explicit source is shell_explicit.
+- Added Windows explicit_path_diagnostics CLI: physical cursor capture, headless
+  controller invocation, exclusive UTF-8 JSONL artifacts and meaningful exit codes.
+  No UI or conversion yet. ASCII-safe console output preserves Unicode in logs.
+- Added sendto stage/install/remove commands and packaged PowerShell shortcut
+  helper. Stage writes a reviewable shortcut under logs/sendto-stage; install
+  uses the current user's SendTo folder. Direct Python target receives appended
+  file arguments, without a shell interpreting filenames. Existing differing
+  shortcuts are refused; owned installs/removals are idempotent. New shortcuts
+  save to a unique temporary name and move without replacement.
+- Implementer supplied bounded validation/controller code and tests; focused
+  reviewer found a Unicode console-encoding failure, fixed with regression test.
+  Recheck found no outstanding material findings and reproduced 139 unit tests.
+- Actual Kubuntu checks: 139 unittest tests pass; compileall and git diff --check
+  pass. Built a wheel and verified the PowerShell helper is packaged. pytest,
+  Ruff and PowerShell are unavailable here; no lint or PowerShell execution pass
+  claimed. Tests cover Unicode, spaces/metacharacters, absent/directory/multiple
+  paths, controller cancellation, exclusive logs, argument quoting/import isolation.
+- WINDOWS_VALIDATION_REQUIRED: follow docs/SEND_TO.md for direct CLI, staged
+  shortcut, personal installation, actual Explorer argument delivery and removal.
+  Verify Unicode/spaces/metacharacters, invalid/multiple paths, cursor point and
+  ownership refusal. Explorer multi-selection may invoke separate processes;
+  record observed process/argument counts. No Windows/MCP run or live shortcut
+  installation occurred here. Native acceptance remains pending, not completed
+  by fakes or Linux tests.
+- Next bounded job: docs/NEXT_TASK.md G4-A, optional PySide6 two-level radial UI,
+  shared controller input, near-cursor placement, Escape/Back/outside dismissal,
+  explicitly declared preview capabilities and no real conversion. Windows GUI
+  placement/focus/DPI checks remain a separate native validation requirement.

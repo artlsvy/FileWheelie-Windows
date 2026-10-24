@@ -71,10 +71,10 @@ and ShellTab HWND; the other registration has different browser/view HWNDs.
 The old blanket multi-entry guard safely rejected all four but was too broad
 for this observed case. Do not select registrations by path/name/index/order.
 
-For multiple complete registrations, require exactly one matched chain whose
+For a complete registration list, require exactly one matched chain whose
 browser HWND equals the hovered tab HWND, view HWND equals its captured
 DUIListView HWND, and content HWND equals its UIItemsView HWND. Every other
-entry must have complete, non-errored evidence positively excluding that tab/view.
+entry must have complete, non-errored native evidence positively excluding that tab/view.
 Missing, contradictory, duplicate-match or truncated evidence rejects. The chosen
 entry still needs all existing index/path/native/file/snapshot checks. Reports
 expose registration count and chosen entry index. Candidates remain provisional;
@@ -86,11 +86,55 @@ paths with selected entry indices1/0/1/0 and passing native checks, drops0/exit0
 Record this narrow live routing evidence; retain D-008's trust barrier and the
 remaining acceptance matrix. No general point-to-item identity guarantee follows.
 
+## D-011 — Explicit Shell path is the next safe invocation baseline (2026-10-25, active)
+
+The native-class probe observes SHELLDLL_DefView hosting DirectUIHWND, not a
+standard SysListView32 content control, on the tested Explorer view. Together
+with GetItemPosition=E_NOTIMPL and the undocumented UIA-ID/Shell-index link,
+the existing approach has not demonstrated the independent identity chain
+required by D-003/EXPLORER_HIT_TEST.md. Equivalent click trials cannot supply
+that missing guarantee. This does not prove all hover techniques impossible.
+
+Keep Mouse3 resolution diagnostic-only and None-returning. Select G2-F explicit
+Shell path passing as the next implementation baseline: a user-invoked Send to
+or context command supplies the file path directly, without reading Explorer
+selection or UIA names. This is an explicit UX compromise: the next baseline
+requires a Shell menu invocation and does not activate by middle-click hover.
+Retain the passive Mouse3 experiment separately for future evidence-based work.
+
+G2-F is not implemented or Windows-verified by this decision. Next implement
+only headless explicit-path validation/diagnostics, with a separately staged
+direct-executable shortcut; no automatic Shell installation/registry edits,
+accounts, GUI or converters. Source metadata must distinguish shell_explicit
+from explorer_hover. Do not mark G2 verified, and gate later UI/conversion work
+on actual explicit-path Windows acceptance.
+
+An unrelated inactive tab may have a consistent bounded candidate prefix after
+positive HWND exclusion. Its candidate list is not used for the hovered target;
+the chosen registration remains complete and <=32. Unknown/error/contradictory
+peers, inconsistent prefixes and globally truncated registration lists reject.
+This narrow diagnostic correction does not relax D-008's trust barrier.
+
+## D-012 — Usable radial prototype is next (2026-10-25, user-directed)
+
+The user accepts temporarily deprioritizing Mouse3 and requests explicit-path
+headless launching with personal install/remove, followed immediately by PySide6
+radial GUI development. Preserve Mouse3 infrastructure; do not expand its
+diagnostics absent a specific blocker. Both routes use InvocationController and
+TargetResolution; explicit file paths never query selection or UIA.
+
+The GUI prototype may progress on Kubuntu with injected preview capabilities and
+offscreen tests while actual Send to/overlay Windows validation stays queued.
+It must show compatible categories then concrete formats, near the cursor, with
+Escape, Back and outside dismissal. No actual converters or invented working
+engine capabilities. This priority supersedes earlier instructions to keep
+investigating Explorer edge cases before any GUI work.
+
 ## Pending experiments
 - Latest hidden-extension test preserves the non-ASCII Shell path and rejects
   both report labels. Keep D-008: no identity bridge follows from matching index
-  sources. Inspect actual native HWND classes before considering a documented
-  control hit test; see G2_IDENTITY_REVIEW.md. No fallback decision made yet.
+  sources. Native classes are now observed as DirectUI; D-011 selects the
+  explicit-path fallback. Future hover research needs a concrete identity bridge.
 - Descending-comparison captures show indices reassigned (A2/B3 to A1/B0) with
   correct candidates and matching native indices. Index-to-path associations
   must be fresh per invocation, never cached across view/sort changes.

@@ -4,7 +4,7 @@
 Build a **private, local-first Windows 11 file-conversion utility**. The primary UX is **middle-click on a file in Windows Explorer → cursor-centered radial menu → output category → concrete format → convert**. No accounts, cloud services, telemetry, monetization, or distribution infrastructure.
 
 ## Current milestone / source of truth
-Read `docs/STATUS.md` and `docs/NEXT_TASK.md` first, then `docs/ROADMAP.md`, `docs/DECISIONS.md`, and task-specific specifications. **CURRENT PRIORITY: prove correct resolution of the exact Explorer file under Mouse3, regardless of selection**. Do not implement real converters or polish the radial UI until the gate in `docs/EXPLORER_HIT_TEST.md` is satisfied or the documented fallback decision is made.
+Read `docs/STATUS.md` and `docs/NEXT_TASK.md` first, then `docs/ROADMAP.md`, `docs/DECISIONS.md`, and task-specific specifications. **CURRENT PRIORITY (user update 2026-10-25): complete the explicit-path/Send to headless launcher, then build a usable PySide6 radial GUI prototype through the shared controller.** D-011 selects the fallback while Mouse3 remains desired but experimental. Preserve all Mouse3 code; expand diagnostics only for a specific blocking issue. Do not implement actual converters yet. Keep Windows fallback/UI validation queued honestly; do not block independent Linux GUI work on an offline host.
 
 ## Development environment
 - Codex runs on Kubuntu over SSH, including when the Windows 11 tower is off at night.

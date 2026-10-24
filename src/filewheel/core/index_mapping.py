@@ -82,9 +82,26 @@ def _tab_window_index(windows: list, frame: int, ancestry: list, view: int, tab:
                        for key in ("tab_hwnd", "items_view_hwnd", "browser_hwnd", "view_hwnd"))
         ):
             return None
+        native_match = (association["browser_hwnd"] == tab_hwnd
+                        and association["view_hwnd"] == view_hwnd)
+        is_matched = association.get("status") == "matched" and native_match
+        is_excluded = (
+            association.get("status") == "unproven"
+            and association["browser_hwnd"] != tab_hwnd
+            and association["view_hwnd"] != view_hwnd
+            and entry.get("native_view_candidate") is None
+        )
+        if not is_matched and not is_excluded:
+            return None  # Unknown or partially matching relationships cannot be ignored.
         count, candidates = entry.get("item_count"), entry.get("candidates")
-        if (entry.get("truncated") is not False or not _integer(count) or count > 32
-                or not isinstance(candidates, list) or len(candidates) != count
+        if not _integer(count) or (is_matched and count > 32):
+            return None
+        # A peer is excluded by independent native HWNDs, not its candidate
+        # listing. Permit only the collector's exact bounded prefix for it;
+        # the chosen registration must still have its complete candidate set.
+        expected_count = min(count, 32) if is_excluded else count
+        if (entry.get("truncated") is not (count > 32)
+                or not isinstance(candidates, list) or len(candidates) != expected_count
                 or any(
                     not isinstance(candidate, dict)
                     or not isinstance(candidate.get("candidate_path"), str)
@@ -96,19 +113,10 @@ def _tab_window_index(windows: list, frame: int, ancestry: list, view: int, tab:
             return None
         indices = [candidate.get("enumeration_index") for candidate in candidates]
         if (any(not _integer(index) for index in indices)
-                or sorted(indices) != list(range(count))):
+                or sorted(indices) != list(range(expected_count))):
             return None
-        native_match = (association["browser_hwnd"] == tab_hwnd
-                        and association["view_hwnd"] == view_hwnd)
-        if association.get("status") == "matched" and native_match:
+        if is_matched:
             matched.append(position)
-        elif not (
-            association.get("status") == "unproven"
-            and association["browser_hwnd"] != tab_hwnd
-            and association["view_hwnd"] != view_hwnd
-            and entry.get("native_view_candidate") is None
-        ):
-            return None  # Contradictory or partially matching relationships.
     return matched[0] if len(matched) == 1 else None
 
 
