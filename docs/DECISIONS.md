@@ -1,0 +1,27 @@
+# Architecture decisions (ADRs)
+
+## D-001 — Windows Explorer Mouse3 first (2026-10-24, active)
+Primary interaction is middle-click a file under pointer. A traditional desktop converter UI is secondary. Technical feasibility of correct hover resolution gates later conversion work.
+
+## D-002 — Development on Kubuntu; target Win11 (2026-10-24, active)
+Codex + Unsnooze continue on Kubuntu without Windows tower. Build portable tests overnight; label Windows-only verification clearly and collect evidence separately on live machine. Do not require Windows-MCP online to start sessions.
+
+## D-003 — Conservative file identity (2026-10-24, active)
+Use Win32 mouse event + Windows UI Automation + Shell APIs as a research path, **not an assumed finished solution**. Fail closed on ambiguous pointer-to-Shell-item mapping. Explorer selection/focus must not stand in for pointer target. If not robust, use a Shell invocation that passes explicit path.
+
+## D-004 — Python/PySide6 (2026-10-24, provisional)
+Python 3.12+; isolated Windows adapter, PySide6 for the future radial overlay, converter adapters later. Revisit only with evidence; optional native helper C++/C# can be considered if Explorer item identification proves impossible from Python bindings.
+
+## D-005 — MCP only for development (2026-10-24, active)
+Windows-MCP is optional interactive QA, not part of runtime app. Its Windows host must be running/unlocked for input testing. Remote access only over loopback + SSH tunnel, not an unauthenticated public endpoint. No overnight dependency.
+
+## D-006 — Personal use (2026-10-24, active)
+No release/distribution business requirements. Prefer quality and existing libraries; license compliance still applies. Avoid cloud processing.
+
+## D-007 — Converter priorities after UI gate (2026-10-24, active)
+Early: PDF→DOCX; DOCX→PDF; DOCX/PDF/PPTX/XLSX/HTML→Markdown; common images. MD→DOCX is a follow-up via Pandoc. PDF→PPTX is **not** an MVP target just because it was an example.
+
+## Pending experiments
+- Which Windows 11 Explorer views provide stable point-to-Shell-item mapping?
+- Native middle-click suppression after overlay opens vs passive processing?
+- Explorer right-click/`Send to` fallback ergonomics and multi-selection behavior?

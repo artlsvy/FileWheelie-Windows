@@ -1,0 +1,13 @@
+# Project-scoped Codex configuration; keep secrets in ~/.codex/config.toml or environment.
+# If unavailable in your Codex client, choose an available model with /model.
+model = "gpt-6.1-sol"
+model_reasoning_effort = "medium"
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 3
+default_subagent_model = "gpt-6-luna"
+default_subagent_reasoning_effort = "high"
+
+# No Windows MCP here. The Windows computer may be off overnight.
+# Optional remote connection belongs in ~/.codex/config.toml; see docs/MCP_AND_REMOTE_WINDOWS.md.
