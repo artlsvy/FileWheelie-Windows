@@ -2,6 +2,10 @@
 
 Private Windows 11 Explorer file converter. **Current phase: Explorer Mouse3 target detection only.** Not yet an executable app or completed converter.
 
+G0-A now includes portable contracts/tests and an opt-in Windows diagnostic
+scaffold. See [diagnostic instructions and limitations](docs/DIAGNOSTIC_POC.md).
+Windows behavior remains unverified; the diagnostic emits no resolved targets.
+
 ## What this bundle contains
 - `AGENTS.md`: current project-wide rules, replacing older versions.
 - `.codex/config.toml`, `.codex/agents/*.toml`: agent settings, replacing earlier examples.

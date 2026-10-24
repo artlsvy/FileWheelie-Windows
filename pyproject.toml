@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "filewheel"
+version = "0.0.1"
+description = "Local Windows Explorer target diagnostics"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+windows = ["comtypes>=1.4; sys_platform == 'win32'"]
+dev = ["pytest>=8", "ruff>=0.9"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests/unit"]
+markers = ["windows_integration: requires an interactive Windows 11 desktop"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100

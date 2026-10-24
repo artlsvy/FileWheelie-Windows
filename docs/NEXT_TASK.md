@@ -1,14 +1,42 @@
 # Next bounded Codex task
 
-**Task G0-A: platform seam and diagnostic contracts for Explorer hover resolution.**
+**Task G0-B: portable diagnostic record schema and evidence replay checks.**
 
-1. Inspect existing repository source before creating or modifying files; preserve working code.
-2. Research the best documented Win11 APIs for `mouse point → Explorer visual element → Shell item/path`; if using subagents, request ONE researcher report only; no speculative file edits by researcher.
-3. Implement a minimal portable, typed `MouseEvent`, `TargetResolution` and `TargetResolver` protocol plus a small controller; use project existing layout if present, otherwise `src/filewheel/core/`.
-4. Write Linux-run unit tests with fake resolvers validating correct hovered path returned, None handling, selected-file trap, cancellation/deduplication, no Win32 import on Linux. Don't pretend fakes prove real hit-testing.
-5. Create a Windows-only diagnostic POC behind platform guards to log UIA element properties and Shell candidate evidence on Mouse3. Do not yet render UI or perform conversions. Isolate and document the uncertain mapping function; return None if not proven. Ensure hook's callback does zero COM/UIA work.
-6. Run actual available Linux tests/linters and report exit codes; if a library is not installed, say so and do not claim success.
-7. Request reviewer inspection for wrong-target and callback/COM risks, address critical findings.
-8. Update `docs/STATUS.md` and `docs/NEXT_TASK.md` with the next independent Linux job and the Windows-only acceptance tests that must be run on the tower.
+G0-A is implemented and fake-tested (19 unittest tests); Windows behavior is
+unverified and the mapping function always returns None. Read `docs/STATUS.md`
+and `docs/DIAGNOSTIC_POC.md` before changing code. Preserve the unresolved G1/G2
+queue; no GUI, converters, speculative path mapping or remote automation.
 
-Do not ask for more input to complete this bounded task. Do not expand into GUI, conversion engines or remote Windows automation. If source architecture differs from the proposal, adapt rather than overwriting existing work.
+1. Extract diagnostic record construction/validation into a minimal portable
+   module. Keep schema version, explicit unknown/unproven values, bounded
+   properties, candidate-vs-resolved distinction, provenance and rejection reasons
+   clear. Do not expand logging scope or add dependencies.
+2. Add synthetic fixture/replay tests on Linux: foreground/process change drops
+   payload, bounds missing/outside click cannot support a target, candidate
+   truncation is explicit, ambiguous duplicate stems/hidden extensions do not
+   become paths, malformed records fail closed. Never treat replay as Windows
+   proof. Keep `proven_target_from_evidence` always None during this task.
+3. Adapt Windows diagnostics to the portable record builder without changing
+   hook behavior or inventing Shell/UIA identity correspondence. Test via fakes;
+   use standard-library unittest if pytest/Ruff are still unavailable.
+4. Run available checks, request focused review for evidence/identity mistakes,
+   and update status/next task with actual commands and exit codes.
+
+Acceptance: deterministic schema/replay tests pass, unknown or ambiguous evidence
+never emits a resolved path, native dependencies remain guarded, and no live
+Windows success is claimed without actual evidence.
+
+## Independent Windows-only queue (not a Linux blocker)
+
+`WINDOWS_VALIDATION_REQUIRED`: run the opt-in diagnostic on the interactive
+Windows 11 tower per `docs/DIAGNOSTIC_POC.md`. First prove passive hook capture,
+UIA/Shell imports/evidence and clean shutdown in Details and icon views, with B
+selected and A middle-clicked. Record build, DPI, selected file, hovered file,
+expected path, actual None/rejection and local log reference. These are G1
+diagnostic smoke runs, **not G2 success**.
+
+After smoke evidence exists, investigate a separately bounded IFolderView2/Shell
+identity/geometry experiment. Require demonstrable pointer-to-item correspondence
+across the full `docs/EXPLORER_HIT_TEST.md` matrix before emitting paths or marking
+G2 verified. If correspondence fails, document the G2-F explicit Shell path
+invocation decision. Do not depend on Windows-MCP being online.
