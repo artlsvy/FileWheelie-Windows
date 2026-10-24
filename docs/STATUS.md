@@ -1,8 +1,8 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-24
-Current gate: G0-A complete; two supplied Windows diagnostic rounds reviewed.
-G2 provisional mapping implemented / Linux replay-tested; Windows acceptance pending.
+Current gate: G0-A complete; three supplied Windows diagnostic rounds reviewed.
+G2 dry-run starts, but native probe failed on Windows; exact identity gate pending.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -56,7 +56,7 @@ G2 provisional mapping implemented / Linux replay-tested; Windows acceptance pen
 
 ## Tests actually run
 - Kubuntu Python 3.14.4: `PYTHONPATH=src python3 -m unittest discover -s tests/unit -v`:
-  53 tests passed, exit 0. Fake hovered vs
+  67 tests passed, exit 0. Fake hovered vs
   selected path, None/no stale fallback, cancellation/reentrant invalidation,
   deduplication/debounce, timeout rejection, import isolation/platform guard,
   unconditional mapping rejection, generated point-type seam, UIA process/window
@@ -77,6 +77,14 @@ G2 provisional mapping implemented / Linux replay-tested; Windows acceptance pen
   compilation and whitespace checks with exit 0. Native ABI remains unverified.
 - Dry-run resolver wiring is replay-tested: candidate reports remain separate
   from trusted returns, and a window race discards both raw and candidate payload.
+- Native failure diagnostics now capture the exact internal API stage, completed
+  stages, signed/hex HRESULT and known symbolic code without exception messages,
+  errorinfo or traceback payload. Synthetic failures exercise service and later
+  path errors; nested errors retain their original stage. This improves
+  observability only; no root-cause fix or alternative API is claimed.
+- Focused review of the failure-diagnostic changes found no material defects;
+  reviewer independently reproduced 67 tests, compilation and whitespace checks
+  with exit 0. The original COM error still requires the new Windows capture.
 - `python3 -m compileall -q src tests`: exit 0 (syntax compilation only).
 - `git diff --check`: exit 0.
 - `python3 -m pytest --version`: exit 1, pytest is not installed.
@@ -86,6 +94,9 @@ G2 provisional mapping implemented / Linux replay-tested; Windows acceptance pen
   Changes for this task are uncommitted; no commit fabricated.
 
 ## Required Windows validation (keep until genuinely tested)
+- `WINDOWS_VALIDATION_REQUIRED`: rerun ONE Details hit with the staged native
+  failure diagnostics (command in `G2_MAPPING.md`); obtain failure stage and
+  HRESULT before repeating the broader matrix or changing the API route.
 - `WINDOWS_VALIDATION_REQUIRED`: run `--dry-run-mapping` per `docs/G2_MAPPING.md`;
   first validate new COM bindings and active view HWND association in one local
   Details hit, then operator-annotated selection/sort/views/hidden-extension/tab/
@@ -101,7 +112,8 @@ G2 provisional mapping implemented / Linux replay-tested; Windows acceptance pen
 
 ## Research and implementation blockers
 - Point→Shell identity remains unproven. Native active view/IShellItem evidence
-  is now implemented but not Windows-tested. Numeric IDs, selection, focus and
+  has been attempted on Windows and failed, without enough original error detail
+  to identify the failing API. Numeric IDs, selection, focus and
   names never establish identity alone. Desktop remains excluded; initial scope
   is fixed local drives, <=32 candidates, standard views, no reparse points.
 - UIA/COM can block the worker; no hard timeout/process isolation exists. Hook
@@ -112,5 +124,23 @@ G2 provisional mapping implemented / Linux replay-tested; Windows acceptance pen
   behavior. G2-F remains available if true hover cannot be proven.
 
 ## Next
-See `docs/NEXT_TASK.md`: run/review G2 dry-run acceptance evidence. Linux work
+See `docs/NEXT_TASK.md`: localize the native COM error before G2 acceptance. Linux work
 must preserve the trusted-target barrier until the Windows gate is satisfied.
+
+## Third supplied Windows evidence: first G2 dry run (reviewed 2026-10-24)
+- Source: latest user-pasted JSONL, not a Codex-run session. Build 26200, DPI96:
+  17 worker events, 17 Explorer records, 17 native_probe_error rejections,
+  zero queue remainder. Mode startup, UIA/Shell collection and safe rejection
+  worked. All UIA repeat snapshots were stable; every selected snapshot true.
+- All 17 active-view reports contain only status=unproven/error_type=COMError.
+  The original logger omitted HRESULT and API stage, so the cause is unknown.
+  No native candidate/tab correspondence was established; all trusted paths null.
+  Collection took 66.726–92.865 ms. No hook-drop output/exit code supplied.
+- IDs continue matching Folder.Items indices, including a/b now at 2/3 after
+  the fixtures folder appears. Downstream false mapping checks reflect early
+  rejection, not independent evidence of bad geometry or truncated enumeration.
+- The appended sanitized fixture is the previous run-2 projection, not additional
+  successful evidence from this failing run. It is preserved as prior replay data.
+- Research rechecked the service GUID and documented route; no supported concrete
+  constant/route correction was found. Stage/HRESULT diagnostics are the next
+  bounded step, not guessed fallback APIs. New diagnostics are Linux-tested only.

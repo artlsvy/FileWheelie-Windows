@@ -44,6 +44,8 @@ never mutate Explorer or suppress Mouse3. Start with small fixed-drive folders
 and standard views. See `G2_MAPPING.md` for primary API sources and protocol.
 
 ## Pending experiments
+- G2 first native dry run rejected all 17 attempts with COMError. Retain D-008;
+  localize with stage/HRESULT diagnostics before changing the native service route.
 - Which Windows 11 Explorer views provide stable point-to-Shell-item mapping?
 - Native middle-click suppression after overlay opens vs passive processing?
 - Explorer right-click/`Send to` fallback ergonomics and multi-selection behavior?

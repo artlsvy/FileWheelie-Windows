@@ -44,6 +44,35 @@ def probe_and_window(*, associated=True, changed=False):
 
 
 class ShellViewProbeTests(unittest.TestCase):
+    def test_service_failure_reports_exact_stage_and_hresult_without_message(self):
+        class FakeCOMError(Exception):
+            hresult = -2147467262
+
+        probe, window, ancestry, _ = probe_and_window()
+        service = window.QueryInterface(None)
+        def fail(*args):
+            raise FakeCOMError("private filename must not enter the log")
+        service.QueryService = fail
+        report = probe.capture(window, ancestry, 1)
+        failure = report["active_view_association"]
+        self.assertEqual(failure["status"], "unproven")
+        self.assertEqual(failure["stage"], "query_top_level_browser_service")
+        self.assertEqual(failure["hresult_hex"], "0x80004002")
+        self.assertEqual(failure["hresult_name"], "E_NOINTERFACE")
+        self.assertEqual(failure["completed_stages"], ["query_service_provider"])
+        self.assertNotIn("private filename", str(report))
+        self.assertNotIn("native_view_candidate", report)
+
+    def test_later_path_failure_does_not_get_relabeled_as_service_failure(self):
+        probe, window, ancestry, _ = probe_and_window()
+        def fail(item):
+            raise OSError("private")
+        probe._path = fail
+        failure = probe.capture(window, ancestry, 1)["active_view_association"]
+        self.assertEqual(failure["stage"], "get_filesystem_path")
+        self.assertIn("get_indexed_shell_item", failure["completed_stages"])
+        self.assertIsNone(failure["hresult"])
+
     def test_observed_hwnd_chain_and_path_are_candidate_evidence_only(self):
         probe, window, ancestry, freed = probe_and_window()
         with patch("filewheel.platforms.windows.shell_view.os.stat", return_value=NS(
@@ -90,3 +119,14 @@ class ShellViewProbeTests(unittest.TestCase):
             "candidate_path": "C:/fixture/a.txt", "rejection": "identity_correspondence_unproven",
         }}
         self.assertIn("candidate=C:/fixture/a.txt", mapping_console_line(event))
+
+    def test_console_mapping_includes_failed_stage_and_hresult(self):
+        event = {"sequence": 1, "mapping": {
+            "status": "rejected", "candidate_index": 1, "candidate_path": None,
+            "rejection": "native_probe_error",
+        }, "shell_candidates": {"matching_windows": [{"active_view_association": {
+            "stage": "query_service_provider", "hresult_hex": "0x80004002",
+        }}]}}
+        line = mapping_console_line(event)
+        self.assertIn("stage=query_service_provider", line)
+        self.assertIn("hresult=0x80004002", line)

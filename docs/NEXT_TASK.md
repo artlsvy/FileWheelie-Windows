@@ -1,24 +1,29 @@
 # Next bounded Codex task
 
-**Task G2-B: validate the provisional index mapper in a Windows dry run.**
+**Task G2-C: localize the native Shell COM failure, then fix its observed cause.**
 
-Two supplied Windows diagnostic runs support Mouse3 capture, UIA/Shell collection
-and aggregate non-Explorer filtering. Run 2 has nine AutomationId/index matches,
-but all selected-state snapshots are true and active-tab correspondence is
-unproven. The G2 provisional assessor/native Shell view probe is implemented,
-with 53 Linux tests passing. New COM bindings have not run on Windows.
+The first G2 Windows dry run started and collected 17 records, but all native
+probes failed with COMError; no stage/HRESULT was logged, so the cause is unknown.
+The returned fixture is prior run-2 replay data, not a successful native run.
+Stage/HRESULT failure diagnostics are now implemented, with 67 Linux tests passing;
+these new diagnostics have not run on Windows. The API route is unchanged and
+trusted resolution remains None. All observed selected snapshots remain true.
 Read `STATUS.md`, `G2_MAPPING.md` and D-008 in `DECISIONS.md`.
 
-1. On interactive Win11 run the new `--dry-run-mapping` invocation in
-   `G2_MAPPING.md` against a small ordinary local folder. First inspect a single
-   Details hit for startup/binding failures, native view HWND chain and indexed
-   IShellItem evidence. Unsupported associations must reject; don't guess a tab.
-2. If collection works, execute the acceptance table: A hovered/B selected,
+1. Run ONE Details-view file click using the updated command in `G2_MAPPING.md`
+   (`logs/g2-probe-stage-1.jsonl`). Stop and inspect active_view_association.stage,
+   hresult_hex/name and completed_stages, plus console drops/exit status.
+   Do not rerun the full matrix until native collection works.
+2. Use that actual failure code/stage to research and implement only the bounded
+   correction. Do not guess a different service GUID, infer a tab from its title,
+   or bypass native validation using the index/name correlation. Add regression
+   tests and independent review; keep G2 Windows acceptance pending.
+3. Once native collection works, execute the acceptance table: A hovered/B selected,
    Details/icons, ascending/descending sorts, hidden extensions, duplicate stems,
    multiple tabs, Unicode, empty pane and chrome. Record independent expected
    paths and selection before/after, build/revision/view/DPI, latency, console
    drop count, capture summary and exit code. Keep all trusted resolved paths null.
-3. Compare UIA index, Folder.Items candidate, native GetItem path/index and
+   Compare UIA index, Folder.Items candidate, native GetItem path/index and
    repeated samples. A wrong provisional path is a failed trial. All-selected
    snapshots alone cannot prove the selection-independent user contract.
 4. Address only observed diagnostic defects with bounded changes/tests/review.

@@ -1,5 +1,37 @@
 # G2 provisional index mapping and Windows acceptance
 
+## Current result: native probe fails; diagnose one click first
+
+The user's first G2 dry run on build26200 received/recorded 17 Explorer events.
+Every one rejected with `native_probe_error`; each native association reported
+only `COMError`. UIA repeat snapshots were stable, all selected snapshots true,
+and all resolved paths null. Collection ranged 66.726–92.865 ms. This validates
+startup and fail-closed handling, not native mapping. The attached sanitized
+fixture is prior run-2 data. No new native view/path success is present.
+
+The old report omitted the failing call and HRESULT. The updated probe now
+records `stage`, `completed_stages`, numeric `hresult`, `hresult_hex` and, when
+known, `hresult_name` inside `active_view_association` on failure. No raw COM
+error message, error-info strings or tracebacks are logged. Successful probes
+include `probe_steps`; optional position failures have separate `position_error`
+evidence. All these are worker-side diagnostics; the mouse hook is unchanged.
+Research rechecked the GUID/route without finding a supported concrete fix.
+Do not change the route until the actual failure is localized.
+
+Run only this short diagnostic next; make one file click in Details, then Ctrl+C:
+
+```powershell
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.diagnostics --enable --dry-run-mapping --output logs\g2-probe-stage-1.jsonl
+$LASTEXITCODE
+```
+
+The console includes failed stage/HRESULT; retain the event record and final
+summary/drop/exit output. A code such as E_NOINTERFACE must be interpreted at its
+actual stage, not assumed to mean every Shell interface is unsupported. A null
+HRESULT is explicit lack of a numeric code. The new stage diagnostics have only
+Linux fake-test coverage; Windows retest is pending. Resume the acceptance table
+below only after native collection works.
+
 ## Run-2 evidence and API finding
 
 Source: user-pasted `windows-run-2.jsonl` text, reviewed 2026-10-24. The named

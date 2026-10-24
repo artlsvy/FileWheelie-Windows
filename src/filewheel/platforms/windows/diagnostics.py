@@ -26,9 +26,15 @@ def mapping_console_line(record: dict) -> str | None:
     mapping = record.get("mapping")
     if not isinstance(mapping, dict):
         return None
-    return (f"{record['sequence']}: {mapping['status']} "
+    line = (f"{record['sequence']}: {mapping['status']} "
             f"index={mapping['candidate_index']} candidate={mapping['candidate_path']} "
             f"reason={mapping['rejection']}")
+    windows = record.get("shell_candidates", {}).get("matching_windows", [])
+    if len(windows) == 1:
+        failure = windows[0].get("active_view_association", {})
+        if "stage" in failure:
+            line += f" stage={failure['stage']} hresult={failure.get('hresult_hex')}"
+    return line
 
 
 def main() -> int:

@@ -9,6 +9,7 @@ import os
 import stat
 from pathlib import PureWindowsPath
 
+from filewheel.core.probe_errors import ProbeFailure, probe_step
 from filewheel.platforms.windows.native import require_windows
 
 
@@ -123,15 +124,28 @@ class ShellViewProbe:
 
     def capture(self, shell_window, ancestry: list[dict], index: int) -> dict:
         """Return observed relationships, not a trusted pointer-to-file assertion."""
+        completed = []
+        try:
+            result = probe_step(completed, "native_probe", self._capture,
+                                shell_window, ancestry, index, completed)
+        except ProbeFailure as error:
+            return {"active_view_association": {"status": "unproven", **error.evidence}}
+        result["probe_steps"] = completed[:32]
+        return result
+
+    def _capture(self, shell_window, ancestry: list[dict], index: int, completed: list) -> dict:
         c, w, GUID, service_type, browser_type, folder_type, item_type = self._types
-        service = shell_window.QueryInterface(service_type)
-        unknown = service.QueryService(
+        def step(stage, operation):
+            return probe_step(completed, stage, operation)
+
+        service = step("query_service_provider", lambda: shell_window.QueryInterface(service_type))
+        unknown = step("query_top_level_browser_service", lambda: service.QueryService(
             c.byref(GUID("{4C96BE40-915C-11CF-99D3-00AA004AE837}")),
             c.byref(browser_type._iid_),
-        )
-        browser = unknown.QueryInterface(browser_type)
-        view = browser.QueryActiveShellView()
-        view_hwnd = view.GetWindow() or 0
+        ))
+        browser = step("query_shell_browser_interface", lambda: unknown.QueryInterface(browser_type))
+        view = step("query_active_shell_view", lambda: browser.QueryActiveShellView())
+        view_hwnd = step("get_active_view_hwnd", lambda: view.GetWindow()) or 0
         tabs = [a["native_hwnd"] for a in ancestry if a.get("class_name") == "ShellTabWindowClass"]
         contents = [a["native_hwnd"] for a in ancestry if a.get("class_name") == "UIItemsView"]
         roots = [a["native_hwnd"] for a in ancestry if a.get("class_name") == "CabinetWClass"]
@@ -146,19 +160,19 @@ class ShellViewProbe:
             "status": "matched" if associated else "unproven",
             "method": "active_shell_view_hwnd_chain", "view_hwnd": view_hwnd,
             "tab_hwnd": tabs[0] if len(tabs) == 1 else None,
-            "browser_hwnd": browser.GetWindow() or 0,
+            "browser_hwnd": step("get_browser_hwnd", lambda: browser.GetWindow()) or 0,
             "items_view_hwnd": contents[0] if len(contents) == 1 else None,
             "windows_verified": False,
         }
         if not associated:
             return {"active_view_association": association}
-        folder = view.QueryInterface(folder_type)
-        count = folder.ItemCount(2)  # SVGIO_ALLVIEW
+        folder = step("query_folder_view2", lambda: view.QueryInterface(folder_type))
+        count = step("get_view_item_count", lambda: folder.ItemCount(2))  # SVGIO_ALLVIEW
         if not 0 <= index < count <= 32:
             return {"active_view_association": association, "native_error": "view_index_or_size"}
-        item = folder.GetItem(index, c.byref(item_type._iid_))
-        path = self._path(item)
-        attributes = item.GetAttributes(0x60000000)  # SFGAO_FILESYSTEM | SFGAO_FOLDER
+        item = step("get_indexed_shell_item", lambda: folder.GetItem(index, c.byref(item_type._iid_)))
+        path = step("get_filesystem_path", lambda: self._path(item))
+        attributes = step("get_shell_item_attributes", lambda: item.GetAttributes(0x60000000))
         local_path = PureWindowsPath(path)
         local = (
             local_path.is_absolute() and len(local_path.drive) == 2
@@ -175,21 +189,23 @@ class ShellViewProbe:
             except OSError:
                 pass
         position = None
+        position_error = None
         try:
-            pidl = folder.Item(index)
+            pidl = step("get_position_pidl", lambda: folder.Item(index))
             try:
-                point = folder.GetItemPosition(pidl)
+                point = step("get_item_position", lambda: folder.GetItemPosition(pidl))
                 if self._native.user.ClientToScreen(view_hwnd, c.byref(point)):
                     position = [point.x, point.y]
             finally:
                 self._ole.CoTaskMemFree(pidl)
-        except Exception:
-            pass  # Position is supplementary; no rectangle/identity is inferred.
-        again = browser.QueryActiveShellView()
-        second_item = folder.GetItem(index, c.byref(item_type._iid_))
+        except ProbeFailure as error:
+            position_error = error.evidence  # Position is supplementary, never identity proof.
+        again = step("recheck_active_shell_view", lambda: browser.QueryActiveShellView())
+        second_item = step("recheck_indexed_shell_item", lambda: folder.GetItem(index, c.byref(item_type._iid_)))
         stable = (
-            again.GetWindow() == view_hwnd and folder.ItemCount(2) == count
-            and self._path(second_item) == path
+            step("recheck_view_hwnd", lambda: again.GetWindow()) == view_hwnd
+            and step("recheck_view_item_count", lambda: folder.ItemCount(2)) == count
+            and step("recheck_filesystem_path", lambda: self._path(second_item)) == path
         )
         return {
             "active_view_association": association,
@@ -198,7 +214,9 @@ class ShellViewProbe:
                 "is_filesystem": bool(attributes & 0x40000000),
                 "is_folder": bool(attributes & 0x20000000),
                 "item_position_screen": position,
-                "view_mode": folder.GetCurrentViewMode(), "view_item_count": count,
+                "position_error": position_error,
+                "view_mode": step("get_view_mode", lambda: folder.GetCurrentViewMode()),
+                "view_item_count": count,
                 "snapshot_stable": bool(stable), **file_state,
                 "local_fixed_drive": bool(local),
             },
