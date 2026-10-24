@@ -64,7 +64,10 @@ GetItemPosition returned E_NOTIMPL and pointer-to-item identity remains unproven
 Do not promote the index hypothesis based on this single matched candidate.
 
 ## Pending experiments
-- Validate selection independence, sorting, views and tabs with the STA probe.
+- Annotated console trials support hovered candidates for A while B selected
+  and for unselected README. Native Mouse3 selects the item before async UIA;
+  use operator pre-click notes, not snapshot selection, as acceptance ground truth.
+  Review full JSONL and extend sorting/view/tab tests before changing D-008.
 - Which Windows 11 Explorer views provide stable point-to-Shell-item mapping?
 - Native middle-click suppression after overlay opens vs passive processing?
 - Explorer right-click/`Send to` fallback ergonomics and multi-selection behavior?

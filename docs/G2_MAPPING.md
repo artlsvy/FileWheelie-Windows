@@ -1,5 +1,51 @@
 # G2 provisional index mapping and Windows acceptance
 
+## Latest acceptance notes: hovered candidates reported despite prior selection
+
+The user supplied g2-acceptance-1 console, full six-event JSONL, zero drops,
+exit0 and the following operator observations. Events1–4 were Medium icons;
+events5–6 were Details (native view modes1/4). All six native validation sets
+pass with stable snapshots and matched Shell paths/indices/active-view HWNDs.
+Collection latency72.965–94.449ms. All GetItemPosition calls return E_NOTIMPL.
+
+| Click | Hovered item | Selection before Mouse3 | Console candidate |
+| --- | --- | --- | --- |
+| 1 | a.txt | a.txt | a.txt / index2 |
+| 2 | b.txt | b.txt | b.txt / index3 |
+| 3 | a.txt | b.txt | a.txt / index2 |
+| 4 | b.txt | b.txt | b.txt / index3 |
+| 5 | README.md in parent folder | README.md | README.md / index11 |
+| 6 | README.md | README unselected; selected item unspecified | README.md / index11 |
+
+Clicks3/6 support the hovered-candidate behavior independently of pre-click
+selection in these trials. The user observed that native Mouse3 selects the
+clicked file. An asynchronous is_selected=true snapshot therefore cannot tell
+us whether that item was selected before the click. The diagnostic remains
+passive and contains no Select/AddToSelection mutation. Judge target correctness
+against operator pre-click notes; record native selection changes separately.
+Do not require native selection to stay on B as a prerequisite for this passive
+experiment, and do not suppress Mouse3 to force that result.
+
+Next challenge the numeric index hypothesis with descending Name sort. Use the
+same tests folder containing a.txt/b.txt and the same environment. Start capture:
+
+```powershell
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.diagnostics --enable --dry-run-mapping --output logs\g2-sort-desc-1.jsonl
+```
+
+1. Medium icons, Sort by Name descending: select B with left click, Mouse3 A.
+2. Select A with left click, Mouse3 B.
+3. Switch to Details, explicitly set Name descending; select B, Mouse3 A.
+4. Select A, Mouse3 B. Stop capture with Ctrl+C.
+
+Space Mouse3 clicks at least one second apart. Expected candidates are A/B/A/B;
+any wrong path is a failed trial, even if rejected from trusted routing. Paste
+JSONL and console exit/drop results, with confirmation that both views were Name
+descending. This adds four cases rather than repeating the initial six. The
+earlier run's sort order was not recorded, so it is not an explicit ascending
+sort baseline. Hidden extensions, duplicate stems, multiple tabs, Unicode and
+negative-area coverage remain pending. All candidates stay provisional.
+
 ## Current result: one native STA capture completed; expand acceptance
 
 The supplied `g2-sta-1.jsonl` now completes GetWindow, HWND association and native
@@ -217,7 +263,7 @@ Operator expectations must be independent of the candidate being evaluated.
 
 | Trial | Procedure | Required evidence |
 | --- | --- | --- |
-| Unselected target | Select B, middle-click A; repeat reversed | Operator before/after selection; A candidate, never B substituted |
+| Unselected target | Select B, middle-click A; repeat reversed | Operator before/after selection; A candidate, never B substituted; native Mouse3 may select A |
 | Views | Repeat in Details and icon views | Correct item bounds, view HWND chain and native candidate agreement |
 | Sort | Name ascending then descending; repeat A/B | Numeric ID and both index sources recorded; mismatch explicitly rejects |
 | Hidden extensions | Toggle extensions, repeat | Supporting name consistency; no guessed extension |
@@ -233,7 +279,7 @@ candidate remains provisional until real Windows results establish a reliable
 pointer-to-item relationship under the core acceptance matrix. All trusted
 resolved_path fields must stay null in this experiment. A wrong provisional
 candidate is a failed trial, even though the trust boundary prevented routing.
-All-selected snapshots alone do not demonstrate an unselected hover; if Explorer
-natively changes selection on Mouse3, record that fact without suppressing the
+All-selected snapshots alone do not demonstrate an unselected hover; use operator
+pre-click selection notes. If Explorer natively changes selection, record it without suppressing the
 button or programmatically selecting a file. Keep G2 pending and evaluate the
 documented explicit-path fallback if the primary contract cannot be satisfied.

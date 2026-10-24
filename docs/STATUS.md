@@ -1,8 +1,9 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-24
-Current gate: supplied Shell STA run passed native collection for one local file.
-G2 selection-independent/sort/view/tab acceptance and trusted mapping remain pending.
+Current gate: full six-event acceptance log corroborates hovered candidates in
+Medium icons and Details, including unselected targets. Sort/tab matrix and
+trusted mapping remain pending.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -94,7 +95,8 @@ G2 selection-independent/sort/view/tab acceptance and trusted mapping remain pen
   Changes for this task are uncommitted; no commit fabricated.
 
 ## Required Windows validation (keep until genuinely tested)
-- `WINDOWS_VALIDATION_REQUIRED`: broader operator-annotated acceptance matrix in
+- `WINDOWS_VALIDATION_REQUIRED`: descending-sort index correspondence next,
+  then continue the broader operator-annotated matrix in
   `G2_MAPPING.md` now that one native STA hit completed. Begin with A hovered/B
   selected in Details/icons; then ascending/descending sorts, hidden extensions,
   duplicate stems, tabs, Unicode and negative areas. Retain drop/exit checks.
@@ -195,3 +197,42 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
 - Focused review found no material fixture/replay issues and independently
   reproduced all83 tests, compileall and diff checks with exit0. Corrected stale
   apartment wording in the mapping implementation documentation.
+
+## Sixth supplied Windows evidence: annotated acceptance console
+- Source: user-pasted g2-acceptance-1 console plus per-click notes, reviewed
+  2026-10-24. Six provisional candidates in order: A, B, A, B, README, README.
+  Click3 was A while B selected; click6 README while README unselected. Both
+  reported the hovered candidate, supporting selection independence for these
+  observed provisional trials. Previous selected item on click6 unspecified.
+- User observed native Mouse3 selects/highlights the clicked file. This explains
+  why later asynchronous UIA snapshots can all be selected=true. It is not
+  evidence the diagnostic selects files: code has no selection mutation call.
+  Do not require the old selection to remain unchanged under passive Mouse3;
+  record native selection effects separately from target correctness.
+- Zero hook drops and exit0 reported. Full six-event JSONL, actual view/sort/
+  extension settings and native per-event checks were not supplied. Do not infer
+  those from console lines or mark G2 verified. Request/review the existing log
+  before repeating these trials. Broader sorting, hidden extensions, duplicate
+  stems, tabs, Unicode and negative-area coverage remains pending.
+- Documentation-only checkpoint; no runtime code, trust policy or fixtures changed.
+  Last code checks remain83 passing Linux tests; only git diff --check rerun,
+  exit0. No new Windows execution by Codex.
+
+## Sixth run follow-up: full acceptance JSONL and view settings supplied
+- User confirms Medium icons for events1–4, Details for events5–6. Native view
+  modes are1 and4 respectively. Full six-event log now supplied and reviewed;
+  this resolves the missing-log/view limitations in the preceding checkpoint.
+- All six events pass computed UIA containment/ancestry, freshness, complete
+  candidate set, sampled active-view HWND association, both Shell path/index
+  agreement, regular/local/nonreparse and snapshot checks. Latency72.965–94.449ms;
+  six received/written, queue0. Prior console reports drops0/exit0.
+- Operator notes establish A while B previously selected in Medium icons
+  (event3), and README previously unselected in Details (event6). These narrow
+  provisional cases are observed on Windows; they do not prove universal index
+  identity. Native Mouse3 selection explains all async snapshots being true.
+- Every GetItemPosition call reports E_NOTIMPL. No independent Shell geometry
+  or multiple-tab/sort/hidden-extension behavior proved. All trusted paths null;
+  no trust policy change. Next bounded Windows comparison is Name descending
+  in Medium icons and Details, explicitly matching each expected path.
+- Documentation-only evidence update; runtime/tests unchanged. Whitespace check
+  exit0; no new native or Linux test execution claimed.
