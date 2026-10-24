@@ -1,5 +1,48 @@
 # G2 provisional index mapping and Windows acceptance
 
+## Latest comparison: paths remain correct through index reassignment
+
+The operator reports completing the four descending-sort trials exactly.
+All four candidates match A/B/A/B, with matching native paths/indices, HWND
+associations and stable snapshots; latency73.105–95.414ms, drops0, queue0.
+Exit code was not supplied for this run. All paths remain provisional.
+
+| Click | Reported view | A/B index evidence | Candidate |
+| --- | --- | --- | --- |
+| 1 | Medium icons, Name descending | A=2; enumeration fixtures/unit/A/B | a.txt |
+| 2 | Medium icons, Name descending | B=3; same enumeration | b.txt |
+| 3 | Details, Name descending | A=1; enumeration B/A/unit/fixtures | a.txt |
+| 4 | Details, Name descending | B=0; same new enumeration | b.txt |
+
+Both Shell sources and UIA agree after the index change. This supports resolving
+against a fresh view snapshot, never treating an index as persistent identity.
+The first two captures do not independently prove reversed icon order; native
+sort columns are not logged. Retain the operator's setting report without adding
+unsupported metadata. GetItemPosition is E_NOTIMPL in all four captures.
+
+Next test two tabs in the SAME Explorer window, using existing files:
+
+```powershell
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.diagnostics --enable --dry-run-mapping --output logs\g2-tabs-1.jsonl
+```
+
+Open one tab at the repository tests folder and one at its parent repository
+folder. Switch tabs using left click. Space Mouse3 file clicks at least one
+second apart, in this order:
+
+1. tests tab: a.txt.
+2. parent tab: README.md.
+3. tests tab: b.txt.
+4. parent tab: AGENTS.md.
+
+Stop with Ctrl+C and record `$LASTEXITCODE`. Send full JSONL/console and confirm
+the two folders were tabs in one window, with their view settings. Expected paths
+are tests/a.txt, parent/README.md, tests/b.txt, parent/AGENTS.md. Each sampled view
+must belong to the hovered tab. An ambiguous association may reject, but any
+other tab's candidate is a failed trial. Do not change the environment or create
+files for this comparison. Duplicate-stem/hidden-extension/Unicode and negative
+tests follow after tab behavior is understood.
+
 ## Latest acceptance notes: hovered candidates reported despite prior selection
 
 The user supplied g2-acceptance-1 console, full six-event JSONL, zero drops,
@@ -26,7 +69,7 @@ against operator pre-click notes; record native selection changes separately.
 Do not require native selection to stay on B as a prerequisite for this passive
 experiment, and do not suppress Mouse3 to force that result.
 
-Next challenge the numeric index hypothesis with descending Name sort. Use the
+The completed comparison challenged the index hypothesis with descending Name sort. It used the
 same tests folder containing a.txt/b.txt and the same environment. Start capture:
 
 ```powershell

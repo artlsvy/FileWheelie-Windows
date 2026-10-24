@@ -64,6 +64,9 @@ GetItemPosition returned E_NOTIMPL and pointer-to-item identity remains unproven
 Do not promote the index hypothesis based on this single matched candidate.
 
 ## Pending experiments
+- Descending-comparison captures show indices reassigned (A2/B3 to A1/B0) with
+  correct candidates and matching native indices. Index-to-path associations
+  must be fresh per invocation, never cached across view/sort changes.
 - Annotated console trials support hovered candidates for A while B selected
   and for unselected README. Native Mouse3 selects the item before async UIA;
   use operator pre-click notes, not snapshot selection, as acceptance ground truth.

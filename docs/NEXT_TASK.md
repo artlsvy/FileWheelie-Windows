@@ -1,24 +1,25 @@
 # Next bounded Codex task
 
-**Task G2-E2: challenge the index hypothesis under descending Name sort.**
+**Task G2-E3: test active-view/path association while alternating Explorer tabs.**
 
-Full g2-acceptance-1 JSONL and views are now supplied: all six native validation
-sets pass, including A while B selected in Medium icons and unselected README in
-Details. Native modes1/4 agree with those operator settings. Native Mouse3 selects
-the clicked file before async snapshots. All position queries return E_NOTIMPL;
-identity correspondence remains unproven and trusted resolution stays None.
+Full descending-comparison JSONL reports correct A/B/A/B candidates. In Details,
+UIA and both Shell index sources changed from A=2/B=3 to A=1/B=0 while preserving
+the paths. Medium-icon records retain the earlier enumeration, despite reported
+descending settings; do not invent missing native sort metadata. Initial tests
+also support unselected targets in Medium icons/Details. All positions remain
+unavailable (E_NOTIMPL); trusted resolution stays None.
 Last code checks:83 Linux tests pass, including the prior STA smoke projection.
-This six-event evidence review changes documentation only; no tests rerun.
+This four-event evidence review changes documentation only; no tests rerun.
 Read `STATUS.md`, `G2_MAPPING.md` and D-008 in `DECISIONS.md`.
 
-1. Use the four-click descending-sort comparison in G2_MAPPING.md and a new
-   logs/g2-sort-desc-1.jsonl. Do not repeat the accepted initial six-click run.
-   Medium icons then Details, Name descending: click A while B selected, then
-   B while A selected in each view. Record expected paths/settings and native
-   selection changes. Compare both index sources to the operator targets.
+1. Use the four-click same-window/two-tab comparison in G2_MAPPING.md and new
+   logs/g2-tabs-1.jsonl. Tabs show tests and repository parent respectively.
+   Alternate tests/A, parent/README, tests/B, parent/AGENTS. Switch tabs with
+   left click; never send Mouse3 to tab headers. Record expected paths, views,
+   tab switches, drops and exit code. Safe rejection is preferable to wrong tab.
 2. After reviewing this comparison, cover the remaining cases: explicit ascending
    sort baseline if still unrecorded, hidden extensions,
-   duplicate stems, two tabs with different/same filenames, Unicode, empty space
+   duplicate stems, same filename in different tab folders if needed, Unicode, empty space
    and Explorer chrome. Keep trusted resolution disabled and native Mouse3 passive.
 3. Review each operator expectation against provisional paths, native HWND chain,
    both Shell sources and snapshot checks. Operator pre-click selection notes

@@ -1,9 +1,9 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-24
-Current gate: full six-event acceptance log corroborates hovered candidates in
-Medium icons and Details, including unselected targets. Sort/tab matrix and
-trusted mapping remain pending.
+Current gate: annotated candidate checks pass in Medium icons/Details; descending
+comparison retains correct paths as indices change. Multi-tab/remaining matrix
+and trusted mapping remain pending.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -95,7 +95,7 @@ trusted mapping remain pending.
   Changes for this task are uncommitted; no commit fabricated.
 
 ## Required Windows validation (keep until genuinely tested)
-- `WINDOWS_VALIDATION_REQUIRED`: descending-sort index correspondence next,
+- `WINDOWS_VALIDATION_REQUIRED`: alternating two-tab HWND/path association next,
   then continue the broader operator-annotated matrix in
   `G2_MAPPING.md` now that one native STA hit completed. Begin with A hovered/B
   selected in Details/icons; then ascending/descending sorts, hidden extensions,
@@ -236,3 +236,27 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   in Medium icons and Details, explicitly matching each expected path.
 - Documentation-only evidence update; runtime/tests unchanged. Whitespace check
   exit0; no new native or Linux test execution claimed.
+
+## Seventh supplied Windows run: descending-sort comparison
+- User reports following the exact four-click pattern: Medium icons then Details,
+  Name descending, alternating A while B selected and B while A selected.
+  Supplied console and full JSONL report A/B/A/B correctly. Four received/written,
+  queue0, drops0; process exit code not supplied for this run.
+- All four native consistency sets pass, including sampled HWND association,
+  matching paths/indices from both Shell sources and stable file/UIA snapshots.
+  Latency73.105–95.414ms. GetItemPosition remains E_NOTIMPL throughout.
+- Medium-icon records use A=2/B=3 with enumeration fixtures/unit/A/B. Details
+  records use A=1/B=0 with enumeration B/A/unit/fixtures. UIA IDs and native
+  GetItem agree with each new enumeration. This is observed index reassignment
+  with correct provisional paths, not stable identity across samples. Never
+  cache index-to-path mappings across view/sort changes.
+- Operator reports descending for both views; the first two records do not
+  independently establish reversed icon order, and sort columns are not logged.
+  Preserve the evidence as supplied without inventing sort metadata. General
+  index correspondence is still undocumented; no trusted targets emitted.
+- Next: alternate four clicks across two tabs in the SAME Explorer window
+  (tests/A, parent/README, tests/B, parent/AGENTS), using left-click tab switches.
+  No fixture creation or runtime change needed. Hidden extensions/duplicate
+  stems/Unicode and negative cases remain queued.
+- Documentation-only checkpoint. Last code tests remain83 passed; whitespace
+  check rerun exit0. No new Windows execution by Codex or new Linux tests claimed.
