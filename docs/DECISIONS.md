@@ -87,6 +87,10 @@ Record this narrow live routing evidence; retain D-008's trust barrier and the
 remaining acceptance matrix. No general point-to-item identity guarantee follows.
 
 ## Pending experiments
+- Latest hidden-extension test preserves the non-ASCII Shell path and rejects
+  both report labels. Keep D-008: no identity bridge follows from matching index
+  sources. Inspect actual native HWND classes before considering a documented
+  control hit test; see G2_IDENTITY_REVIEW.md. No fallback decision made yet.
 - Descending-comparison captures show indices reassigned (A2/B3 to A1/B0) with
   correct candidates and matching native indices. Index-to-path associations
   must be fresh per invocation, never cached across view/sort changes.

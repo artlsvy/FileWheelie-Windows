@@ -164,6 +164,15 @@ class ShellViewProbe:
             "items_view_hwnd": contents[0] if len(contents) == 1 else None,
             "windows_verified": False,
         }
+        # Native window classes are independent of UIA provider class labels.
+        # Read-only feasibility evidence: never send list-view messages to an
+        # arbitrary Explorer HWND or infer Shell item identity from these names.
+        class_of = getattr(self._native, "window_class", lambda hwnd: None)
+        association["native_window_classes"] = {
+            "view": class_of(view_hwnd),
+            "items_view": class_of(association["items_view_hwnd"]),
+            "browser": class_of(association["browser_hwnd"]),
+        }
         if not associated:
             return {"active_view_association": association}
         folder = step("query_folder_view2", lambda: view.QueryInterface(folder_type))

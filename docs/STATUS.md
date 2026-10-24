@@ -1,9 +1,9 @@
 # Status and Windows-validation queue
 
-Updated: 2026-10-24
-Current gate: corrected two-tab candidate routing observed successfully on Windows.
-Hidden extensions/duplicate names/Unicode/negative cases and trusted mapping
-gate remain pending.
+Updated: 2026-10-25
+Current gate: non-ASCII hidden-name candidate and duplicate-label rejection observed.
+Trusted G2 remains pending an independent identity bridge; native control-class
+feasibility probe implemented, Windows validation pending.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -57,7 +57,7 @@ gate remain pending.
 
 ## Tests actually run
 - Kubuntu Python 3.14.4: `PYTHONPATH=src python3 -m unittest discover -s tests/unit -v`:
-  96 tests passed, exit 0. Fake hovered vs
+  104 tests passed, exit 0. Fake hovered vs
   selected path, None/no stale fallback, cancellation/reentrant invalidation,
   deduplication/debounce, timeout rejection, import isolation/platform guard,
   unconditional mapping rejection, generated point-type seam, UIA process/window
@@ -95,8 +95,9 @@ gate remain pending.
   Changes for this task are uncommitted; no commit fabricated.
 
 ## Required Windows validation (keep until genuinely tested)
-- `WINDOWS_VALIDATION_REQUIRED`: isolated hidden-extension/duplicate-stem/Unicode/
-  negative-area comparison per G2_MAPPING.md, then
+- `WINDOWS_VALIDATION_REQUIRED`: one existing-file click with native-class
+  diagnostics per G2_IDENTITY_REVIEW.md; inspect actual HWND classes before
+  scoping independent hit-test feasibility. Completed filename trials need no repeat.
   then continue the broader operator-annotated matrix in
   `G2_MAPPING.md` now that one native STA hit completed. Begin with A hovered/B
   selected in Details/icons; then ascending/descending sorts, hidden extensions,
@@ -305,3 +306,51 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   exclusions/race/DPI cases stay queued per EXPLORER_HIT_TEST.md.
 - Documentation-only checkpoint: last code checks remain96 Linux tests passed;
   whitespace check exit0. No new Windows execution by Codex or Linux tests claimed.
+
+## Tenth supplied Windows run: names and non-file areas
+- Supplied g2-names-1 JSONL/console:8 received/written,4 provisional file paths,
+  1 unsupported_shell_object (blankfolder),3 non_file_element rejections, queue0,
+  drops0 and exit0. Details/viewmode4, same build/runtime/apartments as prior runs.
+  File candidates plain.txt/unicodefile.txt/report.txt/report.pdf match both
+  Shell sources and sampled tab HWND chain; freshness/file/snapshot checks pass.
+  Collection66.678–128.443ms. All trusted paths null; positions still E_NOTIMPL.
+- Non-file evidence: event6 Items View background, event7 command-bar/input-site
+  chrome, event8 search TextBox ancestry. User reports blank space clicked twice;
+  retain that note alongside the actual provider classifications. All reject
+  correctly; do not repeat completed negative-area trials merely for count7.
+- unicodefile.txt is entirely ASCII: its name does not exercise non-ASCII path
+  handling. UIA names report.txt/report.pdf are distinct and include extensions.
+  Same-stem files were distinguished correctly, but visual hidden-extension
+  settings were not confirmed and ambiguous UIA labels were not exercised.
+  Do not count these as Unicode or ambiguous-name Windows verification.
+- Setup differs from proposed fixture: files were created in repository root,
+  not a fresh temporary folder. No automatic cleanup, deletion or modification
+  of these user-created files. Next three-click batch uses a new GUID temp
+  directory and constructs non-ASCII characters by codepoint to avoid typing
+  ambiguity; user confirms visual labels/extension-toggle state.
+- No runtime changes justified by this evidence. Documentation-only checkpoint;
+  last code tests remain96 passing, diff check exit0. No new Windows execution
+  by Codex or Linux tests claimed.
+
+## Eleventh supplied Windows run: actual Unicode and hidden duplicate labels
+- Source: user-pasted g2-names-2 JSONL/console, reviewed 2026-10-25. Three events:
+  unicode-æøå UIA stem yields exact unicode-æøå.txt Shell candidate (provisional);
+  both UIA report labels reject as ambiguous_display_name despite native indexed
+  paths being available. Three same-frame registrations, unique matched entry0.
+  All candidate freshness/tab/file/snapshot checks pass for the Unicode sample.
+- Summary3 received/written,1 provisional+2 ambiguous rejections, queue0, drops0;
+  process exit code not supplied this run. Collection122.096–152.508ms. All
+  trusted paths null; GetItemPosition remains E_NOTIMPL. These close the actual
+  Unicode/hidden-label gaps, not the overall G2 gate.
+- Added sanitized three-record projection and replay tests preserving Unicode
+  codepoints/extension and rejecting hidden duplicate stems even with native
+  candidates. Research audit explains why empirical index equality still lacks
+  an independent point-to-Shell identity bridge: G2_IDENTITY_REVIEW.md.
+- Added bounded Native.window_class/GetClassNameW metadata for the validated
+  view/content/browser HWNDs. UIA provider labels do not supply native classes.
+  No list-view messages, selection, hook change or trust-policy promotion.
+  New fields have not run on Windows. No repeat fixture-creation batch needed.
+- Actual checks:104 Linux unittest tests pass, compileall/diff checks exit0;
+  reviewer independently reproduced104 tests and checks, no material findings.
+  Pytest/Ruff unavailable at last probes; no lint pass claimed. No Windows/MCP
+  execution by Codex. Interrupted agent files were inspected and checks rerun.

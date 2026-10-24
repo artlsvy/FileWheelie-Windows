@@ -44,6 +44,22 @@ def probe_and_window(*, associated=True, changed=False):
 
 
 class ShellViewProbeTests(unittest.TestCase):
+    def test_native_control_classes_are_logged_without_changing_association(self):
+        probe, window, ancestry, _ = probe_and_window()
+        classes = {20: "ShellTabWindowClass", 30: "NativeViewClass", 40: "NativeItemsClass"}
+        probe._native.window_class = classes.get
+        with patch("filewheel.platforms.windows.shell_view.os.stat", return_value=NS(
+            st_mode=0o100644, st_file_attributes=0,
+        )):
+            result = probe.capture(window, ancestry, 1)
+        association = result["active_view_association"]
+        self.assertEqual(association["status"], "matched")
+        self.assertEqual(association["native_window_classes"], {
+            "view": "NativeViewClass", "items_view": "NativeItemsClass",
+            "browser": "ShellTabWindowClass",
+        })
+        self.assertFalse(association["windows_verified"])
+
     def test_service_failure_reports_exact_stage_and_hresult_without_message(self):
         class FakeCOMError(Exception):
             hresult = -2147467262

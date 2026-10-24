@@ -53,6 +53,18 @@ class Native:
         for function, args, result in signatures:
             function.argtypes, function.restype = args, result
 
+    def window_class(self, hwnd: int) -> str | None:
+        """Read a native HWND's class, independently of UIA provider labels."""
+        if (
+            type(hwnd) is not int or hwnd <= 0
+            or hwnd >= 1 << (self.c.sizeof(self.c.c_void_p) * 8)
+        ):
+            return None
+        name = self.c.create_unicode_buffer(256)
+        if not self.user.GetClassNameW(hwnd, name, len(name)):
+            return None
+        return name.value or None
+
     def window_evidence(self, point: tuple[int, int]) -> dict:
         c, w = self.c, self.w
         foreground = self.user.GetForegroundWindow()

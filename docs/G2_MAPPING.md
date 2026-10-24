@@ -1,5 +1,60 @@
 # G2 provisional index mapping and Windows acceptance
 
+## Current result: Unicode/hidden-label checks pass; identity review next
+
+g2-names-2 preserves the full unicode-æøå.txt Shell candidate from UIA's hidden
+stem and safely rejects both report labels as ambiguous_display_name. Unique
+tab association works among three registrations. Queue0/drops0; exit code not
+supplied. These cases do not need another fixture batch.
+
+The remaining technical gap is an independent link from the hovered visual item
+to the Shell identity. See [G2 identity review](G2_IDENTITY_REVIEW.md) for the
+evidence table and next native control-class diagnostic. The new read-only
+fields do not activate paths or send hit-test messages. One existing-file click
+is sufficient to collect them; the filename setup sections below are historical.
+
+## Latest result: negatives pass; non-ASCII and hidden-extension confirmation remain
+
+g2-names-1 reports correct provisional plain.txt/unicodefile.txt/report.txt/
+report.pdf paths. Folder rejection and three non-file rejections pass, queue0,
+drops0/exit0, collection66.678–128.443ms. Raw non-file nodes are Items View,
+command-bar input site and search TextBox. The operator notes two blank-space
+clicks; both notes and provider classes are retained without assuming another
+file target. No negative-area rerun is needed for these cases.
+
+The actual unicodefile.txt name contains only ASCII characters; it cannot prove
+non-ASCII paths. report.txt/report.pdf are distinct UIA names with extensions.
+This proves same-stem differentiation for that provider data, not ambiguous-name
+handling or a confirmed visual extension setting. No runtime correction follows.
+
+Close only these gaps with three new temporary files. This code creates a fresh
+GUID directory and builds æ/ø/å by codepoint, avoiding manual Unicode typing;
+the report.pdf is an empty identity fixture, never opened/converted:
+
+```powershell
+$filewheelNamesDir = Join-Path $env:TEMP ('filewheel-names-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $filewheelNamesDir | Out-Null
+$filewheelUnicodeName = 'unicode-' + [char]0x00E6 + [char]0x00F8 + [char]0x00E5 + '.txt'
+$filewheelUnicodeName, 'report.txt', 'report.pdf' | ForEach-Object { New-Item -ItemType File -Path (Join-Path $filewheelNamesDir $_) | Out-Null }
+$filewheelNamesDir
+```
+
+Navigate Explorer to the printed directory. Set Details/Name ascending and turn
+off File name extensions. Record whether the two report rows visually both say
+report, or still include extensions. Do not rename them to simulate hiding.
+
+```powershell
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.diagnostics --enable --dry-run-mapping --output logs\g2-names-2.jsonl
+```
+
+Mouse3 unicode-æøå.txt, then report.txt, then report.pdf, at least one second
+apart (use Type/icon to distinguish the report rows). Stop/Ctrl+C and record
+$LASTEXITCODE. Supply JSONL/console plus visible-label/extension-toggle notes.
+The Unicode candidate should retain exact codepoints. If UIA exposes both names
+as report, ambiguity must reject; if UIA exposes full names while visual labels
+are hidden, record that valid provider distinction and inspect the native paths.
+Trusted paths stay null. Do not remove the earlier user-created repository files.
+
 ## Current result: tab retest passes; next names and negative-area batch
 
 g2-tabs-2 reports the expected tests/A, root/README, tests/B, root/AGENTS candidates
