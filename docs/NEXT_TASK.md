@@ -1,22 +1,24 @@
 # Next bounded Codex task
 
-**Task G2-E3: test active-view/path association while alternating Explorer tabs.**
+**Task G2-E4: retest unique native tab disambiguation on Windows.**
 
-Full descending-comparison JSONL reports correct A/B/A/B candidates. In Details,
-UIA and both Shell index sources changed from A=2/B=3 to A=1/B=0 while preserving
-the paths. Medium-icon records retain the earlier enumeration, despite reported
-descending settings; do not invent missing native sort metadata. Initial tests
-also support unselected targets in Medium icons/Details. All positions remain
-unavailable (E_NOTIMPL); trusted resolution stays None.
-Last code checks:83 Linux tests pass, including the prior STA smoke projection.
-This four-event evidence review changes documentation only; no tests rerun.
+The supplied two-tab/Details run safely rejected all four captures because the
+frame has two Shell registrations. Each record nevertheless has exactly one
+native HWND chain matching the hovered tab, and a positively different inactive
+browser/view. Core now uses that unique relationship, then all existing native
+candidate checks. Unknown/errored/duplicate/missing relationships still reject.
+New policy is Linux-replay-tested only. Trusted resolution stays None; D-010
+describes the boundary. GetItemPosition remains E_NOTIMPL.
+Current96 Linux tests pass, including four-capture tab replay and adversarial
+registration tests. Independent review/compile/whitespace checks pass.
 Read `STATUS.md`, `G2_MAPPING.md` and D-008 in `DECISIONS.md`.
 
-1. Use the four-click same-window/two-tab comparison in G2_MAPPING.md and new
-   logs/g2-tabs-1.jsonl. Tabs show tests and repository parent respectively.
+1. Sync and repeat the four-click same-window/two-tab comparison in G2_MAPPING.md
+   with NEW logs/g2-tabs-2.jsonl. Tabs show tests and repository parent respectively.
    Alternate tests/A, parent/README, tests/B, parent/AGENTS. Switch tabs with
    left click; never send Mouse3 to tab headers. Record expected paths, views,
-   tab switches, drops and exit code. Safe rejection is preferable to wrong tab.
+   tab switches, drops and exit code. Inspect shell_window_count and chosen
+   selected_shell_window_index plus raw HWND chains. Safe rejection beats wrong tab.
 2. After reviewing this comparison, cover the remaining cases: explicit ascending
    sort baseline if still unrecorded, hidden extensions,
    duplicate stems, same filename in different tab folders if needed, Unicode, empty space

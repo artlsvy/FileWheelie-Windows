@@ -1,9 +1,9 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-24
-Current gate: annotated candidate checks pass in Medium icons/Details; descending
-comparison retains correct paths as indices change. Multi-tab/remaining matrix
-and trusted mapping remain pending.
+Current gate: two-tab native evidence collected, blanket multi-entry guard rejected.
+Unique-HWND tab disambiguation correction implemented; Windows retest and trusted
+mapping gate remain pending.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -57,7 +57,7 @@ and trusted mapping remain pending.
 
 ## Tests actually run
 - Kubuntu Python 3.14.4: `PYTHONPATH=src python3 -m unittest discover -s tests/unit -v`:
-  83 tests passed, exit 0. Fake hovered vs
+  96 tests passed, exit 0. Fake hovered vs
   selected path, None/no stale fallback, cancellation/reentrant invalidation,
   deduplication/debounce, timeout rejection, import isolation/platform guard,
   unconditional mapping rejection, generated point-type seam, UIA process/window
@@ -95,7 +95,8 @@ and trusted mapping remain pending.
   Changes for this task are uncommitted; no commit fabricated.
 
 ## Required Windows validation (keep until genuinely tested)
-- `WINDOWS_VALIDATION_REQUIRED`: alternating two-tab HWND/path association next,
+- `WINDOWS_VALIDATION_REQUIRED`: retest corrected unique-HWND tab association
+  with g2-tabs-2.jsonl after syncing, then
   then continue the broader operator-annotated matrix in
   `G2_MAPPING.md` now that one native STA hit completed. Begin with A hovered/B
   selected in Details/icons; then ascending/descending sorts, hidden extensions,
@@ -260,3 +261,28 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   stems/Unicode and negative cases remain queued.
 - Documentation-only checkpoint. Last code tests remain83 passed; whitespace
   check rerun exit0. No new Windows execution by Codex or new Linux tests claimed.
+
+## Eighth supplied Windows run: two tabs, both Details
+- User confirms exact alternating A/README/B/AGENTS pattern, Details in both tabs.
+  Four events safely rejected as ambiguous_shell_windows, no candidate/trusted
+  path emitted. Summary4 received/written, queue0, drops0, exit0. Latency
+  106.962–136.163ms. UIA repeat snapshots stable; optional positions E_NOTIMPL.
+- Each event has two same-frame registrations. Exactly one native association
+  matches the hovered tab/browser, view and content HWNDs; inactive browser/view
+  HWNDs are different. Correct native paths are present on the matched entry.
+  Original core rejected all multiple registrations without examining this data.
+- D-010 corrects the portable assessor using unique native HWND relationships
+  and positive exclusion of all peers. Unknown/errored/duplicate/contradictory or
+  truncated evidence still rejects; selected native-file checks remain mandatory.
+  No filename/selection/order fallback or native API change. Diagnostic candidates
+  remain provisional and the resolver continues returning None.
+- Added labeled sanitized four-capture projection and adversarial replay tests.
+  New policy is Linux-tested only; old Windows captures do not verify the changed
+  live assessment. Retest same sequence after syncing per G2_MAPPING.md.
+- Current96 Linux tests pass; compileall and whitespace checks exit0. Four
+  captured records replay to the expected provisional paths and selected entry
+  indices1/0/1/0. Negatives cover entry-order changes, duplicate/zero matches,
+  malformed/errored/truncated peers, conflicting handles, wrong-frame/missing
+  view, same-name cross-tab native conflict, stale/missing native and forged
+  selection/verified flags. Reviewer independently reproduced all96 checks and
+  found no material defects. No Windows/Windows-MCP run by Codex.

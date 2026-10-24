@@ -63,6 +63,24 @@ Python3.15.0/comtypes1.4.17. Retain STA ownership. This is narrow smoke evidence
 GetItemPosition returned E_NOTIMPL and pointer-to-item identity remains unproven.
 Do not promote the index hypothesis based on this single matched candidate.
 
+## D-010 — Disambiguate tab registrations by native HWND evidence (2026-10-24, provisional)
+
+The supplied two-tab run shows two Shell registrations sharing one frame HWND.
+For each click, exactly one sampled active-view chain matches the UIA content
+and ShellTab HWND; the other registration has different browser/view HWNDs.
+The old blanket multi-entry guard safely rejected all four but was too broad
+for this observed case. Do not select registrations by path/name/index/order.
+
+For multiple complete registrations, require exactly one matched chain whose
+browser HWND equals the hovered tab HWND, view HWND equals its captured
+DUIListView HWND, and content HWND equals its UIItemsView HWND. Every other
+entry must have complete, non-errored evidence positively excluding that tab/view.
+Missing, contradictory, duplicate-match or truncated evidence rejects. The chosen
+entry still needs all existing index/path/native/file/snapshot checks. Reports
+expose registration count and chosen entry index. Candidates remain provisional;
+active_tab_proven/windows_verified flags are not promoted. Retest on Windows;
+Linux replay of old captures is not new native acceptance evidence.
+
 ## Pending experiments
 - Descending-comparison captures show indices reassigned (A2/B3 to A1/B0) with
   correct candidates and matching native indices. Index-to-path associations

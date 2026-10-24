@@ -1,5 +1,43 @@
 # G2 provisional index mapping and Windows acceptance
 
+## Current change: unique native tab association can disambiguate registrations
+
+The supplied g2-tabs-1 run used Details in both tabs, alternated A/README/B/AGENTS,
+and safely rejected all four with ambiguous_shell_windows. Summary4 received/
+written, queue0, drops0 and exit0. Each record contains TWO same-frame Shell
+registrations, but exactly ONE sampled native chain matches the hovered tab.
+The inactive entry has different browser/view HWNDs. Native collection itself
+worked; the portable assessor rejected merely because the frame had >1 entry.
+Latencies106.962–136.163ms; all optional position queries remain E_NOTIMPL.
+
+The bounded assessor correction selects a registration only by unique native
+HWND evidence: browser=hovered ShellTab, view=captured DUIListView, and content=
+captured UIItemsView. Every peer must carry complete non-errored evidence with
+different browser/view HWNDs. No matching by path/name/index/order, and no
+discarding unknown peers. Duplicate matches, missing/contradictory relationships,
+truncation, native errors and stale data still reject. Existing single-entry
+contracts remain unchanged. The selected entry undergoes all previous candidate
+and native-file validations; trusted resolution remains None.
+
+`mapping.checks.shell_window_count` and `selected_shell_window_index` explain
+the choice. Source projection in windows_tabs_1_sanitized.json preserves the old
+rejections; new replay assessments are not new Windows runs. No native API or
+hook changes were needed. D-010 remains provisional pending this retest.
+
+After syncing, keep the same two tabs/views and repeat the four-file sequence
+once with a fresh log:
+
+```powershell
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.diagnostics --enable --dry-run-mapping --output logs\g2-tabs-2.jsonl
+$LASTEXITCODE
+```
+
+Left-click tab switches; Mouse3 tests/a.txt, parent/README.md, tests/b.txt,
+parent/AGENTS.md, spaced at least one second apart. Expected provisional paths
+must belong to the clicked tab. Preserve both raw registrations in the JSONL;
+any ambiguity must still reject. Send JSONL plus console drop/exit output.
+The prior g2-tabs-1 rejection is not proof this corrected assessor works live.
+
 ## Latest comparison: paths remain correct through index reassignment
 
 The operator reports completing the four descending-sort trials exactly.

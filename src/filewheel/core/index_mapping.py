@@ -50,6 +50,68 @@ def _local_file_path(value) -> PureWindowsPath | None:
     return path if len(path.parts) > 1 else None
 
 
+def _tab_window_index(windows: list, frame: int, ancestry: list, view: int, tab: int) -> int | None:
+    """Choose only a unique native HWND match, with positive exclusion of peers.
+
+    This is diagnostic association, not point-to-item identity. An unknown peer
+    cannot be discarded merely because another registration appears to match.
+    """
+    shell_views = [index for index, node in enumerate(ancestry)
+                   if node.get("class_name") == "DUIListView"
+                   and node.get("control_type") == 50033]
+    if len(shell_views) != 1 or not view < shell_views[0] < tab:
+        return None
+    view_hwnd = ancestry[shell_views[0]].get("native_hwnd")
+    tab_hwnd = ancestry[tab]["native_hwnd"]
+    items_hwnd = ancestry[view]["native_hwnd"]
+    if not _integer(view_hwnd) or not view_hwnd:
+        return None
+    matched = []
+    for position, entry in enumerate(windows):
+        if (not isinstance(entry, dict) or type(entry.get("hwnd")) is not int
+                or entry["hwnd"] != frame or entry.get("native_error") is not None):
+            return None
+        association = entry.get("active_view_association")
+        if (
+            not isinstance(association, dict)
+            or association.get("method") != "active_shell_view_hwnd_chain"
+            or association.get("error_type") is not None
+            or association.get("tab_hwnd") != tab_hwnd
+            or association.get("items_view_hwnd") != items_hwnd
+            or not all(_integer(association.get(key)) and association[key]
+                       for key in ("tab_hwnd", "items_view_hwnd", "browser_hwnd", "view_hwnd"))
+        ):
+            return None
+        count, candidates = entry.get("item_count"), entry.get("candidates")
+        if (entry.get("truncated") is not False or not _integer(count) or count > 32
+                or not isinstance(candidates, list) or len(candidates) != count
+                or any(
+                    not isinstance(candidate, dict)
+                    or not isinstance(candidate.get("candidate_path"), str)
+                    or not 1 <= len(candidate["candidate_path"]) <= 2048
+                    or type(candidate.get("is_folder")) is not bool
+                    or type(candidate.get("is_filesystem")) is not bool
+                    for candidate in candidates
+                )):
+            return None
+        indices = [candidate.get("enumeration_index") for candidate in candidates]
+        if (any(not _integer(index) for index in indices)
+                or sorted(indices) != list(range(count))):
+            return None
+        native_match = (association["browser_hwnd"] == tab_hwnd
+                        and association["view_hwnd"] == view_hwnd)
+        if association.get("status") == "matched" and native_match:
+            matched.append(position)
+        elif not (
+            association.get("status") == "unproven"
+            and association["browser_hwnd"] != tab_hwnd
+            and association["view_hwnd"] != view_hwnd
+            and entry.get("native_view_candidate") is None
+        ):
+            return None  # Contradictory or partially matching relationships.
+    return matched[0] if len(matched) == 1 else None
+
+
 def assess_index_mapping(record: dict, *, now: float) -> dict:
     """Return bounded JSON evidence for an index candidate, never a trusted path.
 
@@ -67,6 +129,7 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
             "complete_candidates": False, "index_in_range": False,
             "name_corroboration": None, "active_view_associated": False,
             "identity_correspondence": False, "filesystem_identity": False,
+            "shell_window_count": None, "selected_shell_window_index": None,
         },
     }
     checks = result["checks"]
@@ -156,9 +219,17 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
         if not isinstance(shell, dict) or shell.get("windows_truncated") is not False:
             return reject("truncated_shell_windows")
         windows = shell.get("matching_windows")
-        if not isinstance(windows, list) or len(windows) != 1:
+        if not isinstance(windows, list) or not 1 <= len(windows) <= 64:
             return reject("ambiguous_shell_windows")
-        shell_window = windows[0]
+        checks["shell_window_count"] = len(windows)
+        if len(windows) == 1:
+            selected_window = 0
+        else:
+            selected_window = _tab_window_index(windows, event.window_id, ancestry, view[0], tab[0])
+            if selected_window is None:
+                return reject("ambiguous_shell_windows")
+        checks["selected_shell_window_index"] = selected_window
+        shell_window = windows[selected_window]
         if shell_window.get("hwnd") != event.window_id:
             return reject("shell_window_mismatch")
         if shell_window.get("native_error") is not None:
@@ -232,6 +303,8 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
         if name_matches > 1:
             return reject("ambiguous_display_name")
         native = shell_window.get("native_view_candidate")
+        if len(windows) > 1 and native is None:
+            return reject("native_checks_incomplete")
         checks["native_index_path_match"] = None
         checks["native_regular_file"] = None
         checks["native_snapshot_stable"] = None
