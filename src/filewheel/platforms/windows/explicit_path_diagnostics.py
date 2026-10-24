@@ -1,4 +1,4 @@
-"""Headless Shell explicit-path launcher; no UIA, mouse hook, Qt or converters."""
+"""Shell explicit-path launcher; headless diagnostics or optional radial preview."""
 
 import argparse
 import ctypes
@@ -44,7 +44,7 @@ def inspect_file(path: PureWindowsPath) -> FileCheck:
     )
 
 
-def invocation_record(arguments, point, *, controller=None, inspector=None) -> dict:
+def resolve_invocation(arguments, point, *, controller=None, inspector=None):
     """Portable test seam; both sources feed the same controller/target DTO."""
     started = monotonic()
     controller = controller if controller is not None else InvocationController()
@@ -53,7 +53,7 @@ def invocation_record(arguments, point, *, controller=None, inspector=None) -> d
         arguments, point=point, timestamp=started, inspect_file=inspector,
     )
     target = result.target
-    return {
+    record = {
         "schema_version": 1, "type": "explicit_invocation", "source": "shell_explicit",
         "argument_count": len(arguments), "accepted": target is not None,
         "path": str(target.path) if target is not None else None,
@@ -62,6 +62,19 @@ def invocation_record(arguments, point, *, controller=None, inspector=None) -> d
         "pid": os.getpid(), "python_version": sys.version.split()[0],
         "action": "diagnostic_only",
     }
+
+    return target, record
+
+
+def invocation_record(arguments, point, *, controller=None, inspector=None) -> dict:
+    """Preserved portable headless diagnostic interface."""
+    return resolve_invocation(arguments, point, controller=controller, inspector=inspector)[1]
+
+
+def show_preview(target):
+    # Optional import after validation; headless mode never imports Qt.
+    from filewheel.ui.popup import run_popup
+    return run_popup(target)
 
 
 def write_invocation(record: dict, *, output: Path | None, directory: Path | None) -> Path:
@@ -79,12 +92,15 @@ def write_invocation(record: dict, *, output: Path | None, directory: Path | Non
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--enable", action="store_true", help="opt in to local path diagnostics")
-    destination = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument("--gui", action="store_true", help="open the radial dry-run preview")
+    destination = parser.add_mutually_exclusive_group()
     destination.add_argument("--output", type=Path, help="new JSONL file; never overwritten")
     destination.add_argument("--output-dir", type=Path, help="directory for unique invocation logs")
     parser.add_argument("paths", nargs="*", help="exactly one absolute file path after --")
     args = parser.parse_args(argv)
-    if not args.enable:
+    if not args.gui and not (args.output or args.output_dir):
+        parser.error("headless diagnostics require --output or --output-dir")
+    if (not args.gui or args.output or args.output_dir) and not args.enable:
         parser.error("local diagnostic logging requires --enable")
     try:
         require_windows()
@@ -92,17 +108,40 @@ def main(argv=None) -> int:
     except (RuntimeError, OSError):
         print("Interactive Windows cursor context unavailable", file=sys.stderr)
         return 3
-    record = invocation_record(args.paths, point)
-    try:
-        output = write_invocation(record, output=args.output, directory=args.output_dir)
-    except (OSError, ValueError):
-        print("Could not create a new diagnostic log", file=sys.stderr)
-        return 4
+    target, record = resolve_invocation(args.paths, point)
+    if args.gui:
+        record["action"] = "radial_preview"
+    output = None
+    if args.output or args.output_dir:
+        try:
+            output = write_invocation(record, output=args.output, directory=args.output_dir)
+        except (OSError, ValueError):
+            print("Could not create a new diagnostic log", file=sys.stderr)
+            return 4
     # Legacy redirected Windows streams may not support the input's Unicode.
     # Keep UTF-8 in the local artifact and ASCII escapes on the console.
     print(json.dumps(record, ensure_ascii=True, allow_nan=False))
-    print(f"Local log: {json.dumps(str(output), ensure_ascii=True)}")
-    return 0 if record["accepted"] else 2
+    if output is not None:
+        print(f"Local log: {json.dumps(str(output), ensure_ascii=True)}")
+    if target is None:
+        return 2
+    if args.gui:
+        try:
+            selection = show_preview(target)
+        except ImportError:
+            print('GUI dependency missing. Install with: python -m pip install -e ".[ui]"',
+                  file=sys.stderr)
+            return 5
+        except (RuntimeError, OSError):
+            print("GUI desktop initialization failed", file=sys.stderr)
+            return 5
+        if selection is not None:
+            print(json.dumps({"action": selection.action, "path": str(selection.input_path),
+                              "category": selection.category,
+                              "original_format": selection.original_format,
+                              "destination_format": selection.output_extension,
+                              "intended_output": str(selection.intended_path)}, ensure_ascii=True))
+    return 0
 
 
 if __name__ == "__main__":

@@ -1,11 +1,58 @@
-# Headless explicit-path launcher and personal Send to integration
+# Explicit-path launcher, radial preview and personal Send to
 
-Implemented and Linux-tested; **Windows Shell integration is not yet verified**.
-The launcher validates one explicit path through InvocationController and records
-the shared TargetResolution DTO. No conversion or GUI action is implemented.
-The next development priority is the PySide6 radial prototype.
+Basic headless single-file direct CLI and Explorer Send to are **WINDOWS-VERIFIED**
+from user evidence: build26200, Python3.15.0, exact AGENTS.md path, source
+shell_explicit, accepted=true. Direct193.127ms/Send to0.334ms are diagnostic timings.
+Do not repeat that basic diagnostic without a regression. Broader argument/removal
+cases and the new radial GUI Windows behavior remain pending. The GUI is implemented
+and Linux/offscreen tested; it performs dry-run previews only, no conversion.
 
-## Direct Windows smoke run
+## Install and launch the radial GUI on Windows
+
+From the updated project root (Python3.15 target supported by PySide6>=6.12):
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[ui]"
+.\.venv\Scripts\python.exe -c "import sys, PySide6; print(sys.version); print(PySide6.__version__)"
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.sendto stage --mode gui
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.sendto install --mode gui
+```
+
+Inspect staged logs/sendto-stage/Filewheel preview.lnk if desired. Right-click
+one file → classic menu / Show more options → **Send to → Filewheel preview**.
+The GUI shortcut targets pythonw.exe directly, so no console stays open. It is
+separately named and owned from Filewheel diagnostic; installing it preserves the
+working diagnostic entry. To switch the visible menu entirely, remove the old
+entry explicitly with `sendto remove --mode diagnostic`. No manual shortcut edits.
+
+Direct GUI command (console useful for dependency/desktop errors):
+
+```powershell
+$filewheelInput = (Resolve-Path .\AGENTS.md).Path
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.explicit_path_diagnostics --gui -- $filewheelInput
+$LASTEXITCODE
+```
+
+AGENTS.md offers Document → DOCX preview; PNG offers Image → JPEG/WebP/TIFF
+(and a Document/PDF preview). DOCX offers Document/PDF and Markdown/Text/MD.
+Only declared preview categories appear. Unsupported suffixes show No preview
+options. No conversion engines are claimed. Choose a category then format;
+confirmation lists original filename/format, destination and intended output.
+Done/Escape/outside closes and exits. No files change and no GUI logs are written
+by default. A dry-run choice exists in memory; direct console execution also
+prints it as ASCII-safe JSON. To opt into invocation logs, append --enable and
+--output-dir logs/invocations before the -- delimiter.
+
+Remove just the owned GUI entry (repeat safely):
+
+```powershell
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.sendto remove --mode gui
+```
+
+All ownership, non-overwrite and same-checkout/interpreter rules below apply to
+both modes. Diagnostic remains the default mode for backward compatibility.
+
+## Preserved headless diagnostic command
 
 From the updated repository root, Python3.12+ and the existing venv:
 
@@ -83,21 +130,21 @@ handle_explicit and handle(MouseEvent) return the same TargetResolution class:
 path/source/point/timestamp. Explicit source is shell_explicit, window_id=0;
 future verified hover source is explorer_hover. Explicit invocation captures
 the current physical cursor at startup, not the historical file-row point.
-The future Qt consumer maps coordinates at its boundary and uses either source
+The Qt consumer maps coordinates at its boundary and uses either source
 identically. Cancel/newer requests invalidate pending results. No UIA/selection
-query, comtypes, hook or Qt dependency is loaded by this launcher. Mouse3 code is
+query, comtypes or hook is loaded; Qt is imported only after GUI path validation. Mouse3 code is
 preserved, with unverified hover still returning None.
 
 CLI exit codes:0 accepted/logged;2 rejected path/count or argparse usage error;
-3 unavailable Windows cursor context;4 log creation failure. Shortcut management
+3 unavailable Windows cursor context;4 log creation failure;5 GUI dependency/desktop failure. Shortcut management
 returns0 on success or1 on script failure. Rejected inputs must never open UI.
 
 ## Manual Windows acceptance (pending)
 
 Record revision/build/runtime, expected path, JSONL result and process exit:
 
-1. Run direct CLI on one existing file; then install and invoke Send to for it.
-   Compare the received path/source with the independently expected path.
+1. Basic headless AGENTS.md direct/Send to delivery is already user-verified.
+   Do not repeat it unless diagnosing a regression.
 2. Repeat actual Unicode/spaces and literal &/%/apostrophe/!/^ filenames. Inspect
    UTF-8 artifacts for exact preservation and ensure filenames execute no commands.
 3. Send a folder: expect not_a_file. Invoke a nonexistent path directly: expect
@@ -111,3 +158,31 @@ Record revision/build/runtime, expected path, JSONL result and process exit:
 PowerShell syntax/COM/shortcuts, Explorer quoting and physical cursor values
 cannot be certified by Linux fakes. Keep their validation queue in STATUS.md.
 GUI development proceeds independently under the user's updated priority.
+
+## New radial GUI Windows acceptance (pending)
+
+1. Install UI dependencies, stage/install GUI mode, invoke through Send to on
+   AGENTS.md and an existing PNG. Compare center filename with the explicit input.
+   Check only declared categories, then JPEG/WebP/TIFF for PNG's Image category.
+2. Check hover highlighting, center Back, Backspace, Escape at both levels,
+   transparent corners, clicks outside the window and switching focus to Explorer.
+   Nothing should remain visible or running after dismissal. Repeated invocations
+   start at categories. Invalid paths/multiple CLI arguments open no popup.
+3. Choose PNG→JPEG: confirmation shows filename, PNG→JPG and intended .jpg name.
+   Done closes. Compare directory listings/hashes independently: no output exists
+   and source/existing output have not changed. This is a preview only.
+4. Test light/dark appearance and100/150/200% display scaling, including two
+   monitors with mixed scaling and one left/above primary (negative coordinates).
+   Invoke near work-area edges/taskbar: wheel stays visible, click regions align,
+   appears above Explorer, and doesn't steal focus after being dismissed.
+5. Repeat GUI install and remove twice. Check diagnostic mode remains usable
+   without Qt import. Keep a differing same-name shortcut intact on refusal.
+   Actual PowerShell/COM ownership/removal remains unverified until observed.
+
+Published compatibility: [PyPI PySide6 metadata](https://pypi.org/project/PySide6/)
+allows Python3.14/3.15; [Qt release notes](https://doc.qt.io/qtforpython-6/release_notes/pyside6_release_notes.html)
+introduced3.14 in6.10.1 and3.15 in6.12.0. KubuntuPython3.14.4 ran6.12.0 here;
+the targetWindows3.15 Qt runtime still needs this manual run. See
+[Qt high-DPI model](https://doc.qt.io/qtforpython-6/overviews/qtdoc-highdpi.html)
+for logical screen origins/scaling; offscreen tests cannot certify native focus,
+outside routing, device-name mapping or Windows activation.

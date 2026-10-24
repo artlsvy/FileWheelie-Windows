@@ -1,13 +1,14 @@
 # Filewheel — Codex starter package
 
 Private Windows 11 file converter prototype. **Current phase: headless explicit-path
-launcher complete; PySide6 radial GUI is next.** Conversion is not implemented.
+launcher complete; PySide6 radial GUI preview is implemented.** Conversion is not implemented.
 
 G0-A now includes portable contracts/tests and an opt-in Windows diagnostic
 scaffold. See [diagnostic instructions and limitations](docs/DIAGNOSTIC_POC.md).
 Experimental Mouse3 remains available and emits no trusted hover targets.
 The [explicit-path/Send to launcher](docs/SEND_TO.md) validates one file through
-the shared controller; its real Windows Shell integration still needs validation.
+the shared controller. Basic single-file headless direct/Send to is Windows-verified;
+the new GUI and broader argument/removal acceptance remain queued.
 
 ## What this bundle contains
 - `AGENTS.md`: current project-wide rules, replacing older versions.
@@ -35,3 +36,13 @@ This package supersedes all prior draft `AGENTS.md`, agent TOMLs, roadmaps and f
 - Microsoft UIA ElementFromPoint: https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nf-uiautomationclient-iuiautomation-elementfrompoint
 - Microsoft low-level mouse hook: https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelmouseproc
 - Windows-MCP: https://github.com/CursorTouch/Windows-MCP
+
+## Radial preview
+
+Install the optional UI with `python -m pip install -e ".[ui]"` (PySide6>=6.12
+for Python3.15 support). On Windows, `python -m
+filewheel.platforms.windows.sendto install --mode gui` adds **Filewheel preview**
+to Send to. [Commands and manual acceptance](docs/SEND_TO.md) cover staging,
+removal, direct launching and pending Windows DPI/focus tests. The two-stage
+radial menu only previews declared conversions and changes no files. G5's real
+PNG→JPEG engine is next, followed by PDF→DOCX and MarkItDown.

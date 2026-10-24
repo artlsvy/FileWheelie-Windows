@@ -1,11 +1,11 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-25
-Current priority: G2-F headless explicit-path launcher is implemented and
-Linux-tested; Windows shortcut delivery remains unverified. NEXT is the usable
-PySide6 radial GUI prototype (D-012), independently of that validation queue.
-Mouse3 remains desired, preserved and diagnostic-only; stop expanding its probes
-unless a specific blocker requires it. No conversion implemented.
+Current priority: G4-A radial preview is implemented/Linux-offscreen-tested;
+Windows GUI acceptance remains queued. NEXT is G5 PNG→JPEG, followed by PDF→DOCX
+and MarkItDown. Basic G2-F single-file direct CLI/Send to is WINDOWS-VERIFIED from
+user-supplied evidence. Mouse3 remains desired, preserved and diagnostic-only.
+No conversion engine has been implemented.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -421,3 +421,59 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   shared controller input, near-cursor placement, Escape/Back/outside dismissal,
   explicitly declared preview capabilities and no real conversion. Windows GUI
   placement/focus/DPI checks remain a separate native validation requirement.
+
+## User Windows acceptance: basic G2-F single-file invocation
+- WINDOWS-VERIFIED (narrow, user-reported): Windows11 build26200, Python3.15.0;
+  direct CLI and subsequent Explorer Send to both accepted exactly one explicit
+  absolute path C:\Users\lsvy\fileconverter\AGENTS.md, source=shell_explicit,
+  argument_count=1, accepted=true, action=diagnostic_only, no rejection/error.
+  Direct elapsed193.127ms; Send to artifact elapsed0.334ms. These are diagnostic
+  timings, not UI startup measurements. Codex did not execute this Windows run.
+- Do not repeat this basic smoke test without a regression. This does not verify
+  Unicode, malformed/nonexistent paths, folders, multi-selection, shortcut
+  removal or native cursor/DPI/GUI behavior. Those broader cases remain queued.
+
+## G4-A implemented: radial GUI and launcher integration
+- Optional PySide6 radial popup (~300 logical pixels; 324 including shadow):
+  translucent frameless topmost popup, palette-based light/dark colors, filename
+  center, animated hover, category→format, center/keyboard Back, Escape,
+  transparent-corner/outside and focus-loss dismissal. One window also shows
+  filename, original/destination formats and intended filename after selection.
+- Pure injected preview capability registry and state machine have no Qt/file I/O.
+  PREVIEW and dry-run confirmation distinguish them from absent conversion engines.
+  Unknown suffixes show no choices; invalid indices/gaps perform no action.
+  Intended paths are descriptive only; no allocation, conversion or source changes.
+- Reusable RadialPopup.present(TargetResolution) and run_popup consume the shared
+  controller result, regardless of source. None/invalid argv opens no UI. No hook,
+  UIA, selected-file lookup, resolver trust change, IPC or background service.
+- Existing explicit_path_diagnostics gains optional --gui after validation;
+  headless options/JSONL behavior remain. GUI mode does not write diagnostic logs
+  unless explicitly requested. Separate --mode gui shortcut uses pythonw.exe,
+  avoiding a console window; diagnostic shortcut remains available. Mode-specific
+  names/markers preserve full ownership checks and atomic no-replacement save.
+- Qt coordinates stay isolated: native MonitorFromPoint/GetMonitorInfoW identify
+  physical monitor/device; matching QScreen origin + relative DPR gives logical
+  point, clamped to availableGeometry. Negative-origin/scaled mapping is fake-
+  tested; real Windows mixed-DPI/display changes/activation remain unverified.
+- Implementer built UI/pure tests; researcher checked official PyPI/Qt metadata:
+  PySide6 6.12 introduces Python3.15 support; 6.10.1 introduced3.14. ui extra uses
+  PySide6>=6.12,<7. Downloaded and ran6.12.0 on Kubuntu Python3.14.4; Windows3.15
+  compatibility is published support, not a locally executed Qt runtime test.
+- WINDOWS_VALIDATION_REQUIRED: GUI-mode staging/install/Explorer launch; actual
+  category/format interactions, focus/activation/outside click, Escape/Back/Done,
+  clean exit, negative monitors,100/150/200% mixed DPI and light/dark palette.
+  Broader G2-F Unicode/invalid/multi-selection/remove ownership remains pending.
+  See docs/SEND_TO.md; basic headless test need not be repeated.
+
+- Final G4 checks: full suite165 tests pass with PySide6 6.12.0, including10
+  actual Qt offscreen tests; system Python without the optional dependency runs
+  the same165 with10 Qt tests skipped. compileall and git diff --check pass.
+  Built a wheel and verified UI modules, native monitor adapter, PowerShell helper
+  and optional dependency metadata are included. Screenshots of category, format
+  and confirmation were rendered and visually inspected. Qt offscreen reports
+  unsupported raise/keyboard-grab operations; native behavior is not established.
+- Reviewer reproduced165 passing tests and checks. Fixed its two findings:
+  any-button outside dismissal (inner actions still left-only) and completion of
+  invalid/failed popup replacements so event-loop waiters cannot remain blocked.
+  Three added regressions pass; focused recheck has no remaining material findings.
+  No PowerShell or Windows GUI execution by Codex. No converter added.

@@ -130,6 +130,20 @@ Escape, Back and outside dismissal. No actual converters or invented working
 engine capabilities. This priority supersedes earlier instructions to keep
 investigating Explorer edge cases before any GUI work.
 
+## D-013 — G4 preview UI and next engine (2026-10-25, user-directed)
+
+User verified narrow single-file headless direct/Send to delivery on Windows11
+build26200/Python3.15.0. G4 uses that validated explicit path and the existing
+TargetResolution boundary. Optional PySide6>=6.12 supports the target3.15 and
+Kubuntu3.14 according to published metadata. One short-lived popup/event loop,
+pure preview registry/state and isolated native monitor mapping; no conversion,
+service, UIA selection lookup or Mouse3 research. Diagnostic and GUI shortcuts
+have distinct ownership identities; explicit --mode gui selects the new entry.
+
+G4 native overlay/DPI/focus and broader explicit-path acceptance remain queued.
+NEXT milestone G5 is real PNG→JPEG, followed by PDF→DOCX and MarkItDown. Preview
+edges are no evidence of installed engine capability. Native G2 remains unproven.
+
 ## Pending experiments
 - Latest hidden-extension test preserves the non-ASCII Shell path and rejects
   both report labels. Keep D-008: no identity bridge follows from matching index

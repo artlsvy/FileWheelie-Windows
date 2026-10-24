@@ -7,28 +7,32 @@ States: `NOT STARTED` · `IMPLEMENTED/UNVERIFIED` · `MOCK-TESTED` · `WINDOWS-V
 | **G0** | Repo, interfaces, offline tests and diagnostic schema | Codex loads project rules; Linux tests pass; diagnostic records are reproducible |
 | **G1** | Hook POC on Windows 11 | Mouse3 events captured, minimal callback, no unrelated-app interference; real Windows evidence |
 | **G2** | Exact file-under-cursor resolver — experimental/deprioritized | Preserve implementation and evidence; expand only for a specific blocking issue; no trusted path promotion |
-| **G2-F** | Explicit-path launcher + personal Send to — IMPLEMENTED/MOCK-TESTED | Real Win11 shortcut/path delivery still pending; see SEND_TO.md |
+| **G2-F** | Explicit-path launcher + personal Send to — basic single-file WINDOWS-VERIFIED | Direct CLI and Send to on build26200/Python3.15.0; Unicode/negative/removal matrix still pending; see SEND_TO.md |
 | G3 | Shared invocation/controller — IMPLEMENTED/MOCK-TESTED | Hover and explicit paths produce the same source-aware TargetResolution; cancellation/validation tests pass |
-| **G4 NEXT** | Usable PySide6 two-stage radial prototype | Near cursor, compatible category→format choices, Escape/Back/outside cancel, shared controller; no conversion |
-| G5 | Conversion registry + first smoke converter | Stubbed registry then image PNG→JPEG, background processing, tested output |
+| **G4** | PySide6 two-stage radial prototype — IMPLEMENTED/LINUX-TESTED; Windows UI pending | Near cursor, compatible category→format choices, Escape/Back/outside cancel, shared controller; no conversion |
+| **G5 NEXT** | Real PNG→JPEG engine | Background execution, valid output, no source overwrite; then PDF→DOCX and MarkItDown |
 | G6 | Document/Markdown MVP | PDF→DOCX, DOCX→PDF, MarkItDown (DOCX/PDF/PPTX/XLSX/HTML→MD); capability tests |
 | G7 | Remaining image MVP | HEIC/JPEG/PNG/WebP, images→PDF, PDF→raster; representative real files |
 | G8 | UX reliability | Errors, progress, output collision policy, notifications, batch (optional) |
 | G9 | Optional expansion | MD→DOCX, PPTX→PDF, XLSX→PDF, CSV↔XLSX; OCR/media deferred |
 
 ## Current focus
-**User priority updated 2026-10-25:** headless G2-F launcher is implemented;
-the NEXT development job is the usable PySide6 radial GUI (G4), using the shared
-controller and explicit-path invocation. Mouse3 remains desired and experimental;
-preserve it without further diagnostic expansion unless an actual blocker demands
-it. No actual converters yet. A prototype preview registry may demonstrate tested
-compatible category/format pairs, clearly marked as previews rather than claiming
-installed conversion engines.
+**G4-A implemented 2026-10-25:** validated explicit paths can open a two-stage
+PySide6 radial preview through the same TargetResolution boundary as future
+trusted Mouse3. An injected preview registry supplies compatible choices; format
+selection shows a dry-run confirmation and changes no files. GUI-mode Send to
+has a separate owned shortcut, with stage/install/remove commands.
 
-Windows Send to/cursor and GUI acceptance remain queued independently. Build and
-test portable UI state/fixtures on Kubuntu; do not wait for an offline Windows
-host or treat Linux checks as Windows verification. D-011's fallback decision
-permits this GUI work; the strict hover trust gate remains unchanged.
+Basic headless direct CLI and Explorer Send to single-file delivery are
+WINDOWS-VERIFIED from user evidence (build26200/Python3.15.0, AGENTS.md). This
+narrow result does not verify GUI overlay/focus/DPI, Unicode/malformed paths,
+multi-selection or removal. These remain independently queued in STATUS.md.
+Do not repeat the completed basic diagnostic without a regression.
+
+**NEXT: G5 PNG→JPEG conversion engine**, then PDF→DOCX and MarkItDown integration.
+G4 native acceptance stays queued; Linux offscreen tests do not establish Windows
+behavior. Mouse3 stays desired, preserved and experimental; no further mouse
+research is part of this milestone.
 
 ## Definition of G2 success
 - Middle-click on a **different unselected file** returns the hovered file, not the previous selection.

@@ -5,8 +5,9 @@ param(
 $ErrorActionPreference = 'Stop'
 try {
     $plan = Get-Content -LiteralPath $PlanFile -Raw -Encoding UTF8 | ConvertFrom-Json
-    if ($plan.description -ne 'Filewheel explicit-path diagnostic v1' -or
-        $plan.name -ne 'Filewheel diagnostic.lnk') { throw 'Invalid shortcut plan' }
+    $diagnosticPlan = $plan.description -ceq 'Filewheel explicit-path diagnostic v1' -and $plan.name -ceq 'Filewheel diagnostic.lnk'
+    $guiPlan = $plan.description -ceq 'Filewheel radial preview v1' -and $plan.name -ceq 'Filewheel preview.lnk'
+    if (-not ($diagnosticPlan -or $guiPlan)) { throw 'Invalid shortcut plan' }
     if ($Action -eq 'stage') {
         $directory = $plan.stage_directory
     } else {
