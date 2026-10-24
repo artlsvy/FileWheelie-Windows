@@ -1,5 +1,53 @@
 # G2 provisional index mapping and Windows acceptance
 
+## Current result: tab retest passes; next names and negative-area batch
+
+g2-tabs-2 reports the expected tests/A, root/README, tests/B, root/AGENTS candidates
+using registration indices1/0/1/0. All six prior consistency classes and repeated
+snapshots pass in all four events. Both tabs report view mode4, latency
+105.009–127.815ms, drops0/queue0/exit0. This is supplied live evidence of corrected
+provisional tab routing, not general G2 completion. Trusted paths remain null;
+Shell positions are still E_NOTIMPL. No runtime change is needed for this batch.
+
+Next create only a fresh temporary test folder with empty identity-test files
+(the .pdf is not a real PDF and will not be opened/converted). Run locally in
+PowerShell; a GUID directory avoids collisions or overwriting repository files:
+
+```powershell
+$filewheelCaseDir = Join-Path $env:TEMP ('filewheel-hit-test-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $filewheelCaseDir | Out-Null
+'plain.txt', 'report.txt', 'report.pdf', '資料 æøå.txt' | ForEach-Object { New-Item -ItemType File -Path (Join-Path $filewheelCaseDir $_) | Out-Null }
+New-Item -ItemType Directory -Path (Join-Path $filewheelCaseDir 'subfolder') | Out-Null
+$filewheelCaseDir
+```
+
+Navigate one Explorer tab to that printed folder. Use Details, explicitly Name
+ascending, and hide filename extensions. Verify how both report files are
+actually displayed; do not rename them to force a result. Then start:
+
+```powershell
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.diagnostics --enable --dry-run-mapping --output logs\g2-names-1.jsonl
+```
+
+Mouse3 these seven targets in order, at least one second apart:
+
+1. plain.txt (select a different row beforehand with left click).
+2. 資料 æøå.txt.
+3. report.txt (use the Type column/icon to distinguish it).
+4. report.pdf.
+5. subfolder.
+6. Empty file-pane space, away from all rows.
+7. Explorer command-bar/chrome blank area (avoid tab headers and action buttons).
+
+Stop with Ctrl+C; record `$LASTEXITCODE`. Supply JSONL/console, the actual folder
+path and visible report labels. Plain/Unicode targets should produce the exact
+provisional paths or an explained safe rejection. If both UIA item names are
+only report, expect ambiguous_display_name rejection; if UIA supplies full
+distinct names despite hidden visual extensions, record that stronger evidence
+instead of assuming ambiguity. Folder/background/chrome must reject file mapping.
+No candidate may be reconstructed from a label or silently become trusted.
+Remaining broader race/scaling/unsupported-surface cases stay in the main matrix.
+
 ## Current change: unique native tab association can disambiguate registrations
 
 The supplied g2-tabs-1 run used Details in both tabs, alternated A/README/B/AGENTS,

@@ -1,28 +1,24 @@
 # Next bounded Codex task
 
-**Task G2-E4: retest unique native tab disambiguation on Windows.**
+**Task G2-E5: validate hidden names, Unicode and non-file rejection.**
 
-The supplied two-tab/Details run safely rejected all four captures because the
-frame has two Shell registrations. Each record nevertheless has exactly one
-native HWND chain matching the hovered tab, and a positively different inactive
-browser/view. Core now uses that unique relationship, then all existing native
-candidate checks. Unknown/errored/duplicate/missing relationships still reject.
-New policy is Linux-replay-tested only. Trusted resolution stays None; D-010
-describes the boundary. GetItemPosition remains E_NOTIMPL.
+The corrected g2-tabs-2 Windows run reports all four expected provisional paths,
+with chosen registrations1/0/1/0 and passing native/tab/file/snapshot checks.
+Drops0/queue0/exit0, both Details; no need to repeat that sequence. Narrow tab
+routing is observed; general G2 is pending. Trusted resolution stays None;
+GetItemPosition remains E_NOTIMPL. No runtime change is needed for the next batch.
 Current96 Linux tests pass, including four-capture tab replay and adversarial
 registration tests. Independent review/compile/whitespace checks pass.
 Read `STATUS.md`, `G2_MAPPING.md` and D-008 in `DECISIONS.md`.
 
-1. Sync and repeat the four-click same-window/two-tab comparison in G2_MAPPING.md
-   with NEW logs/g2-tabs-2.jsonl. Tabs show tests and repository parent respectively.
-   Alternate tests/A, parent/README, tests/B, parent/AGENTS. Switch tabs with
-   left click; never send Mouse3 to tab headers. Record expected paths, views,
-   tab switches, drops and exit code. Inspect shell_window_count and chosen
-   selected_shell_window_index plus raw HWND chains. Safe rejection beats wrong tab.
-2. After reviewing this comparison, cover the remaining cases: explicit ascending
-   sort baseline if still unrecorded, hidden extensions,
-   duplicate stems, same filename in different tab folders if needed, Unicode, empty space
-   and Explorer chrome. Keep trusted resolution disabled and native Mouse3 passive.
+1. Use the isolated temporary-fixture setup and seven-click protocol at the top
+   of G2_MAPPING.md with logs/g2-names-1.jsonl. The user runs setup locally;
+   do not create/overwrite their repository files. Details, Name ascending,
+   hidden filename extensions, record actual visible duplicate labels.
+2. Review plain/Unicode candidates, both report-stem cases, folder/background/
+   chrome rejection. Duplicate display labels must never be guessed; if UIA
+   exposes full distinct names, record the stronger provider data. Preserve
+   native path/tab and snapshot checks. Keep Mouse3 passive and trusted paths null.
 3. Review each operator expectation against provisional paths, native HWND chain,
    both Shell sources and snapshot checks. Operator pre-click selection notes
    matter: native Mouse3 can select the clicked file before the UIA snapshot.

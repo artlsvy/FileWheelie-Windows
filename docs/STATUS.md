@@ -1,9 +1,9 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-24
-Current gate: two-tab native evidence collected, blanket multi-entry guard rejected.
-Unique-HWND tab disambiguation correction implemented; Windows retest and trusted
-mapping gate remain pending.
+Current gate: corrected two-tab candidate routing observed successfully on Windows.
+Hidden extensions/duplicate names/Unicode/negative cases and trusted mapping
+gate remain pending.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -95,8 +95,8 @@ mapping gate remain pending.
   Changes for this task are uncommitted; no commit fabricated.
 
 ## Required Windows validation (keep until genuinely tested)
-- `WINDOWS_VALIDATION_REQUIRED`: retest corrected unique-HWND tab association
-  with g2-tabs-2.jsonl after syncing, then
+- `WINDOWS_VALIDATION_REQUIRED`: isolated hidden-extension/duplicate-stem/Unicode/
+  negative-area comparison per G2_MAPPING.md, then
   then continue the broader operator-annotated matrix in
   `G2_MAPPING.md` now that one native STA hit completed. Begin with A hovered/B
   selected in Details/icons; then ascending/descending sorts, hidden extensions,
@@ -286,3 +286,22 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   view, same-name cross-tab native conflict, stale/missing native and forged
   selection/verified flags. Reviewer independently reproduced all96 checks and
   found no material defects. No Windows/Windows-MCP run by Codex.
+
+## Ninth supplied Windows run: corrected two-tab routing
+- Source: user-pasted g2-tabs-2 console/full JSONL, same four-file protocol.
+  Expected tests/A, root/README, tests/B, root/AGENTS all reported correctly as
+  provisional. Four received/written, queue0, drops0 and exit0. Both native view
+  modes4 (Details), Python3.15.0/comtypes1.4.17, UIA MTA/Shell STA, build26200/DPI96.
+- Two registrations per event; chosen entry indices1/0/1/0. Matching tab/browser,
+  view/content HWND chains and both Shell path/index sources agree throughout,
+  including changed root view/content HWNDs. File, freshness and repeated UIA/
+  native snapshot checks pass. Latency105.009–127.815ms.
+- This is live evidence for corrected provisional routing in this two-tab case,
+  not general G2 verification. No independent Shell position (E_NOTIMPL), all
+  selected snapshots true, identity flags remain false and trusted paths null.
+- Next bounded batch uses a fresh isolated temporary folder for hidden extensions,
+  duplicate stems, Unicode, folders/background/chrome. No runtime code changes
+  needed this round; no repeated tab test requested. Remaining larger matrix
+  exclusions/race/DPI cases stay queued per EXPLORER_HIT_TEST.md.
+- Documentation-only checkpoint: last code checks remain96 Linux tests passed;
+  whitespace check exit0. No new Windows execution by Codex or Linux tests claimed.

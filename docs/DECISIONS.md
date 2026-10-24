@@ -81,6 +81,11 @@ expose registration count and chosen entry index. Candidates remain provisional;
 active_tab_proven/windows_verified flags are not promoted. Retest on Windows;
 Linux replay of old captures is not new native acceptance evidence.
 
+The supplied g2-tabs-2 Windows retest now reports all four expected provisional
+paths with selected entry indices1/0/1/0 and passing native checks, drops0/exit0.
+Record this narrow live routing evidence; retain D-008's trust barrier and the
+remaining acceptance matrix. No general point-to-item identity guarantee follows.
+
 ## Pending experiments
 - Descending-comparison captures show indices reassigned (A2/B3 to A1/B0) with
   correct candidates and matching native indices. Index-to-path associations
