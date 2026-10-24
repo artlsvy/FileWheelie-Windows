@@ -1,35 +1,30 @@
 # Next bounded Codex task
 
-**Task G2-D: test the Shell STA correction against the localized GetWindow failure.**
+**Task G2-E: collect and review operator-annotated mapping acceptance evidence.**
 
-The staged Windows run completed service and active-view queries, then failed
-GetWindow with 0x8001010D (input-synchronization call-context error). It recorded
-zero drops/queue remainder and exit0. Separate Shell STA ownership/message pumping
-is now implemented as a bounded correction experiment; UIA stays MTA. This does
-not prove MTA was the cause. New apartment behavior has only Linux fake tests.
-No native path/view association succeeds yet, trusted resolution remains None,
-and selection independence remains unproven. See D-009 in DECISIONS.md.
+The supplied g2-sta-1 run completes native collection: b.txt/index3 matches both
+Shell sources, active-view HWND chain and file/snapshot checks pass. It reports
+110.607ms, zero drops/queue remainder and exit0 on Python3.15.0/comtypes1.4.17.
+GetItemPosition returned E_NOTIMPL; independent Shell geometry remains absent.
+Selection snapshot true, operator expectations absent. Candidate stays provisional;
+trusted resolution remains None. Narrow smoke is observed; G2 is not complete.
+Current83 Linux tests pass, including a sanitized projection of the supplied run.
 Read `STATUS.md`, `G2_MAPPING.md` and D-008 in `DECISIONS.md`.
 
-1. Run ONE ordinary file click using the updated command in `G2_MAPPING.md`
-   (`logs/g2-sta-1.jsonl`). Check shell_apartment=STA/uia_apartment=MTA and
-   Python/comtypes version metadata. Stop and inspect get_active_view_hwnd
-   success or failure, returned HWND association, later stage/code/completed
-   stages, console drops, process exit and cleanup errors.
-   Do not rerun the full matrix until native collection works.
-2. If it still fails, investigate the actual new stage/code. Treat the Python3.15
-   compatibility warning as a separate variable; a separate Python3.14 venv can
-   compare the identical checkout/command without replacing the existing venv.
-   Do not guess service GUIDs/tabs, bypass native evidence or add retry loops.
-   Any correction requires bounded tests/review; G2 remains pending.
-3. Once native collection works, execute the acceptance table: A hovered/B selected,
-   Details/icons, ascending/descending sorts, hidden extensions, duplicate stems,
-   multiple tabs, Unicode, empty pane and chrome. Record independent expected
-   paths and selection before/after, build/revision/view/DPI, latency, console
-   drop count, capture summary and exit code. Keep all trusted resolved paths null.
-   Compare UIA index, Folder.Items candidate, native GetItem path/index and
-   repeated samples. A wrong provisional path is a failed trial. All-selected
-   snapshots alone cannot prove the selection-independent user contract.
+1. Execute the G2_MAPPING.md acceptance table using a new log such as
+   logs/g2-acceptance-1.jsonl, with the same checkout/environment. Start with A
+   hovered/B selected in Details and icons. Number the clicks and manually record
+   expected full hovered path, selected file before/after, view/sort/tab settings.
+2. Cover the remaining cases: ascending/descending sorts, hidden extensions,
+   duplicate stems, two tabs with different/same filenames, Unicode, empty space
+   and Explorer chrome. Keep trusted resolution disabled and native Mouse3 passive.
+3. Review each operator expectation against provisional paths, native HWND chain,
+   both Shell sources and snapshot checks. Selection snapshots alone cannot prove
+   selection independence. Missing position evidence cannot prove Shell geometry.
+   Record failures/exclusions; don't fix them by assuming index identity.
+   Retain build/revision/view/DPI, latency, console drop count, capture summary
+   and exit code. A wrong provisional path is a failed trial even though trusted
+   resolved_path stays null. All-selected snapshots cannot prove independence.
 4. Address only observed diagnostic defects with bounded changes/tests/review.
    Update status and next task with the evidence actually supplied. Do not promote
    the index hypothesis to trusted routing without documented Windows acceptance

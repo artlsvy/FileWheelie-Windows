@@ -58,8 +58,13 @@ Do not retry/bypass the error or change service GUIDs. Validate one click before
 the broader matrix; trusted resolution stays disabled. See G2_MAPPING.md for
 primary sources and the exact Windows comparison procedure.
 
+The first supplied STA sample completed native collection on build26200 with
+Python3.15.0/comtypes1.4.17. Retain STA ownership. This is narrow smoke evidence;
+GetItemPosition returned E_NOTIMPL and pointer-to-item identity remains unproven.
+Do not promote the index hypothesis based on this single matched candidate.
+
 ## Pending experiments
-- Test the Shell STA correction against the observed GetWindow input-sync error.
+- Validate selection independence, sorting, views and tabs with the STA probe.
 - Which Windows 11 Explorer views provide stable point-to-Shell-item mapping?
 - Native middle-click suppression after overlay opens vs passive processing?
 - Explorer right-click/`Send to` fallback ergonomics and multi-selection behavior?

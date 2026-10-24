@@ -1,0 +1,179 @@
+{
+  "source": "User-pasted g2-sta-1.jsonl; not a Codex Windows execution",
+  "sanitization": "Private path prefixes replaced with C:\\fixture\\project; projection retains item/content/tab/root nodes and native check evidence; intermediate layout nodes, probe_steps and runtime IDs omitted. No identity proof added.",
+  "session": {
+    "schema_version": 1,
+    "type": "session",
+    "windows_build": 26200,
+    "dpi_awareness": "per_monitor_v2",
+    "python_version": "3.15.0",
+    "comtypes_version": "1.4.17",
+    "uia_apartment": "MTA",
+    "shell_apartment": "STA",
+    "mapping": "provisional_index_dry_run"
+  },
+  "record": {
+    "schema_version": 1,
+    "sequence": 1,
+    "point": [
+      966,
+      414
+    ],
+    "timestamp_monotonic": 42792.9063658,
+    "window": {
+      "foreground_hwnd": 15141202,
+      "root_hwnd": 15141202,
+      "class_name": "CabinetWClass",
+      "pid": 8092,
+      "process_image": "C:\\Windows\\explorer.exe",
+      "dpi": 96
+    },
+    "explorer_view": "unknown",
+    "injected": false,
+    "resolved_path": null,
+    "rejection": "identity_correspondence_unproven",
+    "snapshot_stable": true,
+    "elapsed_ms": 110.607,
+    "uia_ancestry": [
+      {
+        "name": "b.txt",
+        "automation_id": "3",
+        "class_name": "UIItem",
+        "control_type": 50007,
+        "process_id": 8092,
+        "native_hwnd": null,
+        "bounds": [
+          927,
+          384,
+          1001,
+          452
+        ],
+        "contains_point": true,
+        "selection_snapshot": {
+          "is_selected": true,
+          "status": "observed"
+        }
+      },
+      {
+        "name": "Items View",
+        "class_name": "UIItemsView",
+        "control_type": 50008,
+        "process_id": 8092,
+        "native_hwnd": 723906,
+        "bounds": [
+          688,
+          378,
+          1764,
+          837
+        ]
+      },
+      {
+        "name": "C:\\fixture\\project\\tests",
+        "class_name": "ShellTabWindowClass",
+        "control_type": 50033,
+        "process_id": 8092,
+        "native_hwnd": 18679786,
+        "bounds": [
+          523,
+          378,
+          1764,
+          861
+        ]
+      },
+      {
+        "name": "Explorer",
+        "class_name": "CabinetWClass",
+        "control_type": 50032,
+        "process_id": 8092,
+        "native_hwnd": 15141202,
+        "bounds": [
+          515,
+          242,
+          1772,
+          869
+        ]
+      }
+    ],
+    "shell_candidates": {
+      "matching_windows": [
+        {
+          "hwnd": 15141202,
+          "item_count": 4,
+          "truncated": false,
+          "candidates": [
+            {
+              "enumeration_index": 0,
+              "candidate_path": "C:\\fixture\\project\\tests\\fixtures",
+              "is_folder": true,
+              "is_filesystem": true
+            },
+            {
+              "enumeration_index": 1,
+              "candidate_path": "C:\\fixture\\project\\tests\\unit",
+              "is_folder": true,
+              "is_filesystem": true
+            },
+            {
+              "enumeration_index": 2,
+              "candidate_path": "C:\\fixture\\project\\tests\\a.txt",
+              "is_folder": false,
+              "is_filesystem": true
+            },
+            {
+              "enumeration_index": 3,
+              "candidate_path": "C:\\fixture\\project\\tests\\b.txt",
+              "is_folder": false,
+              "is_filesystem": true
+            }
+          ],
+          "active_tab_proven": false,
+          "geometry_available": false,
+          "active_view_association": {
+            "status": "matched",
+            "method": "active_shell_view_hwnd_chain",
+            "view_hwnd": 1248042,
+            "tab_hwnd": 18679786,
+            "browser_hwnd": 18679786,
+            "items_view_hwnd": 723906,
+            "windows_verified": false
+          },
+          "native_view_candidate": {
+            "index": 3,
+            "candidate_path": "C:\\fixture\\project\\tests\\b.txt",
+            "is_filesystem": true,
+            "is_folder": false,
+            "item_position_screen": null,
+            "position_error": {
+              "stage": "get_item_position",
+              "error_type": "COMError",
+              "hresult": -2147467263,
+              "hresult_hex": "0x80004001",
+              "hresult_name": "E_NOTIMPL"
+            },
+            "view_mode": 1,
+            "view_item_count": 4,
+            "snapshot_stable": true,
+            "exists_regular_file": true,
+            "is_reparse_point": false,
+            "local_fixed_drive": true
+          }
+        }
+      ],
+      "windows_truncated": false
+    }
+  },
+  "summary": {
+    "worker_received": 1,
+    "counts": {
+      "resolver_calls": 1,
+      "explorer_accepted": 1,
+      "records_written": 1,
+      "identity_correspondence_unproven": 1
+    },
+    "queue_remaining": 0
+  },
+  "console": {
+    "dropped_hook_events": 0,
+    "exit_code": 0
+  }
+}

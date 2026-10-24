@@ -1,8 +1,8 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-24
-Current gate: staged Windows failure localized to GetWindow input-sync call.
-Shell STA correction experiment implemented; Windows retest and G2 gate pending.
+Current gate: supplied Shell STA run passed native collection for one local file.
+G2 selection-independent/sort/view/tab acceptance and trusted mapping remain pending.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -56,7 +56,7 @@ Shell STA correction experiment implemented; Windows retest and G2 gate pending.
 
 ## Tests actually run
 - Kubuntu Python 3.14.4: `PYTHONPATH=src python3 -m unittest discover -s tests/unit -v`:
-  81 tests passed, exit 0. Fake hovered vs
+  83 tests passed, exit 0. Fake hovered vs
   selected path, None/no stale fallback, cancellation/reentrant invalidation,
   deduplication/debounce, timeout rejection, import isolation/platform guard,
   unconditional mapping rejection, generated point-type seam, UIA process/window
@@ -94,9 +94,10 @@ Shell STA correction experiment implemented; Windows retest and G2 gate pending.
   Changes for this task are uncommitted; no commit fabricated.
 
 ## Required Windows validation (keep until genuinely tested)
-- `WINDOWS_VALIDATION_REQUIRED`: rerun ONE ordinary file hit with Shell STA
-  (`logs/g2-sta-1.jsonl`, command in `G2_MAPPING.md`). Check session apartments,
-  GetWindow stage/returned HWND relationship, later stages, drops/exit/cleanup.
+- `WINDOWS_VALIDATION_REQUIRED`: broader operator-annotated acceptance matrix in
+  `G2_MAPPING.md` now that one native STA hit completed. Begin with A hovered/B
+  selected in Details/icons; then ascending/descending sorts, hidden extensions,
+  duplicate stems, tabs, Unicode and negative areas. Retain drop/exit checks.
 - `WINDOWS_VALIDATION_REQUIRED`: run `--dry-run-mapping` per `docs/G2_MAPPING.md`;
   first validate new COM bindings and active view HWND association in one local
   Details hit, then operator-annotated selection/sort/views/hidden-extension/tab/
@@ -112,8 +113,9 @@ Shell STA correction experiment implemented; Windows retest and G2 gate pending.
 
 ## Research and implementation blockers
 - Point→Shell identity remains unproven. Native active view/IShellItem evidence
-  failed at GetWindow with 0x8001010D on the original MTA worker. The separate
-  Shell STA experiment has not run on Windows. Numeric IDs, selection, focus and
+  failed at GetWindow with 0x8001010D on the original MTA worker, but succeeded
+  in one supplied STA sample. GetItemPosition returned E_NOTIMPL, so independent
+  Shell geometry is unavailable in that sample. Numeric IDs, selection, focus and
   names never establish identity alone. Desktop remains excluded; initial scope
   is fixed local drives, <=32 candidates, standard views, no reparse points.
 - UIA/COM can block the worker; no hard timeout/process isolation exists. Hook
@@ -124,7 +126,7 @@ Shell STA correction experiment implemented; Windows retest and G2 gate pending.
   behavior. G2-F remains available if true hover cannot be proven.
 
 ## Next
-See `docs/NEXT_TASK.md`: retest the Shell STA correction before G2 acceptance. Linux work
+See `docs/NEXT_TASK.md`: collect/review the broader G2 acceptance evidence. Linux work
 must preserve the trusted-target barrier until the Windows gate is satisfied.
 
 ## Third supplied Windows evidence: first G2 dry run (reviewed 2026-10-24)
@@ -169,3 +171,27 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   shutdown, startup failure and release before COM uninitialization. Review found
   and fixed an opaque-result cleanup lifetime defect, then independently passed
   all81 tests/compile/whitespace checks with no remaining material findings.
+
+## Fifth supplied Windows evidence: first Shell STA candidate
+- Source: user-pasted `g2-sta-1.jsonl` and console, reviewed 2026-10-24. Build26200,
+  DPI96, Python3.15.0/comtypes1.4.17, UIA MTA/Shell STA. One received/recorded event,
+  no queue remainder, zero hook drops, exit0. No Windows execution by Codex.
+- GetWindow and native collection completed. Sampled HWND chain matches the
+  hovered tab/content; Folder.Items and IFolderView2.GetItem both give b.txt at
+  index3. Regular/local/nonreparse checks and repeated snapshots pass. Collection
+  110.607ms. This is narrow native smoke evidence, not G2 completion or a general
+  proof of all tab/view behavior. Operator expected path/selection notes absent.
+- GetItemPosition returned E_NOTIMPL/0x80004001; no independent Shell position
+  is available. UIA bounds contain the point, selected snapshot true. The report
+  correctly remains provisional/identity_correspondence_unproven and resolved
+  path null. No selected-item targeting, programmatic selection or suppression.
+- Same Python3.15 compatibility warning remains; its presence did not prevent
+  this sample. No dependency/runtime change is justified by the supplied result.
+- Added labeled sanitized projection `tests/fixtures/windows_sta_1_sanitized.json`
+  and replay regressions for the provisional boundary even with native checks
+  passing, optional position failure, changed selection and caller-provided
+  verified flags. Current83 tests, compileall/diff checks exit0. No runtime code
+  change this round; no path promotion or additional APIs implemented.
+- Focused review found no material fixture/replay issues and independently
+  reproduced all83 tests, compileall and diff checks with exit0. Corrected stale
+  apartment wording in the mapping implementation documentation.

@@ -113,7 +113,9 @@ as Shell enumeration indices even if they happen to match.
 
 The standalone process requests per-monitor v2 DPI awareness and fails startup
 if it cannot establish that context. COM objects are created/used/released on a
-dedicated MTA worker. COM calls have no hard timeout here: events older than
+dedicated MTA worker in the default mode. Dry-run mapping keeps UIA on MTA and
+owns Shell proxies on a separate STA, as detailed in G2_MAPPING.md. COM calls
+have no hard provider timeout here: events older than
 500 ms are skipped before collection, but a provider may block during a call.
 The worker is a daemon with a bounded shutdown wait; blocked shutdown is reported
 as failure. This is a known diagnostic limitation, not a latency guarantee. The

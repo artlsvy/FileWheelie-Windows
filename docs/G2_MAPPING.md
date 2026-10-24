@@ -1,5 +1,37 @@
 # G2 provisional index mapping and Windows acceptance
 
+## Current result: one native STA capture completed; expand acceptance
+
+The supplied `g2-sta-1.jsonl` now completes GetWindow, HWND association and native
+IShellItem collection. Build26200/DPI96, Python3.15.0/comtypes1.4.17, UIA MTA and
+Shell STA; Folder.Items and native GetItem both report b.txt at index3. Bounds,
+freshness, regular/local/nonreparse checks and repeated snapshots pass. Latency
+110.607ms, zero drops/queue remainder and exit0. This supports the STA probe in
+one sample, not general tab identity or selection-independent path resolution.
+
+GetItemPosition reports E_NOTIMPL/0x80004001; the record has no independent Shell
+item position. Its `view_mode=1` is retained as native evidence; do not infer the
+operator's Explorer setting solely from the bounding shape. All identity checks
+must continue to distinguish UIA geometry from Shell item correspondence.
+The selected snapshot is true and no independent expected-target/selection notes
+were supplied. `identity_correspondence_unproven` is the intended trust barrier,
+not another COM exception to bypass. All trusted paths remain null.
+
+Next run the acceptance table below, starting with A hovered while B is selected
+in Details and then an icon view. Keep the current environment constant; no
+runtime code/dependency change is required for this round. Use a new log:
+
+```powershell
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.diagnostics --enable --dry-run-mapping --output logs\g2-acceptance-1.jsonl
+$LASTEXITCODE
+```
+
+For every numbered click, record view/sort/tab, hovered full expected path and
+selected file before/after. The log alone cannot supply that ground truth. A
+wrong candidate or index disagreement is a failed trial; a safe rejection is an
+exclusion to record. The broader matrix remains required before a trust-policy
+change. The previous one-click failure investigations below are historical.
+
 ## Latest result: GetWindow input-synchronization failure localized
 
 The supplied staged run reached QueryActiveShellView successfully, then failed
@@ -147,9 +179,11 @@ The optional Windows-only `ShellViewProbe` adds independent evidence:
 
 The guarded comtypes bindings retain SDK interface prefix ordering; unused
 struct parameters are opaque pointers. Allocated PIDLs and display-name strings
-are freed with CoTaskMemFree. Objects stay on the existing MTA worker. The hook
+are freed with CoTaskMemFree. UIA objects stay on MTA; dry-run Shell objects
+stay on their dedicated message-pumped STA. The hook
 is unchanged, passive and free of COM/UIA/filesystem work. Bindings/child-window
-assumptions are implemented and fake-tested, **not Windows-verified**. If
+assumptions have one supplied Windows smoke sample; broader Windows acceptance
+remains pending. If
 QueryService, native view association or another API is unavailable, the report
 rejects or marks the view unproven; do not guess a tab from its title/path.
 
