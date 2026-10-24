@@ -1,8 +1,11 @@
-# G0-A diagnostic scaffold (Windows runtime unverified)
+# Explorer diagnostic: first evidence reviewed, next experiment unverified
 
 The portable controller is fake-tested on Kubuntu. The Windows adapter is a
 diagnostic experiment, not a working target resolver. It always returns `None`.
 No GUI, converter, selection change or middle-click suppression is implemented.
+The user's first Windows session shows successful positive capture/UIA/Shell
+collection; see `WINDOWS_SESSION_001.md`. Negative filtering, selection
+independence and shutdown still need the controlled experiment below.
 
 ## Run portable checks
 
@@ -45,7 +48,63 @@ properties, and at most 32 Shell folder candidates per matching Shell window.
 Enumeration is capped at 64 Shell windows. Candidate paths are evidence strings,
 not verified file paths. The diagnostic records unknown view, unavailable Shell
 geometry, and unproven active-tab correspondence explicitly. No selected/focused
-item API is used. No UIA name is joined to a directory.
+item is used for identity. No UIA name is joined to a directory. List-item
+ancestors now include a read-only `selection_snapshot`: `is_selected` is true or
+false when observed, null when unavailable/error. This is worker-time state,
+not proof of selection at the original hardware event. The API is
+[IUIAutomationSelectionItemPattern.CurrentIsSelected](https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nn-uiautomationclient-iuiautomationselectionitempattern).
+No selection mutation methods are called.
+
+On normal capture shutdown, a `capture_summary` record includes worker-received
+event count, aggregate rejection/capture counts, and queue remainder. Rejected
+unrelated applications produce counts only: no names, HWNDs, PIDs, paths or event
+coordinates are added for them. Controller-skipped events are counted separately.
+Hook queue drops still appear in console output. The summary is written before
+COM release; require a successful process exit as well. A blocked/failed worker
+may prevent the summary from being written.
+
+## Next Windows experiment: six controlled middle clicks
+
+Run the updated diagnostic using a new filename such as `logs/controlled-smoke.jsonl`.
+Record the Git revision, command, actual Explorer view and test time. Use an
+ordinary folder containing exactly `a.txt` and `b.txt` if convenient. Space
+middle clicks at least one second apart, wait one second after each, and make
+no other middle clicks while capture is active. Use left clicks for selection.
+
+1. Details view: select B; middle-click the filename of A once. Record expected
+   hovered A, selected B, and whether selection stayed on B afterward.
+2. Select A; middle-click B once. Record expected hovered B, selected A and
+   selection afterward.
+3. Switch to an icon view; select B; middle-click A once. Record exact view,
+   hovered A, selected B and selection afterward.
+4. Middle-click empty folder background once, away from all items.
+5. Bring an unrelated application such as Notepad to the foreground and
+   middle-click its client area once.
+6. Bring a second unrelated application to the foreground and middle-click
+   its client area once. Stop with Ctrl+C after a one-second wait.
+
+Expected evidence (compare to the actual operator notes, not assumptions):
+
+- `worker_received=6`, `resolver_calls=6`, `explorer_accepted=4`,
+  `records_written=4`, `mapping_unproven=4`, `non_explorer_process=2`,
+  `queue_remaining=0`. Zero counters may be absent from the JSON dictionary.
+  `controller_skipped`, `stale_event`, `window_mismatch`, `process_unavailable`
+  and `evidence_error` should be absent/zero; otherwise investigate the deviation.
+- Three item captures have the expected UIItem ancestor with containing bounds;
+  `selection_snapshot.is_selected=false` supports unselected visual targeting at
+  worker time. A null state is inconclusive, not a false value. A true state or
+  changed selection requires inspection before claiming selection independence.
+- The background capture has no containing file-item ancestor. Its reason still
+  remains `mapping_unproven`; there is no file-row rejection classifier yet.
+- No per-event payload for either unrelated application. Every resolved path
+  stays null. Expect `Dropped hook events: 0`, prompt Ctrl+C exit, exit code 0,
+  and no worker/shutdown errors. Record console output and PowerShell
+  `$LASTEXITCODE` immediately after the diagnostic command.
+
+Send the session/capture records, final summary and operator/console observations.
+This validates a small G1 smoke scenario only. It cannot prove general filtering,
+historical click identity or Shell mapping. Do not reinterpret UIA automation IDs
+as Shell enumeration indices even if they happen to match.
 
 The standalone process requests per-monitor v2 DPI awareness and fails startup
 if it cannot establish that context. COM objects are created/used/released on a

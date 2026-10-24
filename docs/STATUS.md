@@ -1,7 +1,8 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-24
-Current gate: G0-A implemented / mock-tested; G1/G2 Windows-unverified.
+Current gate: G0-A complete; G1 positive Windows smoke evidence supplied;
+G1 controlled filtering/lifecycle and G2 exact identity remain unverified.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -18,25 +19,45 @@ Current gate: G0-A implemented / mock-tested; G1/G2 Windows-unverified.
 - Focused review found generated UIA point-type mismatch, swallowed logging
   errors, and unrelated UIA payload risk during a window race. Fixed all three
   with regression tests; reviewer rechecked with no remaining material findings.
+- Next diagnostic experiment adds aggregate provenance rejection counts, capture
+  summary and read-only UIA selection snapshots. Mapping remains always None.
+  User's existing hook import and bare-return edits were preserved.
+
+## First supplied Windows evidence (reviewed 2026-10-24)
+- Source: user-pasted JSONL, not a Codex-run Windows session. Build 26200,
+  window DPI 96, eight non-injected records. Successful positive Mouse3 capture
+  and UIA/Shell collection are supported for that session.
+- UIA identifies a.txt/b.txt with point-containing item bounds in six events;
+  two reach Items View background. Shell lists a folder and two file candidates.
+  Worker evidence collection: 26.069–56.942 ms, not hook latency.
+- No errors in supplied records. Selected files, expected hovered files, exact
+  view setting, unrelated-app trials, callback timing, drop count, revision and
+  shutdown results were not supplied. No G1/G2 gate completion claimed.
+- Full interpretation and missing evidence: `docs/WINDOWS_SESSION_001.md`.
 
 ## Tests actually run
 - Kubuntu Python 3.14.4: `PYTHONPATH=src python3 -m unittest discover -s tests/unit -v`:
-  19 tests passed, exit 0; reviewer independently reproduced. Fake hovered vs
+  23 tests passed, exit 0; reviewer independently reproduced. Fake hovered vs
   selected path, None/no stale fallback, cancellation/reentrant invalidation,
   deduplication/debounce, timeout rejection, import isolation/platform guard,
   unconditional mapping rejection, generated point-type seam, UIA process/window
   races and visible JSONL write failure are covered.
+- New tests cover provenance rejection categories, no UIA/Shell/payload access
+  for unrelated apps, and read-only true/false/unknown selection snapshots.
+  Focused review found no material code defects; its protocol handoff gap was
+  addressed in `docs/DIAGNOSTIC_POC.md`.
 - `python3 -m compileall -q src tests`: exit 0 (syntax compilation only).
 - `git diff --check`: exit 0.
 - `python3 -m pytest --version`: exit 1, pytest is not installed.
 - `python3 -m ruff --version`: exit 1, Ruff is not installed; no lint pass claimed.
-- No Windows host, Windows-MCP, native hook/COM/UIA, GUI or converter test executed.
-  Changes are uncommitted in this working tree; no commit fabricated.
+- No Windows/Windows-MCP execution by Codex. User's original diagnostic session
+  is reviewed above; new diagnostic additions have only Linux fake-test evidence.
+  Changes for this task are uncommitted; no commit fabricated.
 
 ## Required Windows validation (keep until genuinely tested)
-- `WINDOWS_VALIDATION_REQUIRED`: first run diagnostic on interactive Win11;
-  verify comtypes bindings, UIA/Shell evidence, process/window filtering,
-  passive Mouse3 capture, queue drops and Ctrl+C/unhook shutdown.
+- `WINDOWS_VALIDATION_REQUIRED`: six-click controlled smoke protocol in
+  `docs/DIAGNOSTIC_POC.md`: check known counts, unrelated-app filtering,
+  unselected UIA row snapshots, passive behavior, queue drops and Ctrl+C exit.
 - `WINDOWS_VALIDATION_REQUIRED`: exact under-cursor path across Details/List/Icons,
   A hovered while B selected/focused, hidden extensions, duplicate stems, Unicode,
   tabs/two windows, scroll/reorder/grouping, DPI/negative monitor coordinates.
@@ -58,5 +79,5 @@ Current gate: G0-A implemented / mock-tested; G1/G2 Windows-unverified.
   behavior. G2-F remains available if true hover cannot be proven.
 
 ## Next
-See `docs/NEXT_TASK.md`: portable diagnostic schema/replay validation on Linux,
-with the Windows smoke/acceptance queue retained independently.
+See `docs/NEXT_TASK.md`: review the controlled Windows smoke run before starting
+Shell identity experiments; an independent Linux schema task remains available.

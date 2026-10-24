@@ -65,14 +65,25 @@ def main() -> int:
                 })
                 startup.put(None)
                 ready = True
+                received = 0
                 while not stopped.is_set():
                     try:
                         event = events.get(timeout=0.1)
                     except Empty:
                         continue
+                    received += 1
+                    calls_before = resolver.counts["resolver_calls"]
                     controller.handle(event)
+                    if resolver.counts["resolver_calls"] == calls_before:
+                        resolver.counts["controller_skipped"] += 1
                     if failed.is_set():
                         raise RuntimeError("Diagnostic output failed")
+                write({
+                    "schema_version": 1, "type": "capture_summary",
+                    "worker_received": received, "counts": dict(resolver.counts),
+                    "queue_remaining": events.qsize(),
+                    "note": "aggregate counts only; hook drops printed to console",
+                })
         except Exception as error:
             failed.set()
             if not ready:

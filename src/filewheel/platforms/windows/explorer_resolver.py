@@ -1,8 +1,9 @@
 """Diagnostic evidence only: UIA-to-Shell correspondence is deliberately unproven."""
 
-from pathlib import PureWindowsPath
+from collections import Counter
 from time import monotonic
 
+from filewheel.core.diagnostic_checks import explorer_rejection
 from filewheel.core.models import MouseEvent, TargetResolution
 from filewheel.platforms.windows.native import Native
 
@@ -13,7 +14,7 @@ def proven_target_from_evidence(event: MouseEvent, evidence: dict) -> None:
     Shell automation below enumerates candidates, not pointer targets. No path can
     be emitted until live experiments prove a correspondence with the visual item.
     """
-    return None
+    return
 
 
 class ExplorerTargetResolver:
@@ -29,8 +30,10 @@ class ExplorerTargetResolver:
             "{FF48DBA4-60EF-4201-AA87-54103EEF594E}", interface=uia.IUIAutomation
         )
         self._point_type = uia.tagPOINT
+        self._selection_type = uia.IUIAutomationSelectionItemPattern
         self._shell = comtypes.client.CreateObject("Shell.Application", dynamic=True)
         self._write = write_record
+        self.counts = Counter()
 
     def close(self) -> None:
         # Release proxies before the owning worker calls CoUninitialize.
@@ -39,18 +42,20 @@ class ExplorerTargetResolver:
 
     def resolve(self, event: MouseEvent) -> TargetResolution | None:
         start = monotonic()
-        if event.injected or start - event.timestamp > 0.5:
+        self.counts["resolver_calls"] += 1
+        if event.injected:
+            self.counts["injected"] += 1
+            return None
+        if start - event.timestamp > 0.5:
+            self.counts["stale_event"] += 1
             return None
         n = self._native
         window = n.window_evidence(event.point)
-        image = window["process_image"]
-        if (
-            not image or PureWindowsPath(image).name.casefold() != "explorer.exe"
-            or window["class_name"] != "CabinetWClass"
-            or window["root_hwnd"] != event.window_id
-            or window["foreground_hwnd"] != event.window_id
-        ):
+        rejection = explorer_rejection(event, window)
+        if rejection is not None:
+            self.counts[rejection] += 1
             return None  # Do not log unrelated applications or Shell surfaces.
+        self.counts["explorer_accepted"] += 1
         record = {
             "schema_version": 1, "sequence": event.sequence, "point": event.point,
             "timestamp_monotonic": event.timestamp, "window": window,
@@ -76,7 +81,20 @@ class ExplorerTargetResolver:
             record["rejection"] = "window_changed"
         record["elapsed_ms"] = round((monotonic() - start) * 1000, 3)
         self._write(record)
+        self.counts["records_written"] += 1
+        self.counts[record["rejection"]] += 1
         return None
+
+    def _selection_evidence(self, element) -> dict:
+        """Snapshot only; never call Select/AddToSelection/RemoveFromSelection."""
+        try:
+            pattern = element.GetCurrentPattern(10010)  # UIA_SelectionItemPatternId
+            if not pattern:
+                return {"is_selected": None, "status": "unavailable"}
+            selected = pattern.QueryInterface(self._selection_type).CurrentIsSelected
+            return {"is_selected": bool(selected), "status": "observed"}
+        except Exception:
+            return {"is_selected": None, "status": "unavailable_or_error"}
 
     def _uia_evidence(self, event: MouseEvent, expected_pid: int) -> list[dict]:
         element = self._automation.ElementFromPoint(self._point_type(*event.point))
@@ -103,6 +121,8 @@ class ExplorerTargetResolver:
                     and bounds.top <= event.point[1] < bounds.bottom
                 ),
             })
+            if element.CurrentControlType == 50007:  # UIA_ListItemControlTypeId
+                ancestry[-1]["selection_snapshot"] = self._selection_evidence(element)
             # Stop before recording another application's ancestor information.
             if element.CurrentNativeWindowHandle == event.window_id:
                 break

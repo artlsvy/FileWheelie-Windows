@@ -1,8 +1,8 @@
 """Passive WH_MOUSE_LL source; run the message loop on its installing thread."""
 
+from collections.abc import Callable
 from queue import Full, Queue
 from time import monotonic
-from typing import Callable
 
 from filewheel.core.models import MouseEvent
 from filewheel.platforms.windows.native import Native

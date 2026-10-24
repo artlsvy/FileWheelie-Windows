@@ -2,6 +2,7 @@ import ctypes
 import io
 import json
 import unittest
+from collections import Counter
 from threading import Event
 from types import SimpleNamespace
 
@@ -54,6 +55,7 @@ class DiagnosticSafetyTests(unittest.TestCase):
 
     def test_window_change_discards_payload(self):
         resolver = object.__new__(ExplorerTargetResolver)
+        resolver.counts = Counter()
         window = {
             "process_image": "C:/Windows/explorer.exe", "class_name": "CabinetWClass",
             "root_hwnd": 123, "foreground_hwnd": 123, "pid": 7,

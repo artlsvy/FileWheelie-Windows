@@ -1,42 +1,43 @@
 # Next bounded Codex task
 
-**Task G0-B: portable diagnostic record schema and evidence replay checks.**
+**Task G1-B: run and review the controlled Windows diagnostic smoke experiment.**
 
-G0-A is implemented and fake-tested (19 unittest tests); Windows behavior is
-unverified and the mapping function always returns None. Read `docs/STATUS.md`
-and `docs/DIAGNOSTIC_POC.md` before changing code. Preserve the unresolved G1/G2
-queue; no GUI, converters, speculative path mapping or remote automation.
+G0-A is complete. The user supplied an eight-event Windows session: positive
+Mouse3/UIA/Shell collection worked on build 26200, DPI 96. Negative filtering,
+selection independence, native behavior and shutdown were not demonstrated.
+Read `docs/STATUS.md`, `docs/WINDOWS_SESSION_001.md`, and `docs/DIAGNOSTIC_POC.md`.
+The diagnostic now has aggregate rejection counts, a capture summary and
+read-only selected-state snapshots. These additions are Linux fake-tested only
+(23 tests pass); the mapping seam still always returns None.
 
-1. Extract diagnostic record construction/validation into a minimal portable
-   module. Keep schema version, explicit unknown/unproven values, bounded
-   properties, candidate-vs-resolved distinction, provenance and rejection reasons
-   clear. Do not expand logging scope or add dependencies.
-2. Add synthetic fixture/replay tests on Linux: foreground/process change drops
-   payload, bounds missing/outside click cannot support a target, candidate
-   truncation is explicit, ambiguous duplicate stems/hidden extensions do not
-   become paths, malformed records fail closed. Never treat replay as Windows
-   proof. Keep `proven_target_from_evidence` always None during this task.
-3. Adapt Windows diagnostics to the portable record builder without changing
-   hook behavior or inventing Shell/UIA identity correspondence. Test via fakes;
-   use standard-library unittest if pytest/Ruff are still unavailable.
-4. Run available checks, request focused review for evidence/identity mistakes,
-   and update status/next task with actual commands and exit codes.
+1. On interactive Win11, execute the exact six-click protocol in
+   `DIAGNOSTIC_POC.md`. No Windows-MCP dependency. Capture revision, view,
+   selected/hovered expectations, selection afterward, JSONL summary, drop count
+   and process exit code. Do not assert success if the host is unavailable.
+2. Review observed counters against six planned clicks, four accepted Explorer
+   events and two unrelated-process rejections. Require no unrelated text/path
+   payload, no evidence errors, no hook drops and a clean shutdown.
+3. Inspect the three expected unselected file-row snapshots and background case.
+   A null selected-state value is unknown. Do not substitute selection or join
+   UIA names to candidate paths. Record exactly what the evidence proves.
+4. Update status and next task. Only after diagnostic smoke evidence is adequate,
+   scope an identity experiment tying a specific Shell view/tab and IShellItem
+   identity to the containing UIA item. Automation IDs resembling Shell indices
+   in the first tiny folder are not proof. Do not implement that hypothesis yet.
 
-Acceptance: deterministic schema/replay tests pass, unknown or ambiguous evidence
-never emits a resolved path, native dependencies remain guarded, and no live
-Windows success is claimed without actual evidence.
+Acceptance: a reproducible, operator-annotated smoke record verifies the above
+or precisely documents failures. G2 remains unverified; no GUI or converters.
 
-## Independent Windows-only queue (not a Linux blocker)
+## Independent Linux work if Windows evidence is unavailable
 
-`WINDOWS_VALIDATION_REQUIRED`: run the opt-in diagnostic on the interactive
-Windows 11 tower per `docs/DIAGNOSTIC_POC.md`. First prove passive hook capture,
-UIA/Shell imports/evidence and clean shutdown in Details and icon views, with B
-selected and A middle-clicked. Record build, DPI, selected file, hovered file,
-expected path, actual None/rejection and local log reference. These are G1
-diagnostic smoke runs, **not G2 success**.
+G0-B remains deferred, not completed: extract portable diagnostic record schema
+and synthetic replay tests for provenance races, bounded/truncated candidates,
+missing bounds, duplicate display stems, malformed data and summary accounting.
+Keep logging scope/dependencies unchanged and the mapping seam always None.
+Use unittest on Kubuntu, request focused review and report actual results.
 
-After smoke evidence exists, investigate a separately bounded IFolderView2/Shell
-identity/geometry experiment. Require demonstrable pointer-to-item correspondence
-across the full `docs/EXPLORER_HIT_TEST.md` matrix before emitting paths or marking
-G2 verified. If correspondence fails, document the G2-F explicit Shell path
-invocation decision. Do not depend on Windows-MCP being online.
+`WINDOWS_VALIDATION_REQUIRED`: retain the full matrix in `EXPLORER_HIT_TEST.md`.
+Exact path emission eventually needs proven active-view/tab provenance, visual
+point/bounds-to-Shell-item correspondence, filesystem identity/existence/type and
+race rejection, independently of selection, names and enumeration order. If this
+cannot be demonstrated, document G2-F explicit Shell path invocation fallback.
