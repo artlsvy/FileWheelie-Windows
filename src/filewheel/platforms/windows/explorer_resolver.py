@@ -4,6 +4,7 @@ from collections import Counter
 from time import monotonic
 
 from filewheel.core.diagnostic_checks import explorer_rejection
+from filewheel.core.index_mapping import assess_index_mapping
 from filewheel.core.models import MouseEvent, TargetResolution
 from filewheel.platforms.windows.native import Native
 
@@ -20,7 +21,7 @@ def proven_target_from_evidence(event: MouseEvent, evidence: dict) -> None:
 class ExplorerTargetResolver:
     """Construct, use and release on a single COM-initialized worker thread."""
 
-    def __init__(self, write_record):
+    def __init__(self, write_record, *, dry_run_mapping: bool = False):
         self._native = Native()
         import comtypes.client
 
@@ -34,11 +35,18 @@ class ExplorerTargetResolver:
         self._shell = comtypes.client.CreateObject("Shell.Application", dynamic=True)
         self._write = write_record
         self.counts = Counter()
+        self._dry_run_mapping = dry_run_mapping
+        self._view_probe = None
+        if dry_run_mapping:
+            from filewheel.platforms.windows.shell_view import ShellViewProbe
+
+            self._view_probe = ShellViewProbe(self._native)
 
     def close(self) -> None:
         # Release proxies before the owning worker calls CoUninitialize.
         self._automation = None
         self._shell = None
+        self._view_probe = None
 
     def resolve(self, event: MouseEvent) -> TargetResolution | None:
         start = monotonic()
@@ -64,7 +72,23 @@ class ExplorerTargetResolver:
         }
         try:
             record["uia_ancestry"] = self._uia_evidence(event, window["pid"])
-            record["shell_candidates"] = self._shell_evidence(event.window_id)
+            if getattr(self, "_dry_run_mapping", False):
+                record["shell_candidates"] = self._shell_evidence(
+                    event.window_id, record["uia_ancestry"]
+                )
+                again = self._uia_evidence(event, window["pid"])
+                # Selection is diagnostic only and may change under native Mouse3.
+                def identity_snapshot(ancestry):
+                    return [{k: v for k, v in row.items() if k != "selection_snapshot"}
+                            for row in ancestry]
+
+                record["snapshot_stable"] = (
+                    identity_snapshot(again) == identity_snapshot(record["uia_ancestry"])
+                )
+                record["mapping"] = assess_index_mapping(record, now=monotonic())
+                record["rejection"] = record["mapping"]["rejection"]
+            else:
+                record["shell_candidates"] = self._shell_evidence(event.window_id)
             # This intentionally returns None for every evidence combination.
             proven_target_from_evidence(event, record)
         except Exception as error:
@@ -78,6 +102,7 @@ class ExplorerTargetResolver:
         if not unchanged:
             record.pop("uia_ancestry", None)
             record.pop("shell_candidates", None)
+            record.pop("mapping", None)
             record["rejection"] = "window_changed"
         record["elapsed_ms"] = round((monotonic() - start) * 1000, 3)
         self._write(record)
@@ -129,7 +154,7 @@ class ExplorerTargetResolver:
             element = walker.GetParentElement(element)
         return ancestry
 
-    def _shell_evidence(self, hwnd: int) -> dict:
+    def _shell_evidence(self, hwnd: int, ancestry: list[dict] | None = None) -> dict:
         windows = self._shell.Windows()
         matches = []
         for index in range(min(windows.Count, 64)):
@@ -152,4 +177,16 @@ class ExplorerTargetResolver:
                 "truncated": items.Count > 32, "candidates": candidates,
                 "active_tab_proven": False, "geometry_available": False,
             })
+            if ancestry is not None and self._view_probe is not None:
+                rows = [row for row in ancestry if row.get("class_name") == "UIItem"
+                        and row.get("control_type") == 50007]
+                if len(rows) == 1 and str(rows[0].get("automation_id", "")).isascii():
+                    value = rows[0]["automation_id"]
+                    if value.isdecimal() and len(value) < 10:
+                        try:
+                            matches[-1].update(self._view_probe.capture(window, ancestry, int(value)))
+                        except Exception as error:
+                            matches[-1]["active_view_association"] = {
+                                "status": "unproven", "error_type": type(error).__name__,
+                            }
         return {"matching_windows": matches, "windows_truncated": windows.Count > 64}

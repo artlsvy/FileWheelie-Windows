@@ -1,5 +1,10 @@
 # Explorer diagnostic: first evidence reviewed, next experiment unverified
 
+G2 update: two Windows diagnostic rounds are now reviewed. The optional
+`--dry-run-mapping` mode reports provisional index candidates and native Shell
+view evidence; see [G2 mapping and acceptance procedure](G2_MAPPING.md). The
+original invocation below remains supported and still resolves no targets.
+
 The portable controller is fake-tested on Kubuntu. The Windows adapter is a
 diagnostic experiment, not a working target resolver. It always returns `None`.
 No GUI, converter, selection change or middle-click suppression is implemented.

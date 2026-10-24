@@ -1,40 +1,43 @@
 # Next bounded Codex task
 
-**Task G1-B: run and review the controlled Windows diagnostic smoke experiment.**
+**Task G2-B: validate the provisional index mapper in a Windows dry run.**
 
-G0-A is complete. The user supplied an eight-event Windows session: positive
-Mouse3/UIA/Shell collection worked on build 26200, DPI 96. Negative filtering,
-selection independence, native behavior and shutdown were not demonstrated.
-Read `docs/STATUS.md`, `docs/WINDOWS_SESSION_001.md`, and `docs/DIAGNOSTIC_POC.md`.
-The diagnostic now has aggregate rejection counts, a capture summary and
-read-only selected-state snapshots. These additions are Linux fake-tested only
-(23 tests pass); the mapping seam still always returns None.
+Two supplied Windows diagnostic runs support Mouse3 capture, UIA/Shell collection
+and aggregate non-Explorer filtering. Run 2 has nine AutomationId/index matches,
+but all selected-state snapshots are true and active-tab correspondence is
+unproven. The G2 provisional assessor/native Shell view probe is implemented,
+with 53 Linux tests passing. New COM bindings have not run on Windows.
+Read `STATUS.md`, `G2_MAPPING.md` and D-008 in `DECISIONS.md`.
 
-1. On interactive Win11, execute the exact six-click protocol in
-   `DIAGNOSTIC_POC.md`. No Windows-MCP dependency. Capture revision, view,
-   selected/hovered expectations, selection afterward, JSONL summary, drop count
-   and process exit code. Do not assert success if the host is unavailable.
-2. Review observed counters against six planned clicks, four accepted Explorer
-   events and two unrelated-process rejections. Require no unrelated text/path
-   payload, no evidence errors, no hook drops and a clean shutdown.
-3. Inspect the three expected unselected file-row snapshots and background case.
-   A null selected-state value is unknown. Do not substitute selection or join
-   UIA names to candidate paths. Record exactly what the evidence proves.
-4. Update status and next task. Only after diagnostic smoke evidence is adequate,
-   scope an identity experiment tying a specific Shell view/tab and IShellItem
-   identity to the containing UIA item. Automation IDs resembling Shell indices
-   in the first tiny folder are not proof. Do not implement that hypothesis yet.
+1. On interactive Win11 run the new `--dry-run-mapping` invocation in
+   `G2_MAPPING.md` against a small ordinary local folder. First inspect a single
+   Details hit for startup/binding failures, native view HWND chain and indexed
+   IShellItem evidence. Unsupported associations must reject; don't guess a tab.
+2. If collection works, execute the acceptance table: A hovered/B selected,
+   Details/icons, ascending/descending sorts, hidden extensions, duplicate stems,
+   multiple tabs, Unicode, empty pane and chrome. Record independent expected
+   paths and selection before/after, build/revision/view/DPI, latency, console
+   drop count, capture summary and exit code. Keep all trusted resolved paths null.
+3. Compare UIA index, Folder.Items candidate, native GetItem path/index and
+   repeated samples. A wrong provisional path is a failed trial. All-selected
+   snapshots alone cannot prove the selection-independent user contract.
+4. Address only observed diagnostic defects with bounded changes/tests/review.
+   Update status and next task with the evidence actually supplied. Do not promote
+   the index hypothesis to trusted routing without documented Windows acceptance
+   and a justified independent identity correspondence. No GUI/converters.
 
-Acceptance: a reproducible, operator-annotated smoke record verifies the above
-or precisely documents failures. G2 remains unverified; no GUI or converters.
+Acceptance: reproducible native dry-run evidence either establishes the narrow
+correspondence or identifies a concrete failure to investigate. Preserve G2 as
+Windows-unverified unless its complete core matrix is genuinely satisfied.
 
 ## Independent Linux work if Windows evidence is unavailable
 
-G0-B remains deferred, not completed: extract portable diagnostic record schema
-and synthetic replay tests for provenance races, bounded/truncated candidates,
-missing bounds, duplicate display stems, malformed data and summary accounting.
-Keep logging scope/dependencies unchanged and the mapping seam always None.
-Use unittest on Kubuntu, request focused review and report actual results.
+Do not block on an offline tower or Windows-MCP. The deferred G0-B task remains
+available: extract a minimal portable diagnostic record/schema validator and
+test cross-stage summary accounting, bounded payloads and malformed native
+records. Avoid speculative new native APIs and preserve the candidate/trusted
+boundary. Existing replay tests are not Windows verification. Run available
+checks, request focused review and report actual results.
 
 `WINDOWS_VALIDATION_REQUIRED`: retain the full matrix in `EXPLORER_HIT_TEST.md`.
 Exact path emission eventually needs proven active-view/tab provenance, visual

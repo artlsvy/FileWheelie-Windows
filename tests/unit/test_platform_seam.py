@@ -32,6 +32,7 @@ import filewheel.core.controller
 import filewheel.platforms.windows.hook
 import filewheel.platforms.windows.explorer_resolver
 import filewheel.platforms.windows.diagnostics
+import filewheel.platforms.windows.shell_view
 '''
         result = subprocess.run([sys.executable, "-c", script], env=os.environ,
                                 capture_output=True, text=True)

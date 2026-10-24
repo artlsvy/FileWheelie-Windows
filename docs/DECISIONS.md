@@ -21,6 +21,28 @@ No release/distribution business requirements. Prefer quality and existing libra
 ## D-007 — Converter priorities after UI gate (2026-10-24, active)
 Early: PDF→DOCX; DOCX→PDF; DOCX/PDF/PPTX/XLSX/HTML→Markdown; common images. MD→DOCX is a follow-up via Pandoc. PDF→PPTX is **not** an MVP target just because it was an example.
 
+## D-008 — Provisional index mapping is diagnostic only (2026-10-24, active)
+
+Run 2 observed UIA AutomationId == Folder.Items enumeration index for nine
+file hits, including indices 9–11. This is implementation-specific evidence,
+not a documented API contract. All selected-state snapshots were true; selection
+independence and active-tab correspondence were not demonstrated.
+
+Implement the index hypothesis behind `--dry-run-mapping`, with a portable
+assessor and optional IServiceProvider/IShellBrowser/active IShellView/IFolderView2
+probe. Native HWND containment, IShellItem filesystem path/attributes, regular
+file checks and repeated samples corroborate or contradict the hypothesis.
+Folder.Items and native view indices remain separate sources; disagreement
+rejects. Hidden-extension ambiguity, truncation, stale evidence, unsupported
+objects, tab ambiguity and native errors fail closed.
+
+A provisional candidate is not TargetResolution. The resolver continues returning
+None, and there is no CLI switch to promote candidates to trusted paths. Even
+matching native evidence remains provisional until the real Windows acceptance
+matrix proves the point-to-item correspondence. Keep selection diagnostic-only,
+never mutate Explorer or suppress Mouse3. Start with small fixed-drive folders
+and standard views. See `G2_MAPPING.md` for primary API sources and protocol.
+
 ## Pending experiments
 - Which Windows 11 Explorer views provide stable point-to-Shell-item mapping?
 - Native middle-click suppression after overlay opens vs passive processing?

@@ -21,9 +21,21 @@ def write_record(stream, record: dict, failed: Event) -> None:
         raise
 
 
+def mapping_console_line(record: dict) -> str | None:
+    """Session records use a string mapping label, events use a report object."""
+    mapping = record.get("mapping")
+    if not isinstance(mapping, dict):
+        return None
+    return (f"{record['sequence']}: {mapping['status']} "
+            f"index={mapping['candidate_index']} candidate={mapping['candidate_path']} "
+            f"reason={mapping['rejection']}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--enable", action="store_true", help="opt in to local filename logging")
+    parser.add_argument("--dry-run-mapping", action="store_true",
+                        help="report provisional index candidates; never emit trusted targets")
     parser.add_argument("--output", type=Path, required=True, help="new JSONL file; never overwritten")
     args = parser.parse_args()
     if not args.enable:
@@ -56,12 +68,17 @@ def main() -> int:
             with args.output.open("x", encoding="utf-8") as stream:
                 def write(record):
                     write_record(stream, record, failed)
+                    if args.dry_run_mapping:
+                        line = mapping_console_line(record)
+                        if line is not None:
+                            print(line)
 
-                resolver = ExplorerTargetResolver(write)
+                resolver = ExplorerTargetResolver(write, dry_run_mapping=args.dry_run_mapping)
                 controller = InvocationController(resolver)
                 write({
                     "schema_version": 1, "type": "session", "windows_build": sys.getwindowsversion().build,
-                    "dpi_awareness": "per_monitor_v2", "mapping": "unproven_always_none",
+                    "dpi_awareness": "per_monitor_v2",
+                    "mapping": "provisional_index_dry_run" if args.dry_run_mapping else "unproven_always_none",
                 })
                 startup.put(None)
                 ready = True
