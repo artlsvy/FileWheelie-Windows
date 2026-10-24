@@ -1,23 +1,27 @@
 # Next bounded Codex task
 
-**Task G2-C: localize the native Shell COM failure, then fix its observed cause.**
+**Task G2-D: test the Shell STA correction against the localized GetWindow failure.**
 
-The first G2 Windows dry run started and collected 17 records, but all native
-probes failed with COMError; no stage/HRESULT was logged, so the cause is unknown.
-The returned fixture is prior run-2 replay data, not a successful native run.
-Stage/HRESULT failure diagnostics are now implemented, with 67 Linux tests passing;
-these new diagnostics have not run on Windows. The API route is unchanged and
-trusted resolution remains None. All observed selected snapshots remain true.
+The staged Windows run completed service and active-view queries, then failed
+GetWindow with 0x8001010D (input-synchronization call-context error). It recorded
+zero drops/queue remainder and exit0. Separate Shell STA ownership/message pumping
+is now implemented as a bounded correction experiment; UIA stays MTA. This does
+not prove MTA was the cause. New apartment behavior has only Linux fake tests.
+No native path/view association succeeds yet, trusted resolution remains None,
+and selection independence remains unproven. See D-009 in DECISIONS.md.
 Read `STATUS.md`, `G2_MAPPING.md` and D-008 in `DECISIONS.md`.
 
-1. Run ONE Details-view file click using the updated command in `G2_MAPPING.md`
-   (`logs/g2-probe-stage-1.jsonl`). Stop and inspect active_view_association.stage,
-   hresult_hex/name and completed_stages, plus console drops/exit status.
+1. Run ONE ordinary file click using the updated command in `G2_MAPPING.md`
+   (`logs/g2-sta-1.jsonl`). Check shell_apartment=STA/uia_apartment=MTA and
+   Python/comtypes version metadata. Stop and inspect get_active_view_hwnd
+   success or failure, returned HWND association, later stage/code/completed
+   stages, console drops, process exit and cleanup errors.
    Do not rerun the full matrix until native collection works.
-2. Use that actual failure code/stage to research and implement only the bounded
-   correction. Do not guess a different service GUID, infer a tab from its title,
-   or bypass native validation using the index/name correlation. Add regression
-   tests and independent review; keep G2 Windows acceptance pending.
+2. If it still fails, investigate the actual new stage/code. Treat the Python3.15
+   compatibility warning as a separate variable; a separate Python3.14 venv can
+   compare the identical checkout/command without replacing the existing venv.
+   Do not guess service GUIDs/tabs, bypass native evidence or add retry loops.
+   Any correction requires bounded tests/review; G2 remains pending.
 3. Once native collection works, execute the acceptance table: A hovered/B selected,
    Details/icons, ascending/descending sorts, hidden extensions, duplicate stems,
    multiple tabs, Unicode, empty pane and chrome. Record independent expected

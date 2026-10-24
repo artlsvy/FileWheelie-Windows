@@ -1,8 +1,8 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-24
-Current gate: G0-A complete; three supplied Windows diagnostic rounds reviewed.
-G2 dry-run starts, but native probe failed on Windows; exact identity gate pending.
+Current gate: staged Windows failure localized to GetWindow input-sync call.
+Shell STA correction experiment implemented; Windows retest and G2 gate pending.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -56,7 +56,7 @@ G2 dry-run starts, but native probe failed on Windows; exact identity gate pendi
 
 ## Tests actually run
 - Kubuntu Python 3.14.4: `PYTHONPATH=src python3 -m unittest discover -s tests/unit -v`:
-  67 tests passed, exit 0. Fake hovered vs
+  81 tests passed, exit 0. Fake hovered vs
   selected path, None/no stale fallback, cancellation/reentrant invalidation,
   deduplication/debounce, timeout rejection, import isolation/platform guard,
   unconditional mapping rejection, generated point-type seam, UIA process/window
@@ -94,9 +94,9 @@ G2 dry-run starts, but native probe failed on Windows; exact identity gate pendi
   Changes for this task are uncommitted; no commit fabricated.
 
 ## Required Windows validation (keep until genuinely tested)
-- `WINDOWS_VALIDATION_REQUIRED`: rerun ONE Details hit with the staged native
-  failure diagnostics (command in `G2_MAPPING.md`); obtain failure stage and
-  HRESULT before repeating the broader matrix or changing the API route.
+- `WINDOWS_VALIDATION_REQUIRED`: rerun ONE ordinary file hit with Shell STA
+  (`logs/g2-sta-1.jsonl`, command in `G2_MAPPING.md`). Check session apartments,
+  GetWindow stage/returned HWND relationship, later stages, drops/exit/cleanup.
 - `WINDOWS_VALIDATION_REQUIRED`: run `--dry-run-mapping` per `docs/G2_MAPPING.md`;
   first validate new COM bindings and active view HWND association in one local
   Details hit, then operator-annotated selection/sort/views/hidden-extension/tab/
@@ -112,8 +112,8 @@ G2 dry-run starts, but native probe failed on Windows; exact identity gate pendi
 
 ## Research and implementation blockers
 - Point→Shell identity remains unproven. Native active view/IShellItem evidence
-  has been attempted on Windows and failed, without enough original error detail
-  to identify the failing API. Numeric IDs, selection, focus and
+  failed at GetWindow with 0x8001010D on the original MTA worker. The separate
+  Shell STA experiment has not run on Windows. Numeric IDs, selection, focus and
   names never establish identity alone. Desktop remains excluded; initial scope
   is fixed local drives, <=32 candidates, standard views, no reparse points.
 - UIA/COM can block the worker; no hard timeout/process isolation exists. Hook
@@ -124,7 +124,7 @@ G2 dry-run starts, but native probe failed on Windows; exact identity gate pendi
   behavior. G2-F remains available if true hover cannot be proven.
 
 ## Next
-See `docs/NEXT_TASK.md`: localize the native COM error before G2 acceptance. Linux work
+See `docs/NEXT_TASK.md`: retest the Shell STA correction before G2 acceptance. Linux work
 must preserve the trusted-target barrier until the Windows gate is satisfied.
 
 ## Third supplied Windows evidence: first G2 dry run (reviewed 2026-10-24)
@@ -144,3 +144,28 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
 - Research rechecked the service GUID and documented route; no supported concrete
   constant/route correction was found. Stage/HRESULT diagnostics are the next
   bounded step, not guessed fallback APIs. New diagnostics are Linux-tested only.
+
+## Fourth supplied Windows evidence: staged one-click run
+- Source: user-pasted JSONL and PowerShell console, reviewed 2026-10-24.
+  Build26200/DPI96, one event, one safe native_probe_error, queue remainder zero,
+  hook drops zero, exit code0. Normal shutdown is supported for this session.
+- Service provider, top-level browser service, browser interface and active view
+  queries completed. GetWindow failed at get_active_view_hwnd with -2147417843 /
+  0x8001010D = RPC_E_CANTCALLOUT_ININPUTSYNCCALL. UIA snapshot stable, selected
+  true; latency79.383ms. No native view association/file identity proved.
+- Microsoft documents GetWindow as input-synchronized. This supports investigating
+  COM call context, but does not prove MTA causality. D-009 moves dry-run Shell
+  collection/probing to a dedicated message-pumped STA, keeping UIA on MTA and
+  passing only copied JSON DTOs. Timeouts discard late results; no provider
+  cancellation or unsafe COM proxy transfer. Default diagnostic route preserved.
+- Session metadata now reports Python/comtypes versions and apartment choices.
+  Python3.15/comtypes compatibility warning is a separate variable, not proven
+  causal. No dependency/runtime replacement was performed.
+- New apartment behavior is Linux fake-tested only; no Windows/Windows-MCP run
+  by Codex. Trusted resolver output stays None; no UI/converters were added.
+- Current checks: all81 Linux unittest tests pass, compileall and diff checks
+  exit0; pytest/Ruff probes still exit1 (not installed). Worker fakes verify
+  ownership/pumping, DTO-only boundaries, timeout/late-result handling, bounded
+  shutdown, startup failure and release before COM uninitialization. Review found
+  and fixed an opaque-result cleanup lifetime defect, then independently passed
+  all81 tests/compile/whitespace checks with no remaining material findings.

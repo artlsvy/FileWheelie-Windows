@@ -1,5 +1,47 @@
 # G2 provisional index mapping and Windows acceptance
 
+## Latest result: GetWindow input-synchronization failure localized
+
+The supplied staged run reached QueryActiveShellView successfully, then failed
+at `get_active_view_hwnd` with signed HRESULT -2147417843 / `0x8001010D`.
+Microsoft names this RPC_E_CANTCALLOUT_ININPUTSYNCCALL: an outgoing call cannot
+be made while dispatching an input-synchronous call. Its
+[Call Synchronization documentation](https://learn.microsoft.com/en-us/windows/win32/com/call-synchronization)
+lists IOleWindow.GetWindow as input-synchronized. This localizes the failure to
+call context; it does not prove that the MTA caused it or that STA will fix it.
+
+The latest diagnostic tests that hypothesis: UIA remains on its MTA worker;
+dry-run Shell collection and native view probing move together to a dedicated,
+message-pumped STA. Shell objects are created/used/released only there, before
+CoUninitialize. Only plain diagnostic DTOs cross workers; no marshaled/raw COM
+proxy is reused from MTA. Requests and shutdown waits are bounded; a timed-out
+provider is not forcibly cancelled and a late response cannot satisfy a newer
+request. Reference: Microsoft's
+[STA requirements](https://learn.microsoft.com/en-us/windows/win32/com/single-threaded-apartments).
+The hook and trusted-target policy are unchanged. This correction is implemented
+and fake-tested on Linux; its Windows outcome remains pending.
+
+The user also supplied zero hook drops, queue remainder zero and exit code 0 for
+that one-click run. This is positive shutdown evidence for that session, not
+native mapping success. The Python 3.15/comtypes FutureWarning is recorded as a
+separate compatibility variable, not an established cause. New session records
+include Python/comtypes versions and Shell/UIA apartment choices. If needed,
+repeat the same one-click comparison in a separate Python 3.14 venv; do not
+replace the existing environment or conflate runtime and apartment changes.
+
+After updating the checkout, run one ordinary file click, then Ctrl+C:
+
+```powershell
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.diagnostics --enable --dry-run-mapping --output logs\g2-sta-1.jsonl
+$LASTEXITCODE
+```
+
+Check `shell_apartment=STA`, `uia_apartment=MTA`; inspect whether
+`get_active_view_hwnd` succeeds, the active-view HWND chain, any later stage/code,
+and drop/exit/cleanup output. Keep resolved_path null. Continue the full table
+only after native collection works. Do not rerun the superseded stage-only
+command below for the new experiment.
+
 ## Current result: native probe fails; diagnose one click first
 
 The user's first G2 dry run on build26200 received/recorded 17 Explorer events.

@@ -43,9 +43,23 @@ matrix proves the point-to-item correspondence. Keep selection diagnostic-only,
 never mutate Explorer or suppress Mouse3. Start with small fixed-drive folders
 and standard views. See `G2_MAPPING.md` for primary API sources and protocol.
 
+## D-009 — Isolate native Shell probing on STA (2026-10-24, provisional)
+
+The staged Windows run localized 0x8001010D to IShellView's inherited GetWindow,
+after successful service/active-view queries. Microsoft documents GetWindow as
+input-synchronized and names this HRESULT RPC_E_CANTCALLOUT_ININPUTSYNCCALL.
+This supports a call-context/apartment experiment, not a proven MTA root cause.
+
+For dry-run mapping, create/use/release all Shell proxies on a dedicated STA
+with a message pump. Keep UIA on MTA, exchange only JSON-compatible DTOs, and
+bound request/shutdown waits. Never transfer raw COM interfaces between workers.
+Default non-mapping diagnostics preserve their existing collector route.
+Do not retry/bypass the error or change service GUIDs. Validate one click before
+the broader matrix; trusted resolution stays disabled. See G2_MAPPING.md for
+primary sources and the exact Windows comparison procedure.
+
 ## Pending experiments
-- G2 first native dry run rejected all 17 attempts with COMError. Retain D-008;
-  localize with stage/HRESULT diagnostics before changing the native service route.
+- Test the Shell STA correction against the observed GetWindow input-sync error.
 - Which Windows 11 Explorer views provide stable point-to-Shell-item mapping?
 - Native middle-click suppression after overlay opens vs passive processing?
 - Explorer right-click/`Send to` fallback ergonomics and multi-selection behavior?

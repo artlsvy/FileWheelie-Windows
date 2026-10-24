@@ -84,6 +84,10 @@ def main() -> int:
                 write({
                     "schema_version": 1, "type": "session", "windows_build": sys.getwindowsversion().build,
                     "dpi_awareness": "per_monitor_v2",
+                    "python_version": sys.version.split()[0],
+                    "comtypes_version": getattr(comtypes, "__version__", "unknown"),
+                    "uia_apartment": "MTA",
+                    "shell_apartment": "STA" if args.dry_run_mapping else "MTA",
                     "mapping": "provisional_index_dry_run" if args.dry_run_mapping else "unproven_always_none",
                 })
                 startup.put(None)
@@ -114,11 +118,16 @@ def main() -> int:
             else:
                 print(f"Diagnostic worker failed: {type(error).__name__}", file=sys.stderr)
         finally:
-            if resolver is not None:
-                resolver.close()
-                resolver = None
-            if initialized:
-                comtypes.CoUninitialize()
+            try:
+                if resolver is not None:
+                    resolver.close()
+                    resolver = None
+            except Exception as error:
+                failed.set()
+                print(f"Diagnostic cleanup failed: {type(error).__name__}", file=sys.stderr)
+            finally:
+                if initialized:
+                    comtypes.CoUninitialize()
 
     thread = Thread(target=worker, name="explorer-evidence-mta", daemon=True)
     thread.start()

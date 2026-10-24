@@ -19,7 +19,7 @@ def proven_target_from_evidence(event: MouseEvent, evidence: dict) -> None:
 
 
 class ExplorerTargetResolver:
-    """Construct, use and release on a single COM-initialized worker thread."""
+    """Own UIA on MTA; optional Shell STA exchanges only diagnostic DTOs."""
 
     def __init__(self, write_record, *, dry_run_mapping: bool = False):
         self._native = Native()
@@ -32,21 +32,30 @@ class ExplorerTargetResolver:
         )
         self._point_type = uia.tagPOINT
         self._selection_type = uia.IUIAutomationSelectionItemPattern
-        self._shell = comtypes.client.CreateObject("Shell.Application", dynamic=True)
         self._write = write_record
         self.counts = Counter()
         self._dry_run_mapping = dry_run_mapping
-        self._view_probe = None
-        if dry_run_mapping:
-            from filewheel.platforms.windows.shell_view import ShellViewProbe
+        from filewheel.platforms.windows.shell_evidence import ShellEvidenceCollector
 
-            self._view_probe = ShellViewProbe(self._native)
+        self._shell_worker = None
+        self._shell_collector = None
+        if dry_run_mapping:
+            from filewheel.platforms.windows.shell_worker import ShellStaWorker
+
+            self._shell_worker = ShellStaWorker(lambda: ShellEvidenceCollector(native_probe=True))
+        else:
+            self._shell_collector = ShellEvidenceCollector()
 
     def close(self) -> None:
         # Release proxies before the owning worker calls CoUninitialize.
         self._automation = None
-        self._shell = None
-        self._view_probe = None
+        if self._shell_collector is not None:
+            self._shell_collector.close()
+            self._shell_collector = None
+        if self._shell_worker is not None:
+            if not self._shell_worker.close():
+                raise TimeoutError("Shell STA worker did not exit")
+            self._shell_worker = None
 
     def resolve(self, event: MouseEvent) -> TargetResolution | None:
         start = monotonic()
@@ -155,38 +164,6 @@ class ExplorerTargetResolver:
         return ancestry
 
     def _shell_evidence(self, hwnd: int, ancestry: list[dict] | None = None) -> dict:
-        windows = self._shell.Windows()
-        matches = []
-        for index in range(min(windows.Count, 64)):
-            window = windows.Item(index)
-            if int(window.HWND) != hwnd:
-                continue
-            document = window.Document
-            items = document.Folder.Items()
-            candidates = []
-            for item_index in range(min(items.Count, 32)):
-                item = items.Item(item_index)
-                candidates.append({
-                    "enumeration_index": item_index,
-                    "candidate_path": str(item.Path)[:2048],
-                    "is_folder": bool(item.IsFolder),
-                    "is_filesystem": bool(item.IsFileSystem),
-                })
-            matches.append({
-                "hwnd": hwnd, "item_count": items.Count,
-                "truncated": items.Count > 32, "candidates": candidates,
-                "active_tab_proven": False, "geometry_available": False,
-            })
-            if ancestry is not None and self._view_probe is not None:
-                rows = [row for row in ancestry if row.get("class_name") == "UIItem"
-                        and row.get("control_type") == 50007]
-                if len(rows) == 1 and str(rows[0].get("automation_id", "")).isascii():
-                    value = rows[0]["automation_id"]
-                    if value.isdecimal() and len(value) < 10:
-                        try:
-                            matches[-1].update(self._view_probe.capture(window, ancestry, int(value)))
-                        except Exception as error:
-                            matches[-1]["active_view_association"] = {
-                                "status": "unproven", "error_type": type(error).__name__,
-                            }
-        return {"matching_windows": matches, "windows_truncated": windows.Count > 64}
+        if self._shell_worker is not None:
+            return self._shell_worker.collect(hwnd, ancestry)
+        return self._shell_collector.collect(hwnd, ancestry)
