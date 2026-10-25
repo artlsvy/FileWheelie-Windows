@@ -146,7 +146,8 @@ class DesktopApplication(QObject):
     @Slot()
     def _mouse_started(self):
         startup, self._startup = self._startup, None
-        self.experimental_enabled = bool(startup.result and not self.quitting)
+        self.experimental_enabled = bool(startup.result and not self.quitting
+                                         and self.runtime is not None and self.runtime.running)
         startup.deleteLater()
         self.experiment_action.setEnabled(True)
         self._check_action(self.experimental_enabled)

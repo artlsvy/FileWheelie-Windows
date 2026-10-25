@@ -1,13 +1,11 @@
-# Continue G11 then G12 (G9/G10 implemented)
+# Finish G12 and final native-validation handoff
 
-G9-A/B committed5f656a3/9878e9f. G10 core/Qttray/consent implemented and checked,
-with trustedResolveralwaysNone and explicitconfirmeduserpath source. NativeWin
-hook/COM/tray/startup acceptance remains pending, does not block next stages.
+G9-A5f656a3, G9-B9878e9f, G106168a23 committed. G11packaging/appIPC integration
+is implemented and reviewed/tests underway; commit it beforeG12. Source --self-test
+passed allenginefamilies; actualWindowsbundlebuild notperformed onKubuntu.
 
-Next G11: integrate prepared packaging artifacts with app.main/IPC/singleinstance,
-frozen Send to/resource paths/self-test; spec/build WindowsPython3.14 only. Packaging
-artifacts ownedbyimplementer are ready; root owns application and integration.
-Then G12 bundledLibreOffice full-tree locator and tests; don't copy justsoffice.exe.
-Build actualWindowsbinary onWindows only; noLinuxcrossbuildclaims. Preservehistory,
-source/outputs anddiagnostics. Nootherconversionformats. Complete bothremaining
-stages and docs/commits without waitingWindows or furtherprompts.
+Implementer owns libreoffice_bundle.py +office.py/test_libreoffice_bundle.py;
+fullportabletree locator/frozenexternalDLLenvironment tests ready. Rootmustfinish
+G12docs/loglocationandreview, runfullsuite, updatecheckpoints andcommit separately.
+Nativebundle notdownloaded/staged: structuralfakes andLinuxwrapper are NOT a
+selfcontainedWindowsportableproof. Nofurtherformats. Preservealluncommittedwork.

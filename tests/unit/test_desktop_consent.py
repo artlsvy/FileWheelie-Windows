@@ -140,3 +140,18 @@ class DesktopConsentTests(unittest.TestCase):
             self.app.processEvents(); time.sleep(.005)
         self.assertTrue(released.is_set())
         self.assertIsNone(self.desktop._startup)
+
+    def test_hook_failure_before_startup_finished_stays_disabled(self):
+        class FailedAfterStart(FakeRuntime):
+            def __init__(self, candidate, error):
+                super().__init__(candidate, error)
+                self.error = error
+            def start(self):
+                self.running = False
+                self.error('mouse_hook: RuntimeError')
+                return True
+        self.desktop.runtime_factory = FailedAfterStart
+        self.enable()
+        self.app.processEvents()
+        self.assertFalse(self.desktop.experimental_enabled)
+        self.assertFalse(self.desktop.experiment_action.isChecked())

@@ -20,10 +20,12 @@ try {
         if (Test-Path -LiteralPath $shortcutPath) {
             $existing = $shell.CreateShortcut($shortcutPath)
             try {
+                $currentArguments = $existing.Arguments -ceq $plan.arguments
+                $previousArguments = @($plan.previous_arguments) -ccontains $existing.Arguments
                 $owned = $existing.Description -ceq $plan.description -and
                     [string]::Equals($existing.TargetPath, $plan.target, [StringComparison]::OrdinalIgnoreCase) -and
                     [string]::Equals($existing.WorkingDirectory, $plan.working_directory, [StringComparison]::OrdinalIgnoreCase) -and
-                    $existing.Arguments -ceq $plan.arguments
+                    ($currentArguments -or $previousArguments)
                 if (-not $owned) { throw 'Existing shortcut differs; refusing to overwrite or remove it' }
             } finally {
                 [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($existing)
@@ -32,6 +34,7 @@ try {
                 Remove-Item -LiteralPath $shortcutPath
                 Write-Output "Removed: $shortcutPath"
             } else {
+                if (-not $currentArguments) { throw 'Owned legacy shortcut found; remove it, then install the updated entry' }
                 Write-Output "Already configured: $shortcutPath"
             }
             exit 0

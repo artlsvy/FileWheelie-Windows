@@ -734,3 +734,32 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   ordering, supersession, no pre-confirm validation, async heartbeat, COMownerfake
   and deadworkerQuit). Full suite result recorded next. Native hook/COM/tray/
   startup/focus/point behavior WINDOWS_VALIDATION_REQUIRED; no trust promotion.
+
+## G11 — reproducible onedir recipe and frozen integration
+- Added Windows CPython3.14amd64-only windowed onedir spec, early freeze_support,
+ 54-package wheel/hash lock, isolated non-destructive build venv/script, dependency/
+  source manifests and bounded frozen self-test. Collections include QtEssentials
+  plugins, native engines, dynamically imported converters, Magika/ONNX resources,
+  metadata/licenses and PSshortcut helper. Unused WebEngine/Addons not required.
+- Frozen startup/self-test errors use private logs with no console requirement.
+  Self-test creates only temporary fixtures and actually exercises all current
+  engine families; source execution passed here with a positive JSON report.
+- Added current-user QLockFile + UserAccess QLocalServer/Socket bounded JSON route.
+  Repeated GUI launches forward to one owner; busy rejects, no candidate/experiment
+  commands accepted over IPC. Only exclusive lock owner removes a stale endpoint.
+  Separate-process forwarding tests passed; an earlier same-process QThread test
+  stalled because blocking Qt socket waits prevented the Python server from
+  running, so acceptance now uses real separate clients like deployed invocation.
+- Packaged Send to targets Filewheel.exe --gui directly (never.exe -mPython),
+  source uses the main app for same routing. Old known source arguments can be
+  removed with strict target/root/marker ownership; arbitrary links are protected.
+  Startup remains opt-in and does not enableMouse3 bydefault.
+- Static/portable packaging tests, lock dependency-marker audit and source smoke
+  checks pass. NO Windows EXE was built/run on Kubuntu. Native build, clean-machine
+  plugins/DLLs, repeated launch/tray/Sendto/startup and WindowsIPC remain pending.
+  Proceed G12fullportableLibreOffice seams; noWindowscrosscompileclaim.
+- G11 integration checks:12 packaging/IPC/frozen-plan tests +7 malformed-reply
+  subtests pass; full suite307/234 passed before added reply/late-hook regressions.
+  Source --self-test reports all real engine fixtures successful. Build/self-test
+  deadlines and bidirectional portable-source/output containment guards checked.
+  Native EXE build/clean-machine operation remains unverified.

@@ -14,3 +14,7 @@ logs/
 *.pem
 *.key
 !docs/*.md
+
+.venv-filewheel/
+.venv-build314/
+packaging/vendor/
