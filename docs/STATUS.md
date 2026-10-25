@@ -593,3 +593,20 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   availability guard; added guard and regression. Native Windows MD conversion
   and Python3.14 environment setup remain queued. Continue directly G6-C.
 - G6-B regression fixed;9 focused tests +5 subtests and scoped Ruff pass.
+
+## G6-C — LibreOffice DOCX → PDF implemented
+- Optional engine detection (PATH/Windows ProgramFiles, prefer soffice.com for
+  Windows command-line use), isolated per-run profile/private input/output, fixed
+  argument list with no shell,90second default deadline, validated readable PDF.
+  Expanded archives/macros/external resource relationships reject before rendering.
+  Collision-safe shared publication preserves source/existing files.
+- Timeout kills the owned process tree (POSIX process group; Windows taskkill/T),
+  then bounded cleanup. No unrelated Office process/profile is targeted. Worker
+  cancellation is checked around the renderer call, not immediate interruption.
+- Actual LibreOffice fixture renders editable DOCX text/table to readable PDF,
+  preserving source and collision sentinel. Initial sandbox run failed dconf
+  readonly runtime storage; rerun outside that sandbox passed. Additional tests
+  cover missing engine, corrupt DOCX, safe argv/profile/timeout and a real dummy
+  wrapper/descendant timeout. Reviewer rechecked process-tree fix; no material
+  findings. Windows binary/process-tree behavior remains pending.
+- Continue directly to G7 image/PDF expansion; no Word automation required.

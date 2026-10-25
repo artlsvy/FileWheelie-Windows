@@ -54,3 +54,5 @@ Overnight checkpoint: G5 real converter and background GUI implemented; G6-A nex
 G6-A: PDF→editable DOCX implemented/Linux fixture-tested; G6-B MarkItDown next.
 
 G6-B: local MarkItDown pairs implemented/Linux-tested on3.14; unavailable on3.15. G6-C next.
+
+G6-C: LibreOffice DOCX→PDF implemented/real Linux-tested; bounded process-tree timeout. G7 next.
