@@ -132,8 +132,14 @@ def main(argv=None) -> int:
             print('GUI dependency missing. Install with: python -m pip install -e ".[ui]"',
                   file=sys.stderr)
             return 5
-        except (RuntimeError, OSError):
-            print("GUI desktop initialization failed", file=sys.stderr)
+        except (RuntimeError, OSError) as error:
+            from filewheel.ui.desktop_errors import DesktopInitializationError
+            diagnostic = ({"stage": error.stage, "details": error.details}
+                          if isinstance(error, DesktopInitializationError) else
+                          {"stage": "start_popup", "details": {"error_type": type(error).__name__}})
+            print(json.dumps({"type": "gui_startup_error", **diagnostic},
+                             ensure_ascii=True, allow_nan=False), file=sys.stderr)
+            print("GUI desktop initialization failed; see gui_startup_error above", file=sys.stderr)
             return 5
         if selection is not None:
             print(json.dumps({"action": selection.action, "path": str(selection.input_path),

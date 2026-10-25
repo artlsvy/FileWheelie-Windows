@@ -132,7 +132,7 @@ class RadialPopupTests(unittest.TestCase):
         def fail_mapping(point, screens):
             raise RuntimeError("monitor unavailable")
         self.popup.point_mapper = fail_mapping
-        with self.assertRaisesRegex(RuntimeError, "monitor unavailable"):
+        with self.assertRaisesRegex(RuntimeError, "position_popup"):
             self.popup.present(target("replacement.docx"))
         self.assertEqual(len(finished), 1)
         self.assertTrue(self.popup._finished)

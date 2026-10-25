@@ -1,9 +1,11 @@
 """Physical desktop -> Qt logical coordinates; invoked after QApplication setup."""
 
 import ctypes
+import math
 from ctypes import wintypes
 
 from filewheel.platforms.windows.native import require_windows
+from filewheel.ui.desktop_errors import DesktopInitializationError
 
 
 def logical_point(point, screens):
@@ -26,15 +28,33 @@ def logical_point(point, screens):
     user.GetMonitorInfoW.argtypes = [wintypes.HANDLE, ctypes.POINTER(MonitorInfo)]
     user.GetMonitorInfoW.restype = wintypes.BOOL
     handle = user.MonitorFromPoint(wintypes.POINT(*point), 2)
+    if not handle:
+        raise DesktopInitializationError("get_native_monitor", {
+            "physical_point": list(point), "winerror": ctypes.get_last_error(),
+        })
     info = MonitorInfo()
     info.size = ctypes.sizeof(info)
-    if not handle or not user.GetMonitorInfoW(handle, ctypes.byref(info)):
-        raise OSError("Native monitor information unavailable")
+    if not user.GetMonitorInfoW(handle, ctypes.byref(info)):
+        raise DesktopInitializationError("get_monitor_info", {
+            "physical_point": list(point), "winerror": ctypes.get_last_error(),
+        })
+    screens = list(screens)
+    details = {
+        "physical_point": list(point), "native_device": info.device,
+        "qt_screen_names": [screen.name() for screen in screens],
+        "monitor_rect": [info.monitor.left, info.monitor.top,
+                         info.monitor.right, info.monitor.bottom],
+    }
     matches = [screen for screen in screens if screen.name().casefold() == info.device.casefold()]
     if len(matches) != 1:
-        raise RuntimeError("Native monitor could not be matched to Qt screen")
+        raise DesktopInitializationError("match_qt_screen", details)
     screen = matches[0]
     origin = screen.geometry()
     ratio = screen.devicePixelRatio()
+    if not isinstance(ratio, (int, float)) or not math.isfinite(ratio) or ratio <= 0:
+        # Keep malformed DPR out of the JSON metadata as well as coordinate math.
+        raise DesktopInitializationError("scale_qt_point", {
+            **details, "qt_dpr_valid": False,
+        })
     return (round(origin.x() + (point[0] - info.monitor.left) / ratio),
             round(origin.y() + (point[1] - info.monitor.top) / ratio))

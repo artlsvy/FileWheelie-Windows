@@ -1,4 +1,15 @@
-# Next bounded task — G5 PNG → JPEG conversion
+# Immediate bounded task — resolve Windows G4 desktop startup failure
+
+User direct GUI path validation succeeds but GUI initialization fails. Root cause
+is unknown; previous code hid the failing RuntimeError/OSError stage. Stage-specific
+ASCII-safe gui_startup_error JSON is now implemented/Linux-tested. After syncing,
+run the existing direct GUI command once and inspect stage/details. No shortcut
+reinstall, repeated basic headless test, selected-file lookup or mouse research.
+Fix only the evidenced failing desktop step; preserve strict mapping and lifecycle.
+Keep actual popup placement/focus/DPI verification queued. G5 stays next after G4
+is usable. Details/evidence in STATUS.md and SEND_TO.md.
+
+## Following milestone — G5 PNG → JPEG conversion
 
 G4-A is implemented and Linux/offscreen tested. Windows radial overlay acceptance
 remains queued separately in STATUS.md/SEND_TO.md. Basic single-file headless

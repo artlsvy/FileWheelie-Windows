@@ -1,9 +1,9 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-25
-Current priority: G4-A radial preview is implemented/Linux-offscreen-tested;
-Windows GUI acceptance remains queued. NEXT is G5 PNG→JPEG, followed by PDF→DOCX
-and MarkItDown. Basic G2-F single-file direct CLI/Send to is WINDOWS-VERIFIED from
+Current priority: diagnose the reported Windows G4 GUI startup failure using
+the new stage-specific desktop error. GUI remains Linux/offscreen-tested only.
+G5 PNG→JPEG follows a usable G4 popup, then PDF→DOCX and MarkItDown. Basic G2-F single-file direct CLI/Send to is WINDOWS-VERIFIED from
 user-supplied evidence. Mouse3 remains desired, preserved and diagnostic-only.
 No conversion engine has been implemented.
 
@@ -477,3 +477,29 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   invalid/failed popup replacements so event-loop waiters cannot remain blocked.
   Three added regressions pass; focused recheck has no remaining material findings.
   No PowerShell or Windows GUI execution by Codex. No converter added.
+
+## Windows G4 startup failure: accepted path, desktop failure
+- User supplied direct --gui console: build/runtime context Python3.15.0,
+  path C:\Users\lsvy\fileconverter\AGENTS.md, argument_count1, accepted=true,
+  source=shell_explicit, action=radial_preview, elapsed0.341ms, point[362,888].
+  Then GUI desktop initialization failed. Acceptance describes path validation,
+  NOT popup success. No native GUI success is claimed. Cause remains unknown:
+  previous catch combined RuntimeError/OSError without reporting failing stage.
+- Separate supplied diagnostic_only record has argument_count0 and safely rejects
+  expected_one_path (elapsed0.025ms). It is not the failed one-argument GUI launch;
+  its exact launch method was not supplied. Do not infer selected-file loss.
+- GUI stage/install both report Already configured. This narrowly supports
+  idempotent matching-owned-link detection, not GUI shortcut execution/removal.
+- Added DesktopInitializationError and ASCII-safe gui_startup_error stderr JSON.
+  Stages identify native monitor lookup/info, native-device-to-QScreen matching,
+  DPR scaling, logical screen selection, positioning, application creation and
+  popup display. Details contain desktop geometry/names/numeric error codes,
+  never input paths or arbitrary exception messages. No guessed monitor fallback,
+  new Mouse3 diagnostic, dependency replacement or native mapping change.
+- Actual checks:169 tests pass with Qt offscreen; compileall and whitespace checks
+  pass. New regression tests cover error stages/metadata/CLI reporting, plus
+  preserved failed-replacement completion. WINDOWS_VALIDATION_REQUIRED: sync and
+  rerun the same direct GUI command once; capture gui_startup_error JSON. No
+  shortcut reinstall or repeat basic headless Send to diagnostic is needed.
+- Focused reviewer independently reproduced169 tests/compilation/whitespace checks;
+  no material findings. Root cause and Windows GUI success remain unverified.

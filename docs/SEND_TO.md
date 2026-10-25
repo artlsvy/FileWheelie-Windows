@@ -186,3 +186,14 @@ the targetWindows3.15 Qt runtime still needs this manual run. See
 [Qt high-DPI model](https://doc.qt.io/qtforpython-6/overviews/qtdoc-highdpi.html)
 for logical screen origins/scaling; offscreen tests cannot certify native focus,
 outside routing, device-name mapping or Windows activation.
+
+## Reported Windows GUI startup failure
+
+The supplied --gui command accepted AGENTS.md, then failed desktop initialization.
+accepted=true attests the path only. Updated code prints a gui_startup_error JSON
+record to stderr with stage and bounded desktop details (monitor device names,
+geometry, numeric Windows error where applicable), rather than hiding the failure.
+After syncing, retry the same direct GUI command above once and retain that JSON
+plus exit code. No shortcut reinstall or repeated headless smoke test is required.
+The separate diagnostic_only argument_count0 record correctly rejects a missing
+argument; it does not diagnose the one-argument GUI failure.

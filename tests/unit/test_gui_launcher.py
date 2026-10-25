@@ -62,3 +62,21 @@ class GuiLauncherTests(unittest.TestCase):
         self.assertTrue(diagnostic['target'].endswith('python.exe'))
         with self.assertRaises(ValueError):
             shortcut_plan(root, exe, 'unexpected')
+
+    def test_gui_startup_error_has_stage_without_raw_exception_path(self):
+        from filewheel.ui.desktop_errors import DesktopInitializationError
+        error = DesktopInitializationError("match_qt_screen", {
+            "native_device": "DISPLAY2", "qt_screen_names": ["DISPLAY1"],
+        })
+        with (patch.object(cli, 'require_windows'),
+              patch.object(cli, 'cursor_point', return_value=(2, 3)),
+              patch.object(cli, 'inspect_file', return_value=FileCheck(True, True)),
+              patch.object(cli, 'show_preview', side_effect=error),
+              redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as err):
+            self.assertEqual(cli.main(['--gui', '--', r'C:\a.png']), 5)
+        import json
+        report = json.loads(err.getvalue().splitlines()[0])
+        self.assertEqual(report['type'], 'gui_startup_error')
+        self.assertEqual(report['stage'], 'match_qt_screen')
+        self.assertEqual(report['details']['native_device'], 'DISPLAY2')
+        self.assertNotIn(r'C:\a.png', err.getvalue())

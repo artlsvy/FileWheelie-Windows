@@ -8,6 +8,7 @@ from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QApplication, QWidget
 
 from filewheel.core.models import TargetResolution
+from filewheel.ui.desktop_errors import DesktopInitializationError
 from filewheel.ui.placement import Rect, popup_position
 from filewheel.ui.radial import DEFAULT_PREVIEW_REGISTRY, RadialState
 
@@ -67,22 +68,38 @@ class RadialPopup(QWidget):
             point = self.point_mapper(target.point, app.screens())
             screen = app.screenAt(QPoint(round(point[0]), round(point[1])))
             if screen is None:
-                raise RuntimeError("invocation monitor unavailable")
+                raise DesktopInitializationError("find_logical_screen", {
+                    "logical_point": list(point),
+                    "screens": [{"name": item.name(),
+                                 "geometry": [item.geometry().x(), item.geometry().y(),
+                                              item.geometry().width(), item.geometry().height()]}
+                                for item in app.screens()],
+                })
             area = screen.availableGeometry()
             location = popup_position(point, Rect(area.x(), area.y(), area.width(), area.height()),
                                       (self.width(), self.height()))
-        except Exception:
+        except Exception as error:
             self.state.dismiss()
             self._finish()
-            raise
+            if isinstance(error, DesktopInitializationError):
+                raise
+            raise DesktopInitializationError(
+                "position_popup", {"error_type": type(error).__name__},
+            ) from error
         self.move(*location)
         self._finished = False
         self._hover_amounts = [0.0] * len(self.state.options)
-        self.show()
-        self.raise_()
-        self.activateWindow()
-        self.setFocus(Qt.FocusReason.PopupFocusReason)
-        self.update()
+        try:
+            self.show()
+            self.raise_()
+            self.activateWindow()
+            self.setFocus(Qt.FocusReason.PopupFocusReason)
+            self.update()
+        except (RuntimeError, OSError) as error:
+            self.dismiss()
+            raise DesktopInitializationError(
+                "show_popup", {"error_type": type(error).__name__},
+            ) from error
         return True
 
     def dismiss(self):
@@ -350,7 +367,12 @@ def run_popup(target: TargetResolution | None, registry=DEFAULT_PREVIEW_REGISTRY
     app = QApplication.instance()
     owned_app = app is None
     if owned_app:
-        app = QApplication(["filewheel"])
+        try:
+            app = QApplication(["filewheel"])
+        except (RuntimeError, OSError) as error:
+            raise DesktopInitializationError(
+                "create_qt_application", {"error_type": type(error).__name__},
+            ) from error
     previous = app.quitOnLastWindowClosed()
     app.setQuitOnLastWindowClosed(False)
     popup = RadialPopup(registry)

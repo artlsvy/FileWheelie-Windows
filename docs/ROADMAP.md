@@ -29,7 +29,11 @@ narrow result does not verify GUI overlay/focus/DPI, Unicode/malformed paths,
 multi-selection or removal. These remain independently queued in STATUS.md.
 Do not repeat the completed basic diagnostic without a regression.
 
-**NEXT: G5 PNG→JPEG conversion engine**, then PDF→DOCX and MarkItDown integration.
+**Immediate G4 follow-up:** supplied direct GUI command validates the path but
+fails desktop initialization; stage-specific errors are implemented for the next
+Windows retry. Cause unknown; no native GUI success claimed.
+
+**Following milestone: G5 PNG→JPEG conversion engine**, then PDF→DOCX and MarkItDown integration.
 G4 native acceptance stays queued; Linux offscreen tests do not establish Windows
 behavior. Mouse3 stays desired, preserved and experimental; no further mouse
 research is part of this milestone.
