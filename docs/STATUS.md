@@ -814,3 +814,8 @@ pass on Linux; native tray, COM, focus and hook behavior remain pending.
 - A later no-file launch now adopts tray mode even when the existing owner began
   as a transient GUI. It does not enable Mouse3. This route has a Qt regression
   test; final full-suite count above includes it.
+
+- Final read-only reviewer check found no remaining material blockers in tray
+  lifecycle/app routing or portable-office seams. Native Windows COM/tray/DLL
+  behavior remains unverified. Milestone commits: G9-A `5f656a3`, G9-B `9878e9f`,
+  G10 `6168a23` plus tray fixes `84bfb14`/`2be6260`, G11 `86ca744`, G12 `24df3d7`.
