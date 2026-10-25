@@ -557,3 +557,21 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
 - G5 review recheck:202 full-suite tests pass (includes8 independently prepared
   G6-A engine tests); compileall/whitespace pass. Scoped new G5 code/tests Ruff
   checks pass. No remaining material review findings; no Windows run claimed.
+
+## G6-A — editable PDF → DOCX implemented
+- Registered optional pdf2docx backend; normal text PDFs reconstruct editable Word
+  text and basic table structure. Decoded DOCX archive/text validation precedes safe
+  publication. Corrupt/encrypted/empty/image-only PDFs fail with explicit errors;
+  scanned text needs OCR (not implemented). Mixed image-only pages carry warnings.
+- Real generated PDF fixtures and DOCX readback cover editable text/table, scans,
+  corrupt/encrypted input, cleanup, cancellation and100page/50MiB limits. No Word
+  installation required. No OCR, network or external services used.
+- PyMuPDF1.28.2/pdf2docx0.5.13 tested on Python3.14; constrain PyMuPDF<2 to avoid
+  unrelated new2.0 ML/layout dependencies. pdf2docx is unmaintained upstream; output
+  fidelity is best effort, and cancellation is cooperative around its inline call.
+  PyMuPDF licensing remains AGPL/commercial; this private local workflow uses its
+  documented package, no redistribution infrastructure is added. Word COM deferred.
+- Actual focused tests:9 real/fake engine tests pass; scoped Ruff checks pass.
+  Windows PDF→DOCX remains pending. Continue directly to G6-B MarkItDown.
+- G6-A final suite203 tests pass (197 subtests),9 focused tests independently
+  reproduced by reviewer; no material findings. Compilation/whitespace pass.

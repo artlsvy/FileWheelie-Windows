@@ -46,5 +46,6 @@ class Registry:
 
 def default_registry() -> Registry:
     from filewheel.converters.images import PillowEngine
+    from filewheel.converters.pdf_docx import PdfDocxEngine
 
-    return Registry((PillowEngine(),))
+    return Registry((PillowEngine(), PdfDocxEngine()))

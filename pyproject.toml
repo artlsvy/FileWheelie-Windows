@@ -12,6 +12,7 @@ dependencies = []
 [project.optional-dependencies]
 ui = ["PySide6>=6.12,<7"]
 images = ["Pillow>=12,<14"]
+pdf = ["PyMuPDF>=1.26,<2", "pdf2docx>=0.5.13,<0.6"]
 windows = ["comtypes>=1.4; sys_platform == 'win32'"]
 dev = ["pytest>=8", "ruff>=0.9"]
 

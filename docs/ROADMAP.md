@@ -50,3 +50,5 @@ research is part of this milestone.
 Codex on Kubuntu can always advance G0/G3 tests, diagnostics, mocks, docs, and implementation behind `sys.platform == 'win32'` guards. It cannot certify G1/G2/G4. When validation is pending, log it and work on independent testable units; never call a gate complete by inference.
 
 Overnight checkpoint: G5 real converter and background GUI implemented; G6-A next.
+
+G6-A: PDF→editable DOCX implemented/Linux fixture-tested; G6-B MarkItDown next.
