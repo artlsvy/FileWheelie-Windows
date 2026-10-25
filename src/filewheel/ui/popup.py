@@ -2,6 +2,8 @@
 
 import math
 import sys
+from pathlib import Path
+from dataclasses import replace
 
 from PySide6.QtCore import QEvent, QEventLoop, QPoint, QPointF, QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
@@ -29,10 +31,17 @@ class RadialPopup(QWidget):
     center_radius = 67
     outer_radius = 148
 
-    def __init__(self, registry=DEFAULT_PREVIEW_REGISTRY, *, point_mapper=logical_point):
+    def __init__(self, registry=DEFAULT_PREVIEW_REGISTRY, *, point_mapper=logical_point,
+                 manager=None, source_mapper=lambda path: Path(str(path))):
         super().__init__(None, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint
                          | Qt.WindowType.WindowStaysOnTopHint)
         self.state = RadialState(registry)
+        self.manager, self.source_mapper = manager, source_mapper
+        self.job = None
+        self._closing = False
+        self.status_title = ""
+        self.status_message = ""
+        self.conversion_result = None
         self.point_mapper = point_mapper
         self.hovered = -1
         self.keyboard_index = -1
@@ -54,6 +63,11 @@ class RadialPopup(QWidget):
         self._focus_check.timeout.connect(self._dismiss_if_inactive)
 
     def present(self, target):
+        if self.job is not None:
+            self.job.cancelled.set()
+            return False
+        self._closing = False
+        self.conversion_result = None
         self._resetting = True
         self.hide()
         self._resetting = False
@@ -106,6 +120,10 @@ class RadialPopup(QWidget):
         self.close()
 
     def _finish(self):
+        if self.job is not None:
+            self._closing = True
+            self.job.cancelled.set()
+            return
         self._animation.stop()
         self._focus_check.stop()
         if not self._finished and not self._resetting:
@@ -140,6 +158,10 @@ class RadialPopup(QWidget):
     def _hit(self, point):
         x, y = point.x() - self.width() / 2, point.y() - self.height() / 2
         distance = math.hypot(x, y)
+        if self.state.stage == "converting":
+            return -1
+        if self.state.stage == "result":
+            return -2 if QRectF(54, 251, 216, 34).contains(point) else -1
         if self.state.stage == "confirmation":
             return -2 if QRectF(54, 251, 216, 34).contains(point) else -1
         if self._list_mode():
@@ -175,20 +197,20 @@ class RadialPopup(QWidget):
     def mousePressEvent(self, event):
         point = event.position()
         hit = self._hit(point)
-        if (self.state.stage == "confirmation"
+        if (self.state.stage in ("confirmation", "converting", "result")
                 and not QRectF(22, 35, 280, 262).contains(point)):
             self.dismiss()
         elif self._list_mode() and not QRectF(22, 22, 280, 280).contains(point):
             self.dismiss()
         elif not self.rect().contains(point.toPoint()) or (
-            not self._list_mode() and self.state.stage != "confirmation"
+            not self._list_mode() and self.state.stage not in ("confirmation", "converting", "result")
             and math.hypot(point.x() - 162, point.y() - 162) > self.outer_radius
         ):
             self.dismiss()
         elif event.button() != Qt.MouseButton.LeftButton:
             return
         elif hit == -2:
-            if self.state.stage == "confirmation":
+            if self.state.stage in ("confirmation", "result"):
                 self.dismiss()
             else:
                 self.state.back()
@@ -208,7 +230,42 @@ class RadialPopup(QWidget):
         self._reset_hover()
         if selection is not None:
             self.last_selection = selection
+            if self.manager is not None:
+                from filewheel.ui.conversion_job import ConversionJob
+                self.state.stage = "converting"
+                self.status_title = "Converting…"
+                self.status_message = "Preparing local conversion"
+                self.job = ConversionJob(self.manager, self.source_mapper(selection.input_path),
+                                         selection.output_extension, self)
+                self.job.progress_changed.connect(self._conversion_progress)
+                self.job.outcome.connect(self._conversion_done)
+                self.job.start()
             self.selected.emit(selection)
+
+    def _conversion_progress(self, value, message):
+        self.status_message = f"{round(max(0, min(1, value)) * 100)}% · {message}"
+        self.update()
+
+    def _conversion_done(self, result, error):
+        job, self.job = self.job, None
+        job.wait()
+        job.deleteLater()
+        if self._closing:
+            self._finish()
+            return
+        self.state.stage = "result"
+        self.conversion_result = result
+        if error is not None:
+            self.status_title = "Conversion failed"
+            self.status_message = str(error)[:250] or type(error).__name__
+        else:
+            self.status_title = "Converted"
+            self.status_message = result.outputs[0].name
+            if len(result.outputs) > 1:
+                self.status_message += f" (+{len(result.outputs)-1} files)"
+            self.last_selection = replace(self.last_selection, action="converted",
+                                          intended_path=result.outputs[0])
+        self.update()
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -218,7 +275,7 @@ class RadialPopup(QWidget):
             self.state.back()
             self._reset_hover()
         elif key in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
-            if self.state.stage == "confirmation":
+            if self.state.stage in ("confirmation", "result"):
                 self.dismiss()
             elif self.keyboard_index >= 0:
                 self._choose(self.keyboard_index)
@@ -291,6 +348,18 @@ class RadialPopup(QWidget):
             painter.drawEllipse(QRectF(14-spread/2, 16-spread/2, 296+spread, 296+spread))
         painter.setBrush(base)
         painter.setPen(QPen(border, 1))
+        if self.state.stage in ("converting", "result"):
+            painter.drawRoundedRect(QRectF(22, 35, 280, 262), 24, 24)
+            self._text(painter, QRectF(42, 52, 240, 30), self.status_title, foreground, 13, True)
+            self._text(painter, QRectF(42, 94, 240, 38), self.state.target.path.name,
+                       foreground, 10, True)
+            self._text(painter, QRectF(42, 138, 240, 65), self.status_message, muted, 10, wrap=True)
+            warnings = self.conversion_result.warnings if self.conversion_result else ()
+            if warnings:
+                self._text(painter, QRectF(42, 205, 240, 38), warnings[0], muted, 8, wrap=True)
+            self._text(painter, QRectF(54, 251, 216, 34),
+                       "Esc to cancel" if self.job is not None else "Done", foreground, 10, True)
+            return
         if self.state.stage == "confirmation":
             painter.drawRoundedRect(QRectF(22, 35, 280, 262), 24, 24)
             self._text(painter, QRectF(42, 52, 240, 25), "Dry-run preview", foreground, 13, True)
@@ -347,16 +416,16 @@ class RadialPopup(QWidget):
         painter.setBrush(base)
         painter.setPen(QPen(border, 1))
         painter.drawEllipse(QRectF(95, 95, 134, 134))
-        self._text(painter, QRectF(105, 113, 114, 20), "PREVIEW", QColor("#3982da"), 8, True)
+        self._text(painter, QRectF(105, 113, 114, 20), "CONVERT" if self.manager is not None else "PREVIEW", QColor("#3982da"), 8, True)
         self._text(painter, QRectF(102, 140, 120, 33), self.state.target.path.name, foreground, 10, True)
         text = "‹ Back" if self.state.stage == "formats" else "Choose category"
         if not count:
-            text = "No preview options"
+            text = "No available formats" if self.manager is not None else "No preview options"
         self._text(painter, QRectF(102, 180, 120, 22), text, muted, 8)
         self._text(painter, QRectF(102, 201, 120, 15), "Esc to dismiss", muted, 7)
 
 
-def run_popup(target: TargetResolution | None, registry=DEFAULT_PREVIEW_REGISTRY):
+def run_popup(target: TargetResolution | None, registry=DEFAULT_PREVIEW_REGISTRY, *, manager=None):
     """Run one popup, returning its dry-run selection after it is dismissed.
 
     The caller must supply a controller-validated target, never a provisional
@@ -375,7 +444,7 @@ def run_popup(target: TargetResolution | None, registry=DEFAULT_PREVIEW_REGISTRY
             ) from error
     previous = app.quitOnLastWindowClosed()
     app.setQuitOnLastWindowClosed(False)
-    popup = RadialPopup(registry)
+    popup = RadialPopup(registry, manager=manager)
     loop = QEventLoop()
     popup.finished.connect(loop.quit)
     try:

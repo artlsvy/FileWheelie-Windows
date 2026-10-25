@@ -74,7 +74,9 @@ def invocation_record(arguments, point, *, controller=None, inspector=None) -> d
 def show_preview(target):
     # Optional import after validation; headless mode never imports Qt.
     from filewheel.ui.popup import run_popup
-    return run_popup(target)
+    from filewheel.converters import ConversionManager
+    manager = ConversionManager()
+    return run_popup(target, manager.registry, manager=manager)
 
 
 def write_invocation(record: dict, *, output: Path | None, directory: Path | None) -> Path:

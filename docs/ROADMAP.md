@@ -9,8 +9,8 @@ States: `NOT STARTED` · `IMPLEMENTED/UNVERIFIED` · `MOCK-TESTED` · `WINDOWS-V
 | **G2** | Exact file-under-cursor resolver — experimental/deprioritized | Preserve implementation and evidence; expand only for a specific blocking issue; no trusted path promotion |
 | **G2-F** | Explicit-path launcher + personal Send to — basic single-file WINDOWS-VERIFIED | Direct CLI and Send to on build26200/Python3.15.0; Unicode/negative/removal matrix still pending; see SEND_TO.md |
 | G3 | Shared invocation/controller — IMPLEMENTED/MOCK-TESTED | Hover and explicit paths produce the same source-aware TargetResolution; cancellation/validation tests pass |
-| **G4** | PySide6 two-stage radial prototype — IMPLEMENTED/LINUX-TESTED; Windows UI pending | Near cursor, compatible category→format choices, Escape/Back/outside cancel, shared controller; no conversion |
-| **G5 NEXT** | Real PNG→JPEG engine | Background execution, valid output, no source overwrite; then PDF→DOCX and MarkItDown |
+| **G4** | PySide6 radial — basic launch/render WINDOWS-VERIFIED; full DPI/focus pending | Near cursor, compatible category→format choices, Escape/Back/outside cancel, shared controller; no conversion |
+| **G5** | PNG→JPEG IMPLEMENTED/LINUX-TESTED | Background execution, valid output, no source overwrite; then PDF→DOCX and MarkItDown |
 | G6 | Document/Markdown MVP | PDF→DOCX, DOCX→PDF, MarkItDown (DOCX/PDF/PPTX/XLSX/HTML→MD); capability tests |
 | G7 | Remaining image MVP | HEIC/JPEG/PNG/WebP, images→PDF, PDF→raster; representative real files |
 | G8 | UX reliability | Errors, progress, output collision policy, notifications, batch (optional) |
@@ -48,3 +48,5 @@ research is part of this milestone.
 
 ## Overnight rules
 Codex on Kubuntu can always advance G0/G3 tests, diagnostics, mocks, docs, and implementation behind `sys.platform == 'win32'` guards. It cannot certify G1/G2/G4. When validation is pending, log it and work on independent testable units; never call a gate complete by inference.
+
+Overnight checkpoint: G5 real converter and background GUI implemented; G6-A next.

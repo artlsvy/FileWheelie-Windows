@@ -1,12 +1,10 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-25
-Current priority: verify the corrected G4 monitor association on Windows. The
-reported startup failure came from comparing a Win32 device ID with Qt's friendly
-screen name. GUI remains Linux/offscreen-tested only.
-G5 PNG→JPEG follows a usable G4 popup, then PDF→DOCX and MarkItDown. Basic G2-F single-file direct CLI/Send to is WINDOWS-VERIFIED from
-user-supplied evidence. Mouse3 remains desired, preserved and diagnostic-only.
-No conversion engine has been implemented.
+Current priority: autonomous G5→G8 execution authorized by user. G4 launched and
+rendered successfully on Windows11 (user report), monitor association corrected.
+Basic G2-F invocation is Windows-verified; detailed DPI/focus and future conversion
+Windows runs remain pending. Do not wait for native acceptance to progress.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -532,3 +530,30 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   negative-origin edge pixels. No new Windows runtime execution by Codex.
 - Independent reviewer reproduced176 passing tests/compile/whitespace checks;
   edge-rounding finding fixed and rechecked with no remaining material issues.
+
+## Overnight authorization / fresh checkout audit
+- Resumed at HEAD1a4a525 with clean tree; no existing G5 converters were present.
+  Preserve intervening commits and all Mouse3/diagnostic code. User reports G4
+  successfully launched/rendered on Windows; no expanded DPI/focus claim follows.
+- Authorized sequential G5, G6-A/B/C, G7, G8 without further confirmation or waiting
+  for Windows. Separate commits per milestone when safe; no pushes requested.
+
+## G5 — PNG → JPEG implemented
+- Pillow engine handles RGB/RGBA/grayscale PNG; alpha composites onto white,
+  quality90, output decoded/validated as JPEG. Source is unchanged. Same-directory
+  staging and atomic hardlink publication never replace existing output; collisions
+  get numbered names. Unsupported hardlink filesystems fail safely. Cancel/failure
+  cleans temporary/new artifacts; multi-output protocol is ready for PDF pages.
+- Available-engine registry now feeds the actual Send to GUI: installed working
+  pairs only, no speculative preview edges in live launch. Existing preview API
+  remains for tests. QThread worker supplies progress and result/error; dismissed
+  work is cancelled cooperatively and resources survive until the worker finishes.
+- Actual Linux checks: initial192 pytest tests pass (197 subtests), including real
+  PNG/JPEG and Qt-worker integration. Reviewer identified two failure windows:
+  publication metadata lookup after hardlink, and synchronous selected subscribers
+  closing before worker ownership. Both fixed with regressions; final counts below.
+- Windows G5 conversion/NTFS publication/worker dismissal remains unverified.
+  Continue directly to G6-A PDF→DOCX; user explicitly authorizes provisional progress.
+- G5 review recheck:202 full-suite tests pass (includes8 independently prepared
+  G6-A engine tests); compileall/whitespace pass. Scoped new G5 code/tests Ruff
+  checks pass. No remaining material review findings; no Windows run claimed.
