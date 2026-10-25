@@ -49,5 +49,6 @@ def default_registry() -> Registry:
     from filewheel.converters.markdown import MarkItDownEngine
     from filewheel.converters.office import LibreOfficeEngine
     from filewheel.converters.pdf_docx import PdfDocxEngine
+    from filewheel.converters.pdf_images import PdfImagesEngine
 
-    return Registry((PillowEngine(), PdfDocxEngine(), MarkItDownEngine(), LibreOfficeEngine()))
+    return Registry((PillowEngine(), PdfDocxEngine(), MarkItDownEngine(), LibreOfficeEngine(), PdfImagesEngine()))

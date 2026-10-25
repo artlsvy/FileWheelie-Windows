@@ -610,3 +610,20 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   wrapper/descendant timeout. Reviewer rechecked process-tree fix; no material
   findings. Windows binary/process-tree behavior remains pending.
 - Continue directly to G7 image/PDF expansion; no Word automation required.
+
+## G7 — image and PDF expansion implemented
+- Real PNG↔JPEG/WebP and JPEG↔WebP, JPEG input aliases, optional HEIC/HEIF→JPEG/PNG,
+  supported images→single-page PDF, all PDF pages→PNG/JPEG at144DPI. JPEG/PDF
+  transparency flattens white; PNG/losslessWebP preserve alpha. EXIF orientation
+  is applied. Animated/multi-image inputs reject rather than silently losing frames.
+- Available codec/engine registry gates JPEG/zlib/WebP/HEVC decode dependencies.
+  PDF raster outputs use numbered-page names and shared atomic collision-safe
+  publication. Limits bound image bytes/pixels and PDF pages/bytes/pixels. Sources
+  unchanged; partial-page failure/cancellation never publishes partial batches.
+- Actual fixtures exercise HEIC encoder+decoder installed here, all image pairs,
+  alpha/grayscale, multipage PDF dimensions/readability, collisions and cleanup.
+  Reviewer found missingJPEG/zlib gates; fixed with regression, also gated PDF
+  page validation and HEVC-specific decode support.27 focused engine/core tests
+  +15 subtests pass, scoped Ruff passes. Previous full suite229 +209 subtests
+  passed before the added codec guard test. No native Windows G7 run claimed.
+- Continue directly to G8 configurable240px wheel, transparency and feedback.

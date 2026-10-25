@@ -193,7 +193,7 @@ class PillowConversionTests(unittest.TestCase):
         source = self.make_png("RGB", "blue", "æøå image.PNG")
         result = self.manager.convert(source, ".JPG")
         self.assertEqual(result.path.name, "æøå image.jpg")
-        self.assertEqual(self.manager.registry.categories(source), ("Image",))
+        self.assertIn("Image", self.manager.registry.categories(source))
         self.assertEqual(self.manager.registry.formats(source, "Image")[0].label, "JPEG")
 
     def test_corrupt_and_renamed_non_png_reject_without_output(self):

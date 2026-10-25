@@ -1,13 +1,15 @@
-# Overnight continuation — G6-A, then G6-B/C, G7 and G8
+# Overnight continuation — finish G8 UI refinement and final integration
 
-G5 core and background UI are implemented and Linux-tested. Current bounded work:
-register/review G7 expanded PillowEngine and PdfImagesEngine with real fixtures.
-G6-A/B/C are implemented/Linux-tested and separately committed. Then continue
-immediately to G8 240px sizing/transparency/readability and real result feedback.
-Do not stop after G7.
+G5/G6-A/B/C/G7 engines are implemented and Linux-tested. G8 popup.py changes are
+owned by implementer conversion_core: default240px configurable sizing, transparent
+paint/OSshadow fix, readable labels, coherent scaledhitregions, resultactions and
+cancellation feedback. Do not overwrite its ongoing edits. Review and test it,
+update runtime/docs/Windows commands and commit G8 separately, then final audit.
 
-Working base: clean HEAD1a4a525 at overnight start. Preserve commits and Mouse3.
-G4 basic Windows launch/render user-verified; all new conversions and detailed
-DPI/focus remain WINDOWS_VALIDATION_REQUIRED. No wait for live Windows host.
-MarkItDown0.1.9 excludesPython3.15; keep that runtime's capabilities hidden and
-provide compatible3.14 instructions rather than forcing unsupported dependencies.
+Full suite last229pass; codec regression now27 focused tests pass. RealLibreOffice
+fixtures need `env PYTHONPATH=src .venv-ui/bin/python -m pytest` outside desktop
+sandbox (approvedprefix); restricted runtime dconf writes fail inside. No Windows
+conversion/DPI claim. G4 basic launch/render is user-verified. Preserve Mouse3.
+MarkItDown0.1.9 excludesPython3.15: extra marker skips it; Python3.14 for all MDpairs.
+Continue until G8 and consolidated test/docs audit finished, no approval between
+milestones and no waiting for liveWindows. No pushes authorized.
