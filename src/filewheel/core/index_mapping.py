@@ -94,6 +94,17 @@ def _tab_window_index(windows: list, frame: int, ancestry: list, view: int, tab:
         if not is_matched and not is_excluded:
             return None  # Unknown or partially matching relationships cannot be ignored.
         count, candidates = entry.get("item_count"), entry.get("candidates")
+        if entry.get("lookup_mode") == "targeted_index":
+            # A positively excluded tab has no item enumeration or path lookup.
+            if is_excluded:
+                if count is not None or candidates != [] or entry.get("truncated") is not False:
+                    return None
+            elif (not _integer(count) or not isinstance(candidates, list)
+                  or len(candidates) != 1 or entry.get("truncated") is not False):
+                return None
+            if is_matched:
+                matched.append(position)
+            continue
         if not _integer(count) or (is_matched and count > 32):
             return None
         # A peer is excluded by independent native HWNDs, not its candidate
@@ -123,7 +134,7 @@ def _tab_window_index(windows: list, frame: int, ancestry: list, view: int, tab:
 def assess_index_mapping(record: dict, *, now: float) -> dict:
     """Return bounded JSON evidence for an index candidate, never a trusted path.
 
-    ``candidate_path`` is copied only from Shell enumeration. ``provisional``
+    ``candidate_path`` is copied only from Shell item lookup evidence. ``provisional``
     means basic consistency checks passed, not that the click's identity is
     established. Collection timestamps are monotonic within the captured run;
     replay callers must use that run's clock domain, not their current uptime.
@@ -134,7 +145,7 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
         "checks": {
             "explorer_provenance": False, "fresh": False,
             "geometry_valid": False, "ancestry_provenance": False,
-            "complete_candidates": False, "index_in_range": False,
+            "complete_candidates": False, "candidate_lookup_complete": False, "index_in_range": False,
             "name_corroboration": None, "active_view_associated": False,
             "identity_correspondence": False, "filesystem_identity": False,
             "shell_window_count": None, "selected_shell_window_index": None,
@@ -267,21 +278,42 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
             checks["active_view_associated"] = True
         candidates = shell_window.get("candidates")
         count = shell_window.get("item_count")
-        if (
-            shell_window.get("truncated") is not False or not _integer(count)
-            or not isinstance(candidates, list) or len(candidates) != count
-            or count > 32
-        ):
-            return reject("truncated_candidates")
-        indices = [candidate.get("enumeration_index") for candidate in candidates]
-        if any(not _integer(value) for value in indices) or sorted(indices) != list(range(count)):
-            return reject("inconsistent_candidate_indices")
-        checks["complete_candidates"] = True
+        targeted = shell_window.get("lookup_mode") == "targeted_index"
+        if shell_window.get("lookup_mode") not in (None, "targeted_index"):
+            return reject("invalid_lookup_mode")
+        if targeted:
+            if (_tab_window_index(windows, event.window_id, ancestry, view[0], tab[0])
+                    != selected_window or not checks["active_view_associated"]):
+                return reject("active_view_mismatch")
+            if (shell_window.get("truncated") is not False or not _integer(count)
+                    or not isinstance(candidates, list) or len(candidates) != 1
+                    or shell_window.get("shell_snapshot_stable") is not True):
+                return reject("incomplete_targeted_lookup")
+            native = shell_window.get("native_view_candidate")
+            if (not isinstance(native, dict) or not _integer(native.get("view_item_count"))
+                    or native["view_item_count"] != count):
+                return reject("native_count_mismatch")
+            candidate = candidates[0]
+            if (not isinstance(candidate, dict)
+                    or type(candidate.get("enumeration_index")) is not int
+                    or candidate["enumeration_index"] != index):
+                return reject("inconsistent_candidate_indices")
+        else:
+            if (
+                shell_window.get("truncated") is not False or not _integer(count)
+                or not isinstance(candidates, list) or len(candidates) != count or count > 32
+            ):
+                return reject("truncated_candidates")
+            indices = [candidate.get("enumeration_index") for candidate in candidates]
+            if any(not _integer(value) for value in indices) or sorted(indices) != list(range(count)):
+                return reject("inconsistent_candidate_indices")
+            checks["complete_candidates"] = True
+            candidate = next((candidate for candidate in candidates
+                              if candidate["enumeration_index"] == index), None)
         if not 0 <= index < count:
             return reject("invalid_candidate_index")
         checks["index_in_range"] = True
-        candidate = next(candidate for candidate in candidates
-                         if candidate["enumeration_index"] == index)
+        checks["candidate_lookup_complete"] = True
         if candidate.get("is_folder") is not False or candidate.get("is_filesystem") is not True:
             return reject("unsupported_shell_object")
         path = _local_file_path(candidate.get("candidate_path"))
@@ -301,15 +333,31 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
             checks["name_corroboration"] = None  # Hidden extension is not identity.
         else:
             return reject("inconsistent_names")
-        name_matches = 0
-        for other in candidates:
-            other_path = _local_file_path(other.get("candidate_path"))
-            if other.get("display_name") is not None:
-                name_matches += other["display_name"] == name
-            elif other_path is not None:
-                name_matches += name in (other_path.name, other_path.stem)
-        if name_matches > 1:
-            return reject("ambiguous_display_name")
+        if targeted:
+            # No global name evidence: hidden/shortened labels must fail closed.
+            if name != path.name:
+                return reject("ambiguous_display_name")
+            ambiguity = shell_window.get("name_ambiguity")
+            if (not isinstance(ambiguity, dict)
+                    or ambiguity.get("method") != "literal_name_collision_probe"
+                    or type(ambiguity.get("query_count")) is not int
+                    or ambiguity["query_count"] not in (2, 3)
+                    or ambiguity.get("name") != name
+                    or _local_file_path(ambiguity.get("candidate_path")) != path):
+                return reject("name_ambiguity_unproven")
+            if ambiguity.get("status") != "unique":
+                return reject("ambiguous_display_name" if ambiguity.get("status") == "ambiguous"
+                              else "name_ambiguity_unproven")
+        else:
+            name_matches = 0
+            for other in candidates:
+                other_path = _local_file_path(other.get("candidate_path"))
+                if other.get("display_name") is not None:
+                    name_matches += other["display_name"] == name
+                elif other_path is not None:
+                    name_matches += name in (other_path.name, other_path.stem)
+            if name_matches > 1:
+                return reject("ambiguous_display_name")
         native = shell_window.get("native_view_candidate")
         if len(windows) > 1 and native is None:
             return reject("native_checks_incomplete")

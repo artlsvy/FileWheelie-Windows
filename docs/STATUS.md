@@ -819,3 +819,52 @@ pass on Linux; native tray, COM, focus and hook behavior remain pending.
   lifecycle/app routing or portable-office seams. Native Windows COM/tray/DLL
   behavior remains unverified. Milestone commits: G9-A `5f656a3`, G9-B `9878e9f`,
   G10 `6168a23` plus tray fixes `84bfb14`/`2be6260`, G11 `86ca744`, G12 `24df3d7`.
+
+
+## G10 follow-up — bounded large-folder Mouse3 lookup
+
+User-reported Windows evidence isolates the 32-item complete-enumeration gate:
+Mouse3, conversion engines and explicit confirmation work in smaller directories;
+larger views reject as truncated_candidates. This change addresses that gate
+only; the popup, Send to, conversion engines and resident lifecycle are unchanged.
+
+- Native IFolderView2::GetItem now accepts any valid in-range index. An active
+  large view reads the indexed native Shell item twice for snapshot consistency
+  and one independent Folder.Items.Item(index) for path corroboration. No Shell
+  listing of hundreds/thousands of entries is created. Positively excluded tabs
+  require no Folder.Items collection. Complete enumeration is retained only for
+  active views of at most 32 entries and the existing bounded headless fallback.
+- New targeted_index evidence carries the total count, one indexed candidate,
+  native count/path/HWND evidence and a Shell count recheck. The assessor requires
+  exact active tab/view association, matching counts and candidate index/path,
+  valid UIA geometry, fresh stable snapshots and existing filesystem safeguards.
+  complete_candidates remains false for targeted evidence; a distinct
+  candidate_lookup_complete check feeds the experimental gate. Trusted resolver
+  returns None and explicit user confirmation/path revalidation are unchanged.
+- Large-view labels must equal the full filesystem filename. Hidden/shortened
+  labels reject conservatively, rather than guessing from an incomplete listing.
+  A bounded Win32 literal-name and name+'.*' collision query rejects another
+  basename/stem collision (including hidden-extension aliases), short-name alias
+  surprises and query errors. It consumes at most three returned names, closes
+  handles on every exit, and runs before final native snapshot rechecks. This is
+  supplementary ambiguity evidence, never trusted UIA-to-Shell identity proof.
+- Python/Shell work is bounded independently of folder size; no constant-time
+  guarantee is claimed for Windows filesystem/provider internals. Existing
+  500 ms event freshness checks still fail closed if collection is too slow.
+- Tests cover 33, 50, 100, 500, 1,001 and 10,000 entries, high/invalid indices,
+  mixed-size/excluded tabs, incomplete/conflicting counts/paths/native data,
+  query errors/aliases/duplicates, hidden labels and changes during lookup.
+  Fakes assert exactly two native GetItem calls and one automation item read
+  for large folders. Existing small-directory and confirmation/cancel tests run.
+- WINDOWS_VALIDATION_REQUIRED: at least 500 real files, a hovered index above 32,
+  correct displayed path, cancel/confirm, multiple tabs and acceptable latency.
+  Enable Explorer's file-name extensions for the large-folder positive case;
+  hidden labels remain a deliberate safe rejection. Native FindFirst/FindNext
+  wildcard/alias behavior is not established by Linux fakes.
+
+- Final Linux validation: `PYTHONPATH=src .venv-ui/bin/python -m pytest -q`
+  passed **331 tests and 305 subtests**. Scoped Ruff on changed source/tests,
+  compileall for src/tests and git diff --check passed. Focused read-only review
+  found no remaining material blockers; it independently passed 89 tests and
+  151 subtests. Review's strict native-count schema finding was fixed and tested.
+  No Windows-native large-directory run or push was performed.

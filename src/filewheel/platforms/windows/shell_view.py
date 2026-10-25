@@ -30,14 +30,14 @@ def _bindings():
 
     class IOleWindow(IUnknown):
         _iid_ = GUID("{00000114-0000-0000-C000-000000000046}")
-        _methods_ = [
+        _methods_ = [  # noqa: RUF012 - comtypes interface declaration
             COMMETHOD([], HRESULT, "GetWindow", OUT(w.HWND, "window")),
             COMMETHOD([], HRESULT, "ContextSensitiveHelp", IN(w.BOOL, "enter")),
         ]
 
     class IShellBrowser(IOleWindow):
         _iid_ = GUID("{000214E2-0000-0000-C000-000000000046}")
-        _methods_ = [
+        _methods_ = [  # noqa: RUF012 - comtypes interface declaration
             COMMETHOD([], HRESULT, "InsertMenusSB", IN(V, "menu"), IN(V, "widths")),
             COMMETHOD([], HRESULT, "SetMenuSB", IN(V, "menu"), IN(V, "ole_menu"), IN(w.HWND, "active")),
             COMMETHOD([], HRESULT, "RemoveMenusSB", IN(V, "menu")),
@@ -55,13 +55,14 @@ def _bindings():
 
     class IServiceProvider(IUnknown):
         _iid_ = GUID("{6D5140C1-7436-11CE-8034-00AA006009FA}")
-        _methods_ = [COMMETHOD([], HRESULT, "QueryService",
+        _methods_ = [  # noqa: RUF012 - comtypes interface declaration
+            COMMETHOD([], HRESULT, "QueryService",
                               IN(P(GUID), "service"), IN(P(GUID), "iid"),
                               OUT(P(IUnknown), "object"))]
 
     class IShellItem(IUnknown):
         _iid_ = GUID("{43826D1E-E718-42EE-BC55-A1E261C37BFE}")
-        _methods_ = [
+        _methods_ = [  # noqa: RUF012 - comtypes interface declaration
             COMMETHOD([], HRESULT, "BindToHandler", IN(V, "context"), IN(P(GUID), "handler"),
                       IN(P(GUID), "iid"), OUT(V, "object")),
             COMMETHOD([], HRESULT, "GetParent", OUT(P(IUnknown), "parent")),
@@ -72,7 +73,7 @@ def _bindings():
 
     class IFolderView2(IUnknown):
         _iid_ = GUID("{1AF3A467-214F-4298-908E-06B03E0B39F9}")
-        _methods_ = [
+        _methods_ = [  # noqa: RUF012 - comtypes interface declaration
             # IFolderView slots 3..16, followed by IFolderView2 through GetItem.
             COMMETHOD([], HRESULT, "GetCurrentViewMode", OUT(w.UINT, "mode")),
             COMMETHOD([], HRESULT, "SetCurrentViewMode", IN(w.UINT, "mode")),
@@ -134,7 +135,7 @@ class ShellViewProbe:
         return result
 
     def _capture(self, shell_window, ancestry: list[dict], index: int, completed: list) -> dict:
-        c, w, GUID, service_type, browser_type, folder_type, item_type = self._types
+        c, _w, GUID, service_type, browser_type, folder_type, item_type = self._types
         def step(stage, operation):
             return probe_step(completed, stage, operation)
 
@@ -177,7 +178,7 @@ class ShellViewProbe:
             return {"active_view_association": association}
         folder = step("query_folder_view2", lambda: view.QueryInterface(folder_type))
         count = step("get_view_item_count", lambda: folder.ItemCount(2))  # SVGIO_ALLVIEW
-        if not 0 <= index < count <= 32:
+        if type(index) is not int or not 0 <= index < count:
             return {"active_view_association": association, "native_error": "view_index_or_size"}
         item = step("get_indexed_shell_item", lambda: folder.GetItem(index, c.byref(item_type._iid_)))
         path = step("get_filesystem_path", lambda: self._path(item))
@@ -197,6 +198,15 @@ class ShellViewProbe:
                 }
             except OSError:
                 pass
+        name_ambiguity = None
+        names = [node.get("name") for node in ancestry if node.get("class_name") == "UIItem"
+                 and node.get("control_type") == 50007]
+        if (count > 32 and local and file_state["exists_regular_file"]
+                and file_state["is_reparse_point"] is False
+                and bool(attributes & 0x40000000) and not bool(attributes & 0x20000000)
+                and len(names) == 1 and names[0] == local_path.name):
+            from filewheel.platforms.windows.name_ambiguity import probe_name_ambiguity
+            name_ambiguity = step("check_name_collision", lambda: probe_name_ambiguity(path, names[0]))
         position = None
         position_error = None
         try:
@@ -218,6 +228,7 @@ class ShellViewProbe:
         )
         return {
             "active_view_association": association,
+            "name_ambiguity": name_ambiguity,
             "native_view_candidate": {
                 "index": index, "candidate_path": path,
                 "is_filesystem": bool(attributes & 0x40000000),

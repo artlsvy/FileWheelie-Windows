@@ -53,7 +53,7 @@ def candidate_from_record(record: dict, *, now: float) -> ExperimentalCandidate 
         "fresh",
         "geometry_valid",
         "ancestry_provenance",
-        "complete_candidates",
+        "candidate_lookup_complete",
         "index_in_range",
         "active_view_associated",
         "native_index_path_match",

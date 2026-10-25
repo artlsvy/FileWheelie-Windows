@@ -1,64 +1,41 @@
-# Next task: Windows acceptance of G10–G12
+# Next task: Windows acceptance of large-folder Mouse3 fix
 
-G9-A/B are Windows-verified by the user's latest report. G10 tray implementation
-and lifecycle follow-up are complete. G11 build recipe and G12 full portable-office
-integration seams are complete; native packaging/bundling remain unverified.
-Final Linux checks: 312 tests / 241 subtests; all-engine source self-test passed.
-Do not repeat G9 diagnosis or expand Mouse3 diagnostics without an observed blocker.
+The confirmed 32-item gate is replaced by bounded targeted Shell lookup. G10's
+confirmation dialog, Send to fallback and trusted resolver are unchanged.
+No conversion/UI/LibreOffice/packaging work is part of this fix.
+Linux validation: 331 tests / 305 subtests, scoped Ruff and compilation pass;
+focused review found no remaining material blockers. Native acceptance is pending.
 
-## First: try the tray on Windows 11 / Python 3.14
+## Windows 11 acceptance
+
+Quit the old resident Filewheel tray process before launching the updated source:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1
 .\.venv-filewheel\Scripts\python.exe -m filewheel --tray
 ```
 
-Use the tray checkbox to enable Experimental Mouse3 (confirmation required).
-Middle-click a local file in Explorer. Confirm only the exact proposed full path;
-Cancel must never open a converter. A confirmed path opens the normal wheel at
-the Mouse3 event point. Test unselected files, tabs, ambiguous hidden extensions,
-background/chrome and unrelated apps; ambiguous evidence must reject. Disable
-while idle and during pending consent; checkbox/status must return to off. Quit
-must release the hook/threads and exit. Experiment remains off on the next normal
-launch. If a provider genuinely hangs, retain logs and diagnose that concrete
-case; do not force-kill another application's process.
+Enable Experimental Mouse3 using the existing tray checkbox. Use a local Explorer
+folder with **at least 500 files** and show file-name extensions. Scroll and
+middle-click an item whose index is **greater than 32** (for example a file near
+the end of a 600-file view). Verify that confirmation shows the exact intended
+absolute path. Cancel must do nothing; confirming must open the existing radial
+converter at the event point. Repeat with a second high-index file and a different
+active tab whose folder has a different size. Ensure activation stays responsive.
+Small folders must retain their existing behavior.
 
-Send to continues independently. For a known older owned GUI shortcut, remove
-with its original environment before installing through the current entry:
+Large folders intentionally reject hidden/shortened labels, conflicting evidence,
+and ambiguous names; incomplete listings never justify bypassing duplicate-name
+protection. Test a full-name collision such as photo.png plus photo.png.txt and
+ensure it rejects conservatively. Check background/chrome rejection and the
+unchanged Send to fallback. Do not revisit already-confirmed conversion types.
 
-```powershell
-.\.venv-filewheel\Scripts\python.exe -m filewheel --sendto remove
-.\.venv-filewheel\Scripts\python.exe -m filewheel --sendto stage
-.\.venv-filewheel\Scripts\python.exe -m filewheel --sendto install
-```
+The implementation makes two indexed native GetItem reads and one independent
+Shell automation Item(index) read per large active view. Inactive tabs collect no
+items. Filename ambiguity uses at most three returned Win32 search names, not a
+Python/Shell directory walk. Actual filesystem query latency/wildcard behavior
+still requires Windows acceptance; the existing freshness deadline is retained.
 
-If the existing link targets another environment, its original interpreter is
-required for ownership-checked removal. Never delete a foreign shortcut blindly.
-Repeated Send to/direct GUI calls should route to the existing owner; test busy
-rejection, negative-coordinate monitors, DPI, focus and repeated shutdown/restart.
-Startup is optional: `python -m filewheel --startup install` / `--startup remove`.
-It starts the tray with Mouse3 off. No startup entry is created automatically.
-
-## Then: build and validate the standalone folder
-
-Follow PACKAGING.md and PORTABLE_LIBREOFFICE.md. Build on Windows, Python 3.14
-amd64 standard-GIL; the script uses a separate hash-locked build environment.
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1 -LibreOfficeDirectory "D:\Tools\LibreOfficePortable"
-& .\dist\Filewheel\Filewheel.exe --self-test
-Get-Content "$env:LOCALAPPDATA\Filewheel\logs\self-test.json"
-& .\dist\Filewheel\Filewheel.exe --tray
-```
-
-Omit LibreOfficeDirectory if no complete vendor tree is available; this leaves
-portable DOCX → PDF acceptance pending, not failed PDF → DOCX. Move the entire
-folder to a clean Windows machine/location without Python/venv. Verify native Qt
-plugins, all conversion families, repeated launch, Send to and startup ownership.
-With a complete bundle and no system LibreOffice, self-test must report
-libreoffice_source=bundled and DOCX → PDF must produce readable output. Record
-actual directory size and cold/warm latency. Do not call Linux wrapper tests a
-portable Windows validation.
-
-Local errors: `%LOCALAPPDATA%/Filewheel/logs/conversion-debug.log`.
-Keep source files unchanged and output collision checks in every acceptance run.
+Record Windows results in STATUS.md. If a concrete regression appears, fix only
+that blocker. Existing G11/G12 native packaging validation remains queued from the
+prior milestone, but is outside this G10 directory-size task. Do not push unless
+the user separately authorizes it.
