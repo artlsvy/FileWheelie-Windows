@@ -1,13 +1,15 @@
 # Immediate bounded task — resolve Windows G4 desktop startup failure
 
-User direct GUI path validation succeeds but GUI initialization fails. Root cause
-is unknown; previous code hid the failing RuntimeError/OSError stage. Stage-specific
-ASCII-safe gui_startup_error JSON is now implemented/Linux-tested. After syncing,
-run the existing direct GUI command once and inspect stage/details. No shortcut
-reinstall, repeated basic headless test, selected-file lookup or mouse research.
-Fix only the evidenced failing desktop step; preserve strict mapping and lifecycle.
-Keep actual popup placement/focus/DPI verification queued. G5 stays next after G4
-is usable. Details/evidence in STATUS.md and SEND_TO.md.
+Latest Windows stage=match_qt_screen identifies the cause: Win32 device name
+\\.\DISPLAY1 differs from Qt friendly name MAG 244F. The adapter now associates
+by unique full monitor origin/dimensions + valid DPR, with rounding tolerance;
+names/index/primary are not identity. See STATUS.md for actual evidence/tests.
+
+After syncing, retry the same direct GUI command once. No shortcut reinstall or
+repeat headless diagnostic. If successful, verify Back/Escape/confirmation and
+GUI Send to; if unsuccessful inspect the new stage/geometry details and fix only
+the evidenced issue. Keep native mixed-DPI/focus acceptance queued. Preserve
+Mouse3 and the controller boundary. G5 follows a usable G4 popup.
 
 ## Following milestone — G5 PNG → JPEG conversion
 

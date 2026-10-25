@@ -1,4 +1,4 @@
-"""Native monitor API fakes verify device matching and relative DPI mapping."""
+"""Native monitor fakes verify full-geometry association and relative DPI mapping."""
 import json
 import unittest
 from types import SimpleNamespace
@@ -7,17 +7,19 @@ from filewheel.platforms.windows import qt_position
 from filewheel.ui.desktop_errors import DesktopInitializationError
 
 
-def screen(name, x, y, ratio):
+def screen(name, x, y, ratio, width=1280, height=720):
     return SimpleNamespace(name=lambda: name, devicePixelRatio=lambda: ratio,
-                           geometry=lambda: SimpleNamespace(x=lambda: x, y=lambda: y))
+                           geometry=lambda: SimpleNamespace(x=lambda: x, y=lambda: y,
+                                                           width=lambda: width, height=lambda: height))
 
 
 class QtPositionTests(unittest.TestCase):
-    def native(self, device=r'\\.\DISPLAY2', left=-2560, top=-200):
+    def native(self, device=r'\\.\DISPLAY2', left=-2560, top=-200, width=2560, height=1440):
         def info(handle, pointer):
             obj = pointer._obj
             obj.device = device
             obj.monitor.left, obj.monitor.top = left, top
+            obj.monitor.right, obj.monitor.bottom = left + width, top + height
             return True
         return SimpleNamespace(MonitorFromPoint=Mock(return_value=1),
                                GetMonitorInfoW=Mock(side_effect=info))
@@ -26,9 +28,71 @@ class QtPositionTests(unittest.TestCase):
         with (patch.object(qt_position, 'require_windows'),
               patch.object(qt_position.ctypes, 'WinDLL', return_value=self.native(), create=True)):
             self.assertEqual(qt_position.logical_point((-2060, 300),
-                [screen(r'\\.\DISPLAY2', -2560, -200, 2)]), (-2310, 50))
+                [screen('MAG negative', -2560, -200, 2)]), (-2310, 50))
 
-    def test_unmatched_device_or_native_error_fails_without_guessing(self):
+    def test_user_friendly_name_single_monitor_capture(self):
+        with (patch.object(qt_position, 'require_windows'),
+              patch.object(qt_position.ctypes, 'WinDLL', return_value=self.native(
+                  device=r'\\.\DISPLAY1', left=0, top=0, width=1920, height=1080), create=True)):
+            self.assertEqual(qt_position.logical_point((444, 706),
+                [screen('MAG 244F', 0, 0, 1, 1920, 1080)]), (444, 706))
+
+    def test_multiple_screens_unique_full_geometry_match_not_order_or_name(self):
+        with (patch.object(qt_position, 'require_windows'),
+              patch.object(qt_position.ctypes, 'WinDLL', return_value=self.native(), create=True)):
+            primary = screen(r'\\.\DISPLAY2', 0, 0, 1, 1920, 1080)
+            matching = screen('same friendly model', -2560, -200, 2)
+            for screens in ([primary, matching], [matching, primary]):
+                self.assertEqual(qt_position.logical_point((-2060, 300), screens), (-2310, 50))
+
+    def test_duplicate_mirrored_geometries_fail_even_with_one_device_name_match(self):
+        with (patch.object(qt_position, 'require_windows'),
+              patch.object(qt_position.ctypes, 'WinDLL', return_value=self.native(), create=True)):
+            with self.assertRaises(DesktopInitializationError) as failure:
+                qt_position.logical_point((-2060, 300), [
+                    screen(r'\\.\DISPLAY2', -2560, -200, 2),
+                    screen('Mirror', -2560, -200, 2),
+                ])
+            self.assertEqual(failure.exception.stage, 'match_qt_screen')
+            self.assertEqual(failure.exception.details['geometry_match_count'], 2)
+
+    def test_wrong_origin_or_dimensions_reject_despite_matching_device_name(self):
+        with (patch.object(qt_position, 'require_windows'),
+              patch.object(qt_position.ctypes, 'WinDLL', return_value=self.native(), create=True)):
+            for candidate in (screen(r'\\.\DISPLAY2', 0, -200, 2),
+                              screen(r'\\.\DISPLAY2', -2560, 0, 2),
+                              screen(r'\\.\DISPLAY2', -2560, -200, 2, 1920, 1080)):
+                with self.subTest(candidate=candidate), self.assertRaises(DesktopInitializationError):
+                    qt_position.logical_point((-2060, 300), [candidate])
+
+    def test_fractional_dpr_rounding_with_negative_origin(self):
+        with (patch.object(qt_position, 'require_windows'),
+              patch.object(qt_position.ctypes, 'WinDLL', return_value=self.native(), create=True)):
+            self.assertEqual(qt_position.logical_point((-1060, 550),
+                [screen('Friendly', -2560, -200, 1.5, 1707, 960)]), (-1560, 300))
+            with self.assertRaises(DesktopInitializationError):
+                qt_position.logical_point((-1060, 550),
+                    [screen('Friendly', -2560, -200, 1.5, 1700, 960)])
+
+    def test_invalid_peer_dpr_cannot_be_excluded_by_name(self):
+        with (patch.object(qt_position, 'require_windows'),
+              patch.object(qt_position.ctypes, 'WinDLL', return_value=self.native(), create=True)):
+            with self.assertRaises(DesktopInitializationError) as failure:
+                qt_position.logical_point((-2060, 300), [
+                    screen('Good', -2560, -200, 2), screen('Other', 0, 0, float('inf')),
+                ])
+            self.assertEqual(failure.exception.stage, 'scale_qt_point')
+            json.dumps(failure.exception.as_record(), allow_nan=False)
+
+    def test_scaled_last_physical_pixel_stays_inside_verified_negative_screen(self):
+        with (patch.object(qt_position, 'require_windows'),
+              patch.object(qt_position.ctypes, 'WinDLL', return_value=self.native(), create=True)):
+            # Native right/bottom are 0/1240; at2x rounding would yield -1280/520,
+            # the exclusive right/bottom bounds of this Qt logical geometry.
+            self.assertEqual(qt_position.logical_point((-1, 1239),
+                [screen('Friendly', -2560, -200, 2)]), (-1281, 519))
+
+    def test_unmatched_geometry_or_native_error_fails_without_guessing(self):
         native = self.native()
         with (patch.object(qt_position, 'require_windows'),
               patch.object(qt_position.ctypes, 'WinDLL', return_value=native, create=True),

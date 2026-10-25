@@ -9,11 +9,13 @@ from filewheel.ui.desktop_errors import DesktopInitializationError
 
 
 def logical_point(point, screens):
-    """Match the native monitor by device name, scaling relative to its origin.
+    """Match one native/Qt full monitor geometry, scaling relative to its origin.
 
     Qt keeps screen origins in native desktop layout on Windows. Dividing the
     entire desktop point by DPR would misplace monitors left of the primary.
-    Failure to match is reported instead of opening on a guessed monitor.
+    Qt screen names can be friendly model names rather than Win32 device names.
+    Require unique origin and DPR-scaled dimensions instead; duplicate/mirrored
+    or contradictory geometries fail closed rather than choosing by name/order.
     """
     require_windows()
 
@@ -45,16 +47,42 @@ def logical_point(point, screens):
         "monitor_rect": [info.monitor.left, info.monitor.top,
                          info.monitor.right, info.monitor.bottom],
     }
-    matches = [screen for screen in screens if screen.name().casefold() == info.device.casefold()]
-    if len(matches) != 1:
-        raise DesktopInitializationError("match_qt_screen", details)
-    screen = matches[0]
-    origin = screen.geometry()
-    ratio = screen.devicePixelRatio()
-    if not isinstance(ratio, (int, float)) or not math.isfinite(ratio) or ratio <= 0:
-        # Keep malformed DPR out of the JSON metadata as well as coordinate math.
+    candidates = []
+    qt_screens = []
+    invalid_dpr = False
+    for screen in screens:
+        origin = screen.geometry()
+        ratio = screen.devicePixelRatio()
+        valid_ratio = type(ratio) in (int, float) and math.isfinite(ratio) and ratio > 0
+        geometry = [origin.x(), origin.y(), origin.width(), origin.height()]
+        qt_screens.append({
+            "name": screen.name(), "geometry": geometry,
+            "dpr": ratio if valid_ratio else None,
+        })
+        if not valid_ratio:
+            invalid_dpr = True
+            continue
+        # At most one logical pixel of size rounding can be introduced by Qt.
+        tolerance = max(1.0, ratio)
+        if (geometry[0] == info.monitor.left and geometry[1] == info.monitor.top
+                and geometry[2] > 0 and geometry[3] > 0
+                and abs(geometry[2] * ratio - (info.monitor.right - info.monitor.left)) <= tolerance
+                and abs(geometry[3] * ratio - (info.monitor.bottom - info.monitor.top)) <= tolerance):
+            candidates.append((screen, origin, ratio))
+    details["qt_screens"] = qt_screens
+    if invalid_dpr:
+        # An unmeasurable screen cannot be excluded from a uniqueness proof.
         raise DesktopInitializationError("scale_qt_point", {
             **details, "qt_dpr_valid": False,
         })
-    return (round(origin.x() + (point[0] - info.monitor.left) / ratio),
-            round(origin.y() + (point[1] - info.monitor.top) / ratio))
+    if len(candidates) != 1:
+        raise DesktopInitializationError("match_qt_screen", {
+            **details, "geometry_match_count": len(candidates),
+        })
+    screen, origin, ratio = candidates[0]
+    x = round(origin.x() + (point[0] - info.monitor.left) / ratio)
+    y = round(origin.y() + (point[1] - info.monitor.top) / ratio)
+    # At a scaled monitor edge, rounding may reach the exclusive screen bound.
+    # Clamp within the already uniquely verified screen; never choose a peer.
+    return (min(max(x, origin.x()), origin.x() + origin.width() - 1),
+            min(max(y, origin.y()), origin.y() + origin.height() - 1))

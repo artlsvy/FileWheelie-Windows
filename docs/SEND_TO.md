@@ -185,7 +185,7 @@ introduced3.14 in6.10.1 and3.15 in6.12.0. KubuntuPython3.14.4 ran6.12.0 here;
 the targetWindows3.15 Qt runtime still needs this manual run. See
 [Qt high-DPI model](https://doc.qt.io/qtforpython-6/overviews/qtdoc-highdpi.html)
 for logical screen origins/scaling; offscreen tests cannot certify native focus,
-outside routing, device-name mapping or Windows activation.
+outside routing, monitor mapping or Windows activation.
 
 ## Reported Windows GUI startup failure
 
@@ -197,3 +197,9 @@ After syncing, retry the same direct GUI command above once and retain that JSON
 plus exit code. No shortcut reinstall or repeated headless smoke test is required.
 The separate diagnostic_only argument_count0 record correctly rejects a missing
 argument; it does not diagnose the one-argument GUI failure.
+
+The next supplied error identified match_qt_screen: Win32 \\.\DISPLAY1 versus
+Qt friendly name MAG 244F. Updated mapping requires unique matching monitor
+origin and DPR-scaled dimensions instead of name equality. Zero/duplicate matches
+still fail closed. Sync and retry the same direct GUI command once; installation
+commands do not need repeating. This fix remains Windows-unverified until that run.

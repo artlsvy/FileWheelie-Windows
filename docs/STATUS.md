@@ -1,8 +1,9 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-25
-Current priority: diagnose the reported Windows G4 GUI startup failure using
-the new stage-specific desktop error. GUI remains Linux/offscreen-tested only.
+Current priority: verify the corrected G4 monitor association on Windows. The
+reported startup failure came from comparing a Win32 device ID with Qt's friendly
+screen name. GUI remains Linux/offscreen-tested only.
 G5 PNG→JPEG follows a usable G4 popup, then PDF→DOCX and MarkItDown. Basic G2-F single-file direct CLI/Send to is WINDOWS-VERIFIED from
 user-supplied evidence. Mouse3 remains desired, preserved and diagnostic-only.
 No conversion engine has been implemented.
@@ -503,3 +504,31 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   shortcut reinstall or repeat basic headless Send to diagnostic is needed.
 - Focused reviewer independently reproduced169 tests/compilation/whitespace checks;
   no material findings. Root cause and Windows GUI success remain unverified.
+
+## Windows G4 cause identified: native device ID differs from Qt display name
+- User supplied gui_startup_error stage=match_qt_screen: physical_point[444,706],
+  native_device=\\.\DISPLAY1, qt_screen_names=[MAG 244F], monitor_rect[0,0,1920,1080].
+  Explicit AGENTS.md validation accepted (0.293ms); GUI exit5. This identifies the
+  name-equality assumption as the failing step; no Qt screen geometry was supplied
+  and no popup success is implied.
+- Corrected association: require exactly one QScreen whose origin equals the
+  physical monitor origin and whose logical width/height times valid DPR match
+  physical dimensions within rounding tolerance. Names are desktop diagnostics
+  only; no index/primary/single-screen shortcut. Zero or duplicate matches reject.
+  Relative-origin scaling stays; rounded points are clamped inside the verified
+  screen to prevent right/bottom edge rounding from leaving Qt screen bounds.
+  Work-area placement stays unchanged.
+- Qt's official high-DPI model documents Windows screen positions staying native
+  while sizes scale (https://doc.qt.io/qt-6/highdpi.html). QScreen.name is not used
+  as a Win32 device-ID contract. No selected-file lookup or Mouse3 expansion.
+- WINDOWS_VALIDATION_REQUIRED: sync and retry the same direct --gui command once.
+  No shortcut reinstall needed. If popup opens, check Back/Escape/confirmation,
+  then actual GUI Send to; if not, retain new stage and screen-geometry metadata.
+  Mixed-DPI/negative-monitor and native focus/cleanup acceptance remain queued.
+- Actual Kubuntu checks:176 unit tests pass including Qt offscreen; compileall and
+  git diff --check pass. New fakes cover friendly-name matching with explicitly
+  supplied Qt geometry (not present in the Windows log), screen order changes,
+  contradictory/mirrored geometry, invalid DPR, fractional rounding and scaled
+  negative-origin edge pixels. No new Windows runtime execution by Codex.
+- Independent reviewer reproduced176 passing tests/compile/whitespace checks;
+  edge-rounding finding fixed and rechecked with no remaining material issues.

@@ -30,8 +30,9 @@ multi-selection or removal. These remain independently queued in STATUS.md.
 Do not repeat the completed basic diagnostic without a regression.
 
 **Immediate G4 follow-up:** supplied direct GUI command validates the path but
-fails desktop initialization; stage-specific errors are implemented for the next
-Windows retry. Cause unknown; no native GUI success claimed.
+failed screen matching because Qt reports a friendly name rather than the Win32
+device ID. Unique monitor geometry/DPR association is implemented for the next
+Windows retry; no native GUI success claimed.
 
 **Following milestone: G5 PNG→JPEG conversion engine**, then PDF→DOCX and MarkItDown integration.
 G4 native acceptance stays queued; Linux offscreen tests do not establish Windows

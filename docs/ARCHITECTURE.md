@@ -66,7 +66,8 @@ ui/radial.py owns injected preview edges, navigation and DryRunSelection;
 ui/placement.py owns pure geometry. ui/popup.py paints/hit-tests the same logical
 geometry and owns the short popup event loop, timers and cleanup. Native Windows
 monitor mapping lives in platforms/windows/qt_position.py and matches physical
-monitor device to QScreen before scaling relative to that screen's origin. Work
+monitor origin/dimensions to one QScreen using its logical size and DPR before
+scaling relative to that screen's origin. Qt friendly names are diagnostic only. Work
 area clamping happens in logical pixels. Real Windows overlay behavior is unverified.
 No file I/O or engine runs in the UI. G5 will add PNG→JPEG through an independent
 worker and actual capability attestation; other choices remain dry-run previews.
