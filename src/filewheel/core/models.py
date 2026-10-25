@@ -24,7 +24,9 @@ class TargetResolution:
     point/bounds correspondence, Shell identity and current file existence/type.
     For shell_explicit the controller validates the explicitly supplied path;
     window_id is zero because no Explorer provenance inference is required.
-    Both invocation sources return this DTO for the same future UI consumer.
+    user_confirmed_candidate means explicit user consent to a displayed
+    provisional path plus file revalidation, never proven hover identity.
+    All sources return this DTO for the same UI consumer.
     PureWindowsPath keeps Windows path semantics in Linux contract tests.
     """
 
@@ -32,7 +34,7 @@ class TargetResolution:
     window_id: int
     point: tuple[int, int]
     timestamp: float
-    source: Literal["explorer_hover", "shell_explicit"] = "explorer_hover"
+    source: Literal["explorer_hover", "shell_explicit", "user_confirmed_candidate"] = "explorer_hover"
 
     def __post_init__(self) -> None:
         if not isinstance(self.path, PureWindowsPath) or not self.path.is_absolute():

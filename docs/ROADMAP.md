@@ -16,7 +16,7 @@ States: `NOT STARTED` · `IMPLEMENTED/UNVERIFIED` · `MOCK-TESTED` · `WINDOWS-V
 | G8 |240px UI refinement — IMPLEMENTED/OFFSCREEN-TESTED | Errors, progress, output collision policy, notifications, batch (optional) |
 | G9-A | Rendering + conversion diagnosis — IMPLEMENTED/LINUX-TESTED | Single separator strokes; engine/operation/traceback logs |
 | G9-B | Unified Python3.14 — IMPLEMENTED/LINUX-TESTED | One supported runtime/all current converters |
-| G10 | Opt-in Mouse3 candidate confirmation/tray | Never promote candidates without explicit confirmation |
+| G10 | Opt-in Mouse3 candidate confirmation/tray — IMPLEMENTED/LINUX-TESTED | Never promote candidates without explicit confirmation |
 | G11 | Reproducible Windows onedir packaging | Build scripts/spec; native build/acceptance pending |
 | G12 | Portable LibreOffice integration | Full bundle preferred; isolated profile/process deadline |
 

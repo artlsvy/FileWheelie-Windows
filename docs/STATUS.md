@@ -707,3 +707,30 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
 - Runtime/setup tests10passed/5subtests with GUI boundary tests. Docs now use one
   .venv-filewheel and explain safe old-shortcut migration. Native3.14 setup still
   WINDOWS_VALIDATION_REQUIRED; proceed to G10 without waiting.
+
+## G10 — opt-in tray Mouse3 and candidate confirmation
+- Added source entry `python -m filewheel --tray`, passive existing hook/source,
+  existing UIA MTA + Shell STA evidence and shared controller. Experiment off by
+  default; explicit --experimental-mouse3 or tray checkbox enables for this run.
+  No program is suppressed and no COM/UIA runs inside hook callback.
+- ExperimentalCandidate is separate from TargetResolution. Factory reruns the
+  existing assessor with known stable snapshots, all fresh HWND/tab/index/path/
+  filesystem native checks; conflicts/ambiguity reject. Trusted resolver remains
+  unmodified and alwaysNone. The proposed full path is shown with Cancel default;
+  only explicit Use this file +one-shot30s current token +freshpathvalidation
+  creates source=user_confirmed_candidate. It never claims explorer_hover identity.
+  OriginalMouse3 physical point anchors the menu after confirmation. Send to still
+  uses launch-time cursor and cannot infer original file location.
+- Existing COM implicit import/atexit ownership corrected for this process: main
+  STA bootstraps comtypes, worker explicitly owns balanced MTA ref; all actualUIA/
+  Shell calls stay offQtmain. Readiness waits run in an owned Qt startup worker,
+  not the event loop. Disable/Quit invalidates gates and waits for threads/jobs;
+  stopped-worker cleanup warnings are logged without hangingQuit. A genuinely
+  blocked provider is not forcibly killed; live shutdown remains unverified.
+- Optional HKCU startup registration explicit --startup install/remove, ownership-
+  checked and disabledbydefault; command starts tray with experiment off. No
+  registration occurs automatically. Fakes verify normal/foreign entry behavior.
+- Focused core/runtime/Qtconsent tests28passed/6subtests (including real Qt consent
+  ordering, supersession, no pre-confirm validation, async heartbeat, COMownerfake
+  and deadworkerQuit). Full suite result recorded next. Native hook/COM/tray/
+  startup/focus/point behavior WINDOWS_VALIDATION_REQUIRED; no trust promotion.

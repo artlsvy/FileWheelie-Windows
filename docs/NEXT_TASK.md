@@ -1,13 +1,13 @@
-# Continue G9–G12
+# Continue G11 then G12 (G9/G10 implemented)
 
-G9-A single-stroke annulus and private backend traceback diagnostics implemented;
-reviewed portable tests pass, native compositor/converter diagnosis still pending.
-G9-B unifiedPython3.14 complete. Next finish G10
-opt-in candidate confirmation/tray, G11 Windows PyInstaller onedir scripts/spec,
-G12 portable LibreOffice seams. Continue sequentially without waitingWindows.
+G9-A/B committed5f656a3/9878e9f. G10 core/Qttray/consent implemented and checked,
+with trustedResolveralwaysNone and explicitconfirmeduserpath source. NativeWin
+hook/COM/tray/startup acceptance remains pending, does not block next stages.
 
-Current implementer owns NEW core/experimental.py and Windows mouse_runtime.py
-plus their tests (G10prep); root owns runtime/Qttray/packaging integration. Preserve
-uncommitted disjoint files and all existing diagnostics. Candidate != trusted DTO;
-only explicit confirmation+freshfilevalidation may enter normal conversion.
-LogWindows-only acceptance inSTATUS; noCOM/UIA insidehook. No unrelatedformats.
+Next G11: integrate prepared packaging artifacts with app.main/IPC/singleinstance,
+frozen Send to/resource paths/self-test; spec/build WindowsPython3.14 only. Packaging
+artifacts ownedbyimplementer are ready; root owns application and integration.
+Then G12 bundledLibreOffice full-tree locator and tests; don't copy justsoffice.exe.
+Build actualWindowsbinary onWindows only; noLinuxcrossbuildclaims. Preservehistory,
+source/outputs anddiagnostics. Nootherconversionformats. Complete bothremaining
+stages and docs/commits without waitingWindows or furtherprompts.
