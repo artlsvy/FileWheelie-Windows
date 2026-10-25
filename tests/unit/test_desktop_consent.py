@@ -155,3 +155,30 @@ class DesktopConsentTests(unittest.TestCase):
         self.app.processEvents()
         self.assertFalse(self.desktop.experimental_enabled)
         self.assertFalse(self.desktop.experiment_action.isChecked())
+
+    def test_tray_action_stops_listener_and_resets_status_after_threads_exit(self):
+        self.desktop.experiment_action.trigger()
+        deadline = time.monotonic() + 2
+        while self.desktop._startup is not None and time.monotonic() < deadline:
+            self.app.processEvents(); time.sleep(.005)
+        self.assertTrue(self.desktop.experimental_enabled)
+        runtime = self.desktop.runtime
+        runtime.threads_alive = True
+        runtime.close = lambda **kwargs: False
+        self.desktop.experiment_action.trigger()
+        self.assertFalse(self.desktop.experimental_enabled)
+        self.assertFalse(self.desktop.experiment_action.isChecked())
+        self.assertFalse(self.desktop.experiment_action.isEnabled())
+        self.assertIn('stopping', self.desktop.tray.toolTip())
+        runtime.threads_alive = False
+        self.desktop._poll_mouse_stop()
+        self.assertIsNone(self.desktop.runtime)
+        self.assertTrue(self.desktop.experiment_action.isEnabled())
+        self.assertIn('off', self.desktop.tray.toolTip())
+        self.assertFalse(self.desktop.stop_timer.isActive())
+
+    def test_runtime_error_resets_active_tooltip(self):
+        self.enable()
+        self.desktop.mouse_error('hook failed')
+        self.assertFalse(self.desktop.experimental_enabled)
+        self.assertIn('off', self.desktop.tray.toolTip())

@@ -42,7 +42,7 @@ def main(argv=None):
             parser.error('--experimental-mouse3 requires tray mode')
         if args.gui and not args.paths:
             parser.error('--gui requires one explicit path')
-        from PySide6.QtWidgets import QApplication
+        from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 
         from filewheel.platforms.windows.explicit_path_diagnostics import cursor_point
         from filewheel.ui.desktop import DesktopApplication
@@ -60,7 +60,11 @@ def main(argv=None):
         outcome = broker.acquire_or_forward(packet)
         if outcome != 'owner':
             return 0 if outcome == 'forwarded' else 3
-        desktop = host = DesktopApplication(tray=args.tray or not args.paths)
+        tray_mode = args.tray or not args.paths
+        if tray_mode and not QSystemTrayIcon.isSystemTrayAvailable():
+            broker.close()
+            raise RuntimeError('System tray is unavailable; use an explicit file invocation.')
+        desktop = host = DesktopApplication(tray=tray_mode)
         application._filewheel_desktop = desktop
         application.aboutToQuit.connect(broker.close)
         application._filewheel_broker = broker

@@ -63,6 +63,9 @@ class DesktopApplication(QObject):
         quit_action.triggered.connect(self.request_quit)
         self.tray.setContextMenu(self.menu)
         self.tray.setToolTip('Filewheel — Mouse3 experiment off')
+        self.stop_timer = QTimer(self)
+        self.stop_timer.setInterval(100)
+        self.stop_timer.timeout.connect(self._poll_mouse_stop)
         self.shutdown_timer = QTimer(self)
         self.shutdown_timer.setInterval(100)
         self.shutdown_timer.timeout.connect(self._finish_quit)
@@ -115,9 +118,11 @@ class DesktopApplication(QObject):
         self.close_confirmation()
         if self.runtime is not None:
             if not self.runtime.close(timeout=0):
-                self.notify('Previous Mouse3 worker is still stopping; try again later.')
-                self._check_action(False)
                 self.experimental_enabled = False
+                self._check_action(False)
+                self.experiment_action.setEnabled(False)
+                self.tray.setToolTip('Filewheel — Mouse3 stopping')
+                self.stop_timer.start()
                 return
             self.runtime = None
         self.experimental_enabled = False
@@ -144,6 +149,15 @@ class DesktopApplication(QObject):
                              else 'Filewheel — Mouse3 experiment off')
 
     @Slot()
+    def _poll_mouse_stop(self):
+        if self.runtime is not None and self.runtime.threads_alive:
+            return
+        self.stop_timer.stop()
+        self.runtime = None
+        self.experiment_action.setEnabled(not self.quitting)
+        self.tray.setToolTip('Filewheel — Mouse3 experiment off')
+
+    @Slot()
     def _mouse_started(self):
         startup, self._startup = self._startup, None
         self.experimental_enabled = bool(startup.result and not self.quitting
@@ -168,6 +182,7 @@ class DesktopApplication(QObject):
         self.experimental_enabled = False
         self._check_action(False)
         self.close_confirmation()
+        self.tray.setToolTip('Filewheel — Mouse3 experiment off')
         record_failure('mouse3', 'runtime', RuntimeError(message))
         self.notify(f'Mouse3 stopped: {message}. Send to remains available.')
 
@@ -180,6 +195,7 @@ class DesktopApplication(QObject):
         self.close_confirmation(cancel_gate=False)
         self.popup.dismiss()
         box = QMessageBox()
+        box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
         box.setTextFormat(Qt.TextFormat.PlainText)
         box.setWindowTitle('Experimental Mouse3 — confirm proposed file')
         box.setText('Explorer mapping is provisional. Confirm this exact file before continuing.')
@@ -197,6 +213,8 @@ class DesktopApplication(QObject):
         box._deadline = timer
         box.finished.connect(lambda result: self._confirmed(box, yes, candidate))
         box.open()
+        box.raise_()
+        box.activateWindow()
 
     def _confirmed(self, box, yes, candidate):
         if self.dialog is not box:
@@ -232,6 +250,8 @@ class DesktopApplication(QObject):
     @Slot()
     def request_quit(self):
         self.quitting = True
+        self.stop_timer.stop()
+        self.experiment_action.setEnabled(False)
         self.experimental_enabled = False
         self.close_confirmation()
         self.controller.cancel()

@@ -763,3 +763,20 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   Source --self-test reports all real engine fixtures successful. Build/self-test
   deadlines and bidirectional portable-source/output containment guards checked.
   Native EXE build/clean-machine operation remains unverified.
+
+
+## User acceptance update — G9-A/B
+
+The user reports testing G9-A/B successfully on the Windows 11 target. Record
+rendering fixes and the unified runtime work as WINDOWS-VERIFIED by user report.
+This does not establish G10 tray/hook acceptance or a G11/G12 packaged build.
+
+## G10 tray completion follow-up
+
+The tray checkbox starts Mouse3 asynchronously and is disabled while startup or
+shutdown is pending. Disabling invalidates candidate consent immediately, shows
+“stopping”, then restores the off state when listener threads exit. Runtime
+failure clears the active tooltip. Confirmation requests topmost/foreground
+presentation with Cancel as default. An unavailable system tray rejects tray
+startup rather than leaving an invisible owner. Nine Qt consent/lifecycle tests
+pass on Linux; native tray, COM, focus and hook behavior remain pending.
