@@ -14,7 +14,11 @@ States: `NOT STARTED` · `IMPLEMENTED/UNVERIFIED` · `MOCK-TESTED` · `WINDOWS-V
 | G6 | Document/Markdown — IMPLEMENTED/LINUX-TESTED (MD needs Python<3.15) | PDF→DOCX, DOCX→PDF, MarkItDown (DOCX/PDF/PPTX/XLSX/HTML→MD); capability tests |
 | G7 | Image/PDF expansion — IMPLEMENTED/LINUX-TESTED | HEIC/JPEG/PNG/WebP, images→PDF, PDF→raster; representative real files |
 | G8 |240px UI refinement — IMPLEMENTED/OFFSCREEN-TESTED | Errors, progress, output collision policy, notifications, batch (optional) |
-| G9 | Optional expansion | MD→DOCX, PPTX→PDF, XLSX→PDF, CSV↔XLSX; OCR/media deferred |
+| G9-A | Rendering + conversion diagnosis — IMPLEMENTED/LINUX-TESTED | Single separator strokes; engine/operation/traceback logs |
+| G9-B | Unified Python3.14 — NEXT | One supported runtime/all current converters |
+| G10 | Opt-in Mouse3 candidate confirmation/tray | Never promote candidates without explicit confirmation |
+| G11 | Reproducible Windows onedir packaging | Build scripts/spec; native build/acceptance pending |
+| G12 | Portable LibreOffice integration | Full bundle preferred; isolated profile/process deadline |
 
 ## Current focus
 

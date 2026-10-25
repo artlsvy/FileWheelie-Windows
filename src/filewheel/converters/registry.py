@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from pathlib import PurePath
 
-from filewheel.converters.base import Capability, ConversionError, Engine
+from filewheel.converters.base import Capability, ConversionError, DependencyUnavailable, Engine
 
 CATEGORIES = ("Image", "Document", "Markdown/Text", "Audio", "Video")
 
@@ -11,11 +11,13 @@ CATEGORIES = ("Image", "Document", "Markdown/Text", "Audio", "Video")
 class Registry:
     def __init__(self, engines: Iterable[Engine]):
         self.engines = {}
+        self.unavailable_capabilities = []
         capabilities = []
         for engine in engines:
             if engine.engine_id in self.engines:
                 raise ValueError("Duplicate conversion engine")
             if not engine.available():
+                self.unavailable_capabilities.extend(engine.capabilities)
                 continue
             self.engines[engine.engine_id] = engine
             for capability in engine.capabilities:
@@ -41,7 +43,13 @@ class Registry:
             if (capability.input_extension.lower() == source_extension.lower()
                     and capability.output_extension.lower() == output_extension.lower()):
                 return capability
-        raise ConversionError("This conversion engine is unavailable or unsupported")
+        for capability in self.unavailable_capabilities:
+            if (capability.input_extension.lower() == source_extension.lower()
+                    and capability.output_extension.lower() == output_extension.lower()):
+                error = DependencyUnavailable(f"Required dependency for {capability.engine_id} is unavailable")
+                error.engine_id = capability.engine_id
+                raise error
+        raise ConversionError("This conversion pair is unsupported")
 
 
 def default_registry() -> Registry:

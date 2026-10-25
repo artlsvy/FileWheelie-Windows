@@ -13,6 +13,10 @@ class ConversionError(RuntimeError):
     """A local conversion failed without replacing any pre-existing output."""
 
 
+class DependencyUnavailable(ConversionError):
+    """The selected local backend or one of its required libraries is unavailable."""
+
+
 class ConversionCancelled(ConversionError):
     """A cancellation request was observed before publishing output."""
 

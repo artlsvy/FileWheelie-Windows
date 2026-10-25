@@ -23,6 +23,69 @@ def logical_point(point, screens):
     return point
 
 
+_SEPARATOR_WIDTH = 0.8
+
+
+def radial_separators(count, inner_radius=67, outer_radius=148):
+    """One segment per angular boundary, confined to the annulus.
+
+    A full-circle single choice has no boundary. Geometry is shared by paint
+    and hit testing so thin separators do not leave wide inactive wedges.
+    """
+    if count < 2:
+        return ()
+    return tuple(
+        (
+            (
+                162 + inner_radius * math.sin(index * 2 * math.pi / count),
+                162 - inner_radius * math.cos(index * 2 * math.pi / count),
+            ),
+            (
+                162 + outer_radius * math.sin(index * 2 * math.pi / count),
+                162 - outer_radius * math.cos(index * 2 * math.pi / count),
+            ),
+        )
+        for index in range(count)
+    )
+
+
+def radial_hit(point, count, inner_radius=67, outer_radius=148):
+    """Return center=-2, separator/outside=-1, or a clockwise choice index."""
+    x, y = point[0] - 162, point[1] - 162
+    distance = math.hypot(x, y)
+    if distance < inner_radius:
+        return -2
+    if distance > outer_radius or not count:
+        return -1
+    for start, end in radial_separators(count, inner_radius, outer_radius):
+        dx, dy = end[0] - start[0], end[1] - start[1]
+        projection = ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / (dx * dx + dy * dy)
+        projection = min(1.0, max(0.0, projection))
+        if (
+            math.hypot(point[0] - start[0] - projection * dx, point[1] - start[1] - projection * dy)
+            <= _SEPARATOR_WIDTH / 2
+        ):
+            return -1
+    angle = (math.degrees(math.atan2(y, x)) + 90) % 360
+    return min(count - 1, int(angle / (360 / count)))
+
+
+def _annular_sector(start_degrees, sweep_degrees, inner_radius=67, outer_radius=148):
+    """Fill geometry only: sector paths deliberately have no painted outline."""
+    outer = QRectF(162 - outer_radius, 162 - outer_radius, 2 * outer_radius, 2 * outer_radius)
+    inner = QRectF(162 - inner_radius, 162 - inner_radius, 2 * inner_radius, 2 * inner_radius)
+    start = math.radians(start_degrees)
+    end = math.radians(start_degrees + sweep_degrees)
+    path = QPainterPath()
+    path.moveTo(162 + inner_radius * math.cos(start), 162 + inner_radius * math.sin(start))
+    path.lineTo(162 + outer_radius * math.cos(start), 162 + outer_radius * math.sin(start))
+    path.arcTo(outer, -start_degrees, -sweep_degrees)
+    path.lineTo(162 + inner_radius * math.cos(end), 162 + inner_radius * math.sin(end))
+    path.arcTo(inner, -(start_degrees + sweep_degrees), sweep_degrees)
+    path.closeSubpath()
+    return path
+
+
 class RadialPopup(QWidget):
     """The same present(TargetResolution) boundary serves both invocation sources."""
 
@@ -204,8 +267,6 @@ class RadialPopup(QWidget):
 
     def _hit(self, point):
         point = self._reference_point(point)
-        x, y = point.x() - 162, point.y() - 162
-        distance = math.hypot(x, y)
         if self.state.stage == "converting":
             return -1
         if self.state.stage == "result":
@@ -223,18 +284,9 @@ class RadialPopup(QWidget):
             ):
                 return index
             return -1
-        if distance < self.center_radius:
-            return -2
-        count = len(self.state.options)
-        if distance > self.outer_radius or not count:
-            return -1
-        angle = (math.degrees(math.atan2(y, x)) + 90) % 360
-        sweep = 360 / count
-        # Match the visible separator gaps, so clicking a gap has no action.
-        within = angle % sweep
-        if count > 1 and (within < 1.5 or within > sweep - 1.5):
-            return -1
-        return int(angle // sweep)
+        return radial_hit(
+            (point.x(), point.y()), len(self.state.options), self.center_radius, self.outer_radius
+        )
 
     def mouseMoveEvent(self, event):
         self.hovered = self._hit(event.position())
@@ -333,13 +385,15 @@ class RadialPopup(QWidget):
         if error is not None:
             cancelled = isinstance(error, ConversionCancelled)
             self.status_title = "Cancelled" if cancelled else "Conversion failed"
-            self.status_message = str(error)[:250] or type(error).__name__
+            from filewheel.converters.debugging import describe_conversion_error, error_details
+
+            self.status_message = describe_conversion_error(error)[:250]
             self.last_selection = replace(
                 self.last_selection,
                 action="conversion_cancelled" if cancelled else "conversion_failed",
                 outputs=(),
             )
-            self.setToolTip(self.status_message)
+            self.setToolTip(error_details(error))
         else:
             self.status_title = "Converted"
             self.status_message = result.outputs[0].name
@@ -534,19 +588,17 @@ class RadialPopup(QWidget):
                 self._text(painter, rectangle, getattr(option, "label", option), foreground, 10)
             return
         outer = QRectF(14, 14, 296, 296)
+        inner = QRectF(95, 95, 134, 134)
+        # One continuous base disk; hover paints only its annular sector. Paths
+        # have no pen, so neighboring choices never double-stroke a boundary.
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(base)
         painter.drawEllipse(outer)
         count = len(self.state.options)
-        for index, option in enumerate(self.state.options):
-            sweep = 360 / count
-            start = -90 + index * sweep
-            gap = 1.5 if count > 1 else 0
-            path = QPainterPath()
-            path.moveTo(162, 162)
-            angle = math.radians(start + gap)
-            path.lineTo(162 + 148 * math.cos(angle), 162 + 148 * math.sin(angle))
-            path.arcTo(outer, -(start + gap), -(sweep - 2 * gap))
-            path.closeSubpath()
+        for index in range(count):
             amount = self._hover_amounts[index] if index < len(self._hover_amounts) else 0
+            if amount <= 0:
+                continue
             fill = QColor(base)
             accent = QColor("#287bd6")
             fill.setRed(round(fill.red() * (1 - amount * 0.25) + accent.red() * amount * 0.25))
@@ -555,9 +607,21 @@ class RadialPopup(QWidget):
             )
             fill.setBlue(round(fill.blue() * (1 - amount * 0.25) + accent.blue() * amount * 0.25))
             painter.setBrush(fill)
-            painter.setPen(QPen(border, 0.8))
-            painter.drawPath(path)
-            angle = math.radians(start + sweep / 2)
+            painter.drawPath(
+                _annular_sector(
+                    -90 + index * 360 / count, 360 / count, self.center_radius, self.outer_radius
+                )
+            )
+        # Stroke the two circles once, then each radial separator exactly once.
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(border, 1))
+        painter.drawEllipse(outer)
+        painter.drawEllipse(inner)
+        painter.setPen(QPen(border, _SEPARATOR_WIDTH))
+        for start, end in radial_separators(count, self.center_radius, self.outer_radius):
+            painter.drawLine(QPointF(*start), QPointF(*end))
+        for index, option in enumerate(self.state.options):
+            angle = math.radians(-90 + (index + 0.5) * 360 / count)
             x, y = 162 + 105 * math.cos(angle), 162 + 105 * math.sin(angle)
             label = option if isinstance(option, str) else option.label
             self._text(
@@ -569,9 +633,6 @@ class RadialPopup(QWidget):
                 True,
                 True,
             )
-        painter.setBrush(base)
-        painter.setPen(QPen(border, 1))
-        painter.drawEllipse(QRectF(95, 95, 134, 134))
         self._text(
             painter,
             QRectF(105, 113, 114, 20),

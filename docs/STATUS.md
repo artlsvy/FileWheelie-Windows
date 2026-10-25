@@ -666,3 +666,31 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
  36098aa G7; G8 checkpoint commit follows. No force-push/discard/unrelated changes.
   All authorized milestones are now implemented and checked as far as this host
   permits. Word COM/OCR/media and broader product work were not implemented.
+
+## G9–G12 authorization and Windows evidence update
+- Starting clean HEAD1e21084. User confirms G5–G8 radial UI launches on Windows
+  and implemented format choices are visible. No conversion-output correctness,
+  transparency/compositor, packaging or Mouse3 identity success is inferred.
+- Send to's current launch-time cursor is the final menu click, not original file
+  position; do not reconstruct the file-row point. Mouse3 uses its actual event
+  point. G10 permits only opt-in explicitly confirmed provisional candidates.
+- G9-A: correcting duplicated sector outlines; logging engine/operation/actual
+  exception locally and distinguishing missing dependencies. PDF→DOCX is pdf2docx;
+  LibreOffice is only DOCX→PDF, never assumed to repair pdf2docx errors.
+
+## G9-A — rendering and backend failure diagnostics
+- Continuous annulus fill with no stroked sector polygons; each separator/inner/
+  outer border drawn once. Shared separator geometry drives hit testing.240px,
+  transparent source clear and OS shadow suppression preserved. Offscreen spies/
+  pixel checks cover1/2/3sectors and alpha corners; Windows compositor retest pending.
+- Conversion errors identify selected engine, operation, dependency-vs-failure kind
+  and rotating local debug log. Full actual exception chain is written locally;
+  no console/cloud required. Windows log is LOCALAPPDATA/Filewheel/logs/
+  conversion-debug.log; FILEWHEEL_LOG_DIR overrides for testing. Logs contain local
+  paths/tracebacks and rotate2MB×4. Log failures never replace conversion errors.
+- PDF→DOCX selects pdf2docx, while DOCX→PDF selects LibreOffice; tests assert backend
+  identity. No supplied Windows converter traceback yet, so no unsupported claim
+  that installing LibreOffice fixes PDF→DOCX. Progress also names the engine.
+- Full suite246tests/220subtests passed; focused reviewer found wrapped-dependency
+  classification and log-path failure masking, both fixed with regressions. Final
+  focused9tests/9subtests pass; no native rendering or conversion success inferred.
