@@ -187,13 +187,13 @@ class UiPolishTests(unittest.TestCase):
                 self.assertEqual(self.popup._hit(self.point(162, 265)), -2)
                 self.assertEqual(self.popup._hit(self.point(60, 265)), -1)
                 QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(162, 265))
-                self.assertFalse(self.popup.isVisible())
+                self.assertEqual(self.popup.isVisible(), stage == "converting")
 
-    def test_circle_outside_point_cancels_status_instead_of_dead_rectangular_hit(self):
+    def test_circle_outside_point_keeps_conversion_visible(self):
         self.choose_preview()
         self.popup.state.stage = "converting"
         QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(24, 60))
-        self.assertFalse(self.popup.isVisible())
+        self.assertTrue(self.popup.isVisible())
 
     def test_compact_long_category_labels_fit_without_unbroken_word_overflow(self):
         font = QFont("Segoe UI")

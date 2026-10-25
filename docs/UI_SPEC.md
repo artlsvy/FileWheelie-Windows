@@ -15,7 +15,8 @@ minimum (9.5pt below 220px; 10.5pt at larger sizes); compact Docs/Text-MD
 labels and deliberate wrapping avoid clipping. The smaller center contains only Esc at the category level and Back at
 the format level. Clicking Esc dismisses; clicking Back returns to categories.
 Source path remains available in the tooltip rather than crowding the center.
-Frameless/translucent Qt.Popup, explicit transparent source clearing, no system
+Selection uses a frameless/translucent Qt.Popup; conversion/results use a
+non-modal Qt.Tool with WindowStaysOnTopHint. Explicit transparent clearing, no system
 background/autofill or native rectangular drop shadow. Painted shadow follows the
 circle. Light/dark variants use forest green, warm ivory and muted brass, with semantic
 surface/text/outline/accent roles and animated hover. Token text pairs meet 4.5:1
@@ -34,26 +35,33 @@ formats from the same injected registry. Unknown inputs show No available format
 Clicking a format starts exactly one real conversion worker. The old injected
 preview registry remains a test-only seam with explicit PREVIEW/dry-run UI.
 
-Center/Backspace navigates back from formats. Escape, outside any-button click or
-focus loss dismiss; inner choices are left-click only. Gaps/invalid indices do
+Center/Backspace navigates back from formats. In selection menus, Escape,
+outside any-button click or focus loss dismiss; inner choices are left-click only. Gaps/invalid indices do
 nothing. Tab/arrows + Return provide basic keyboard access. Reopening resets idle
-menu state; a busy instance requests cancellation rather than starting overlapping
+menu state; a busy instance rejects new invocations without cancelling current
 work. Six or more injected options use a compact scrollable list.
 
 ## Conversion feedback and exit
 
-One popup displays preparing/encoding/rendering progress, percentage/bar, result
-and errors. Source filename remains visible; long filename/output/warning details
-are in tooltips. Multi-page results show first output plus count and all paths in
-the tooltip. Success uses actual published paths, not predicted collision names.
-Done closes. Conversion outcomes are converted/conversion_failed/conversion_cancelled,
-including dismissal while working; the CLI returns6 for a conversion failure.
+The 170px status face shows only “In progress”, a percentage and the circular
+progress ring. Backend phase messages, filenames and detailed warnings/errors
+stay in metadata, tooltips and local logs. Success shows “Done” and “File saved”
+(or a file count); failure shows “Failed” with details available on hover.
 
-A QThread owns only backend work; signals update Qt on its GUI thread. Dismissal
-requests cooperative cancellation, hides the popup and retains worker/widget
-ownership until cleanup completes. Library calls cannot all be interrupted
-mid-call; LibreOffice has a bounded process-tree deadline. The application does
-not destroy a running QThread or leave an unowned worker behind.
+Conversion/results remain visible above ordinary windows during outside clicks
+and focus loss. Status mode uses a non-modal Qt.Tool rather than Qt.Popup, so it
+does not retain a popup mouse grab while the user works in Explorer. A guarded
+window-type transition preserves geometry and prevents Qt's temporary hide from
+cancelling work or emitting completion. Results stay until Done/Escape or a new
+intentional invocation. Reopening restores normal selection-menu popup behavior.
+Native Windows z-order/focus acceptance remains required.
+
+Cancel or Escape while working requests cooperative cancellation and shows
+“Stopping…” until cleanup finishes, then “Cancelled”. It keeps the window
+visible. Programmatic dismissal/Quit can still hide the window and wait for its
+owned worker to finish. A QThread runs only backend work; signals update Qt on
+its GUI thread. Library calls cannot all be interrupted mid-call; LibreOffice has
+a bounded process-tree deadline. Running workers are never destroyed early.
 
 Outputs are adjacent to source, numbered on collision, validated before atomic
 publication. See CONVERTERS.md for limits, alpha behavior, OCR/fidelity and engine
@@ -81,5 +89,6 @@ UIA-to-Shell identity. Native validation of the new direct/UI behavior is pendin
 All progress/results and preview confirmations share the wheel's circular
 silhouette, replacing the previous intentionally rounded-rectangle panel.
 A circular progress ring, compact Cancel/Done control and chord-constrained text
-retain transparent corners and consistent hit regions. Escape/outside click still
-cancel/dismiss, and worker ownership remains until cleanup completes.
+retain transparent corners and consistent hit regions. Selection menus dismiss
+on outside click; conversion/results persist. Cancel/Escape while busy requests
+cancellation visibly, and worker ownership remains until cleanup completes.

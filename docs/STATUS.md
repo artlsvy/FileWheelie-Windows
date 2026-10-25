@@ -954,3 +954,44 @@ format. No Windows session was run by Codex for this change.
   remaining material blockers; its grouped-first/UI-order run passed 82 tests
   and 166 subtests. Windows grouped-provider behavior, latency and 170px font/DPI
   rendering remain WINDOWS_VALIDATION_REQUIRED. No push was performed.
+
+
+## User confirmation and persistent, simplified conversion status
+
+The user confirms the grouped Explorer fix now works on Windows. Record grouped
+activation as WINDOWS-VERIFIED by user report; no numeric latency/DPI matrix is
+inferred. The current request simplifies status text and keeps progress visible
+when clicking elsewhere.
+
+- Conversion status paints only “In progress” and a percentage with the existing
+  round ring. Filenames/backend operations/warnings/error text remain available
+  in metadata, tooltips and private logs. Results show simple Done/File saved,
+  file count, Failed or Cancelled states. No engine or diagnostic data is deleted.
+- At conversion start, the selection Qt.Popup becomes a frameless non-modal
+  Qt.Tool with WindowStaysOnTopHint. Outside clicks and focus loss leave busy
+  conversion and results visible. The flag change is guarded because Qt hides
+  widgets when changing flags; geometry, worker ownership and completion are
+  preserved, and a queued focus check cannot close status. New selection restores
+  Popup behavior. This is implemented/offscreen-tested, not native z-order proof.
+- Cancel/Escape requests cancellation visibly, showing Stopping until completion,
+  then Cancelled. Results stay until Done/Escape or a new intentional invocation.
+  Programmatic dismiss/Quit still hide and await cleanup. A busy present request
+  rejects without cancelling the current conversion.
+- Tests use a held worker to verify actual Qt flags, unchanged geometry, outside
+  activity/focus loss, no accidental cancellation, persistence through results,
+  visible Cancel/Escape acknowledgement, reopening and one completion on Quit-like
+  programmatic dismissal. Paint assertions check that technical chatter is absent
+  while tooltips retain errors/output details.
+- Review caught a test-only QPainter lifetime problem: a MagicMock kept painter
+  arguments alive until worker-thread garbage collection. The paint observer now
+  uses a plain replacement function, and the previously crashing test order passes.
+
+- Final validation: **357 tests and 362 subtests passed** on Kubuntu; scoped Ruff,
+  compileall and git diff --check passed. Focused review independently reran the
+  previously crashing order: 43 tests and 7 subtests passed with no remaining
+  material blockers. Reviewed a dark 170px progress render with only In progress,
+  42% and Cancel; source paths remain in result/error tooltips as well.
+- WINDOWS_VALIDATION_REQUIRED: click Explorer/another app during a longer
+  conversion and after completion, verify persistent topmost placement without
+  input blocking, then Cancel/Escape/Done, tray Quit and reopening. Offscreen
+  tests do not establish native z-order/compositor behavior. No push was performed.

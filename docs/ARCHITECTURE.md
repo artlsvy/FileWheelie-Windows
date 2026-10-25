@@ -137,3 +137,15 @@ this route; native_item_path_match is the shared positive path check after the
 route-specific assessor succeeds. Indexed views still check range and native
 index correspondence. Both remain experimental until a real identity bridge
 exists. No full group enumeration or selection lookup is involved.
+
+
+### Persistent conversion status (D-018)
+
+The same RadialPopup changes its native window type from selection Popup to
+non-modal topmost Tool for converting/result stages. The guarded flag transition
+preserves geometry and suppresses hide-triggered finish/cancellation. Focus/outside
+activity is ignored only in status stages. Reopening restores Popup mode. The
+status face uses short words/percentages; actual engine messages and outcomes
+remain unchanged in metadata/tooltips/logs. UI Cancel/Escape requests cooperative
+cancellation without hiding, while explicit application dismissal/Quit retains
+its cleanup contract. Busy invocation rejects without cancelling ongoing work.

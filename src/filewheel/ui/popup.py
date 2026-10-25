@@ -132,6 +132,7 @@ class RadialPopup(QWidget):
         self.last_selection = None
         self._finished = True
         self._resetting = False
+        self._changing_window_mode = False
         self._hover_amounts = []
         self._list_offset = 0
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -152,7 +153,6 @@ class RadialPopup(QWidget):
 
     def present(self, target):
         if self.job is not None:
-            self.job.cancelled.set()
             return False
         self._closing = False
         self.conversion_result = None
@@ -161,6 +161,7 @@ class RadialPopup(QWidget):
         self.progress_fraction = 0.0
         self._resetting = True
         self.hide()
+        self._set_persistent_window(False)
         self._resetting = False
         self.last_selection = None
         self.hovered = self.keyboard_index = -1
@@ -227,7 +228,40 @@ class RadialPopup(QWidget):
     def dismiss(self):
         self.close()
 
+    def _persistent_status(self):
+        return self.state.stage in ("converting", "result")
+
+    def _set_persistent_window(self, enabled):
+        # Qt.Popup dismisses natively outside the window. A Tool window keeps
+        # progress/results visible without grabbing mouse input from Explorer.
+        kind = Qt.WindowType.Tool if enabled else Qt.WindowType.Popup
+        if self.windowType() == kind:
+            return
+        geometry = self.geometry()
+        visible = self.isVisible()
+        self._focus_check.stop()
+        self._changing_window_mode = True
+        try:
+            self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, enabled)
+            self.setWindowFlags(kind | Qt.WindowType.FramelessWindowHint
+                                | Qt.WindowType.WindowStaysOnTopHint
+                                | Qt.WindowType.NoDropShadowWindowHint)
+            self.setGeometry(geometry)
+            if visible:
+                self.show()
+                self.raise_()
+        finally:
+            self._changing_window_mode = False
+
+    def _request_cancel(self):
+        if self.job is not None:
+            self.job.cancelled.set()
+            self.status_title = "Stopping…"
+            self.update()
+
     def _finish(self):
+        if self._changing_window_mode:
+            return
         if self.job is not None:
             self._closing = True
             self.job.cancelled.set()
@@ -249,14 +283,17 @@ class RadialPopup(QWidget):
 
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
-        self._focus_check.start(0)
+        if not self._persistent_status() and not self._changing_window_mode:
+            self._focus_check.start(0)
 
     def _dismiss_if_inactive(self):
-        if self.isVisible() and not self.isActiveWindow():
+        if (self.isVisible() and not self.isActiveWindow()
+                and not self._persistent_status() and not self._changing_window_mode):
             self.dismiss()
 
     def event(self, event):
-        if event.type() == QEvent.Type.WindowDeactivate and self.isVisible():
+        if (event.type() == QEvent.Type.WindowDeactivate and self.isVisible()
+                and not self._persistent_status() and not self._changing_window_mode):
             self._focus_check.start(0)
         return super().event(event)
 
@@ -310,11 +347,14 @@ class RadialPopup(QWidget):
         else:
             outside = math.hypot(point.x() - 162, point.y() - 162) > self.outer_radius
         if outside:
-            self.dismiss()
+            if not self._persistent_status():
+                self.dismiss()
         elif event.button() != Qt.MouseButton.LeftButton:
             return
         elif hit == -2:
-            if self.state.stage in ("confirmation", "converting", "result", "categories"):
+            if self.state.stage == "converting":
+                self._request_cancel()
+            elif self.state.stage in ("confirmation", "result", "categories"):
                 self.dismiss()
             else:
                 self.state.back()
@@ -340,8 +380,9 @@ class RadialPopup(QWidget):
                 self.state.stage = "converting"
                 self.last_selection = replace(selection, action="conversion_started")
                 self.progress_fraction = 0.0
-                self.status_title = "Converting…"
+                self.status_title = "In progress"
                 self.status_message = "Preparing local conversion"
+                self._set_persistent_window(True)
                 self.job = ConversionJob(
                     self.manager,
                     self.source_mapper(selection.input_path),
@@ -370,6 +411,7 @@ class RadialPopup(QWidget):
         # Record the outcome even when the user dismissed during conversion.
         # _finish() must not make a successful/failed action look like a preview.
         self.conversion_result, self.conversion_error = result, error
+        input_detail = f"Input: {self.state.target.path}\n\n" if self.state.target else ""
         if error is not None:
             cancelled = isinstance(error, ConversionCancelled)
             self.status_title = "Cancelled" if cancelled else "Conversion failed"
@@ -381,7 +423,7 @@ class RadialPopup(QWidget):
                 action="conversion_cancelled" if cancelled else "conversion_failed",
                 outputs=(),
             )
-            self.setToolTip(error_details(error))
+            self.setToolTip(input_detail + error_details(error))
         else:
             self.status_title = "Converted"
             self.status_message = result.outputs[0].name
@@ -394,19 +436,23 @@ class RadialPopup(QWidget):
                 outputs=result.outputs,
             )
             self.setToolTip(
-                "\n".join(str(path) for path in result.outputs)
+                input_detail + "\n".join(str(path) for path in result.outputs)
                 + ("\n\n" + "\n".join(result.warnings) if result.warnings else "")
             )
         if self._closing:
             self._finish()
             return
         self.state.stage = "result"
+        self._set_persistent_window(True)
         self.update()
 
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key.Key_Escape:
-            self.dismiss()
+            if self.state.stage == "converting":
+                self._request_cancel()
+            else:
+                self.dismiss()
         elif key in (Qt.Key.Key_Backspace, Qt.Key.Key_Left) and self.state.stage == "formats":
             self.state.back()
             self._reset_hover()
@@ -539,17 +585,31 @@ class RadialPopup(QWidget):
                 message = f"{selection.original_format} → {selection.output_extension[1:].upper()}"
                 detail = selection.intended_path.name
             else:
-                title = self.status_title
-                filename = self.state.target.path.name
-                message = self.status_message
-                warnings = self.conversion_result.warnings if self.conversion_result else ()
-                detail = warnings[0] if warnings else ""
+                # Keep technical engine chatter, filenames and traceback details
+                # in metadata/tooltips. The small status face stays glanceable.
+                filename = detail = ""
+                if self.state.stage == "converting":
+                    stopping = self.job is not None and self.job.cancelled.is_set()
+                    title = "Stopping…" if stopping else "In progress"
+                    message = f"{round(self.progress_fraction * 100)}%"
+                elif self.last_selection and self.last_selection.action == "conversion_cancelled":
+                    title, message = "Cancelled", ""
+                elif self.conversion_error is not None:
+                    title, message = "Failed", "Hover for details"
+                else:
+                    title, message = "Done", "File saved"
+                    if self.conversion_result and len(self.conversion_result.outputs) > 1:
+                        message = f"{len(self.conversion_result.outputs)} files saved"
             title_color = QColor(theme.error if self.conversion_error is not None else theme.accent)
-            self._text(painter, QRectF(54, 60, 216, 34), title, title_color,
-                       10.5 if self.diameter < 220 else 12, True)
-            self._text(painter, QRectF(54, 103, 216, 29), filename, foreground, 10, True)
-            self._text(painter, QRectF(54, 145, 216, 58), message, muted, 10, wrap=True)
-            self._text(painter, QRectF(64, 210, 196, 25), detail, muted, 9)
+            if self.state.stage == "confirmation":
+                self._text(painter, QRectF(54, 60, 216, 34), title, title_color,
+                           10.5 if self.diameter < 220 else 12, True)
+                self._text(painter, QRectF(54, 103, 216, 29), filename, foreground, 10, True)
+                self._text(painter, QRectF(54, 145, 216, 58), message, muted, 10, wrap=True)
+                self._text(painter, QRectF(64, 210, 196, 25), detail, muted, 9)
+            else:
+                self._text(painter, QRectF(48, 112, 228, 38), title, title_color, 11, True)
+                self._text(painter, QRectF(54, 166, 216, 36), message, muted, 10)
             if self.state.stage == "converting":
                 track = QRectF(26, 26, 272, 272)
                 painter.setBrush(Qt.BrushStyle.NoBrush)

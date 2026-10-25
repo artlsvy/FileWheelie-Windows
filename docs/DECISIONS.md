@@ -225,3 +225,17 @@ required. The existing direct-open preference and optional confirmation remain.
 Primary API references: [GetGroupBy](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ifolderview2-getgroupby),
 [Folder.ParseName](https://learn.microsoft.com/en-us/windows/win32/shell/folder-parsename),
 [SHCreateItemFromParsingName](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-shcreateitemfromparsingname).
+
+
+## D-018 — Persistent, glanceable conversion feedback
+
+The user requests removing verbose progress text and keeping conversion visible
+when clicking elsewhere. Preserve the ring and use short progress/result words;
+keep technical detail in tooltips/logs. Conversion/results use a non-modal topmost
+Tool window; selection remains a dismissible Popup. Guard the window-type change
+against lifecycle hide events. Explicit Cancel/Escape waits visibly for cleanup;
+Quit/programmatic dismissal retains the existing owned-worker shutdown path.
+
+Qt documents [Tool/Popup and topmost flags](https://doc.qt.io/qt-6/qt.html#WindowType-enum)
+and that [changing window flags hides widgets](https://doc.qt.io/qt-6/qwidget.html#windowFlags-prop).
+Native Windows focus/z-order remains a manual acceptance item.

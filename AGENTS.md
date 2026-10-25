@@ -9,7 +9,9 @@ experimental wheel activation without per-file confirmation is now authorized
 (D-016). Keep all evidence/freshness/path checks and experimental provenance;
 never promote this route to trusted hover identity. Per-file confirmation is an
 optional tray preference. Current UI task: compact 170px forest/ivory/brass wheel and grouped-folder support,
-larger labels, small Esc/Back center and circular conversion feedback.
+larger labels, small Esc/Back center and circular conversion feedback. Latest UI
+request: short progress labels and persistent topmost conversion/results (D-018);
+selection menus retain outside/focus dismissal.
 
 Read `docs/STATUS.md` and `docs/NEXT_TASK.md` first, then `docs/ROADMAP.md`, `docs/DECISIONS.md`, and task-specific specifications. **CURRENT PRIORITY (user update 2026-10-25): G9–G12 authorized sequentially: rendering/backend diagnostics, unified Python3.14, opt-in Mouse3 candidate confirmation/tray runtime, Windows onedir packaging and portable LibreOffice integration. Preserve trusted-target boundaries and Send to.** D-011 selects the fallback while Mouse3 remains desired but experimental. Preserve all Mouse3 code; expand diagnostics only for a specific blocking issue. Complete the authorized G9–G12 milestones; preserve diagnostics and record native verification limits. Keep Windows fallback/UI validation queued honestly; do not block independent Linux GUI work on an offline host.
 

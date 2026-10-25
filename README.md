@@ -43,3 +43,8 @@ Current personal workflow (D-016): opt-in experimental Mouse3 opens the wheel
 directly after evidence/path checks. The optional tray checkbox restores per-file
 confirmation. Latest UI uses a 170px forest/ivory/brass wheel with a small Esc/Back
 center and circular conversion feedback. See docs/NEXT_TASK.md for Windows checks.
+
+During conversion the 170px circle shows a short status and percentage/ring.
+Conversion/results stay visible above ordinary windows when clicking elsewhere;
+Cancel/Escape waits visibly for cleanup, and Done closes the result. Technical
+messages and file/output details remain available in tooltips and local logs.

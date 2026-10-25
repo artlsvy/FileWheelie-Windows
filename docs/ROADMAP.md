@@ -30,7 +30,7 @@ can be restored in the tray. The listener stays opt-in and Send to stays usable.
 
 Compact UI polish is implemented: 170px wheel, larger labels, small Esc/Back
 center, forest/ivory/brass themes and circular progress/results. Linux checks:
-352 tests and 360 subtests pass; new direct-route/native visuals await Windows
+357 tests and 362 subtests pass; new direct-route/native visuals await Windows
 acceptance. G11/G12 source build/bundle seams remain implemented, with native
 packaging/portable-office checks queued separately. No push was performed.
 
@@ -56,6 +56,12 @@ G7 complete with codec-gated real image/PDF paths; G8 240px transparency/feedbac
 
 
 Grouped Explorer date sections now use bounded exact-name/active-parent Shell
-corroboration, with group-local UIA IDs excluded from flat index claims. Native
-Today/Yesterday/Earlier acceptance and 170px readability remain pending. See
+corroboration, with group-local UIA IDs excluded from flat index claims. The user
+confirms grouped activation works; detailed latency/DPI coverage remains pending. See
 NEXT_TASK.md; no selected-file fallback or full-directory scan was introduced.
+
+
+The user confirms grouped-folder activation now works. Current UI follow-up keeps
+170px conversion/results topmost and visible through outside activity, with short
+status words and the existing progress ring. Details stay in tooltips/logs; native
+Windows focus/z-order acceptance is the next check (D-018, NEXT_TASK.md).

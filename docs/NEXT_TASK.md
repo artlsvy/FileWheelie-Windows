@@ -1,38 +1,38 @@
-# Next task: Windows acceptance of grouped Explorer lookup and 170px wheel
+# Next task: Windows acceptance of persistent simple conversion status
 
-User reports later Downloads date groups do not activate Mouse3. A grouped_name
-lookup now resolves the exact visible filename in the active real folder and
-cross-checks native child/parent evidence. It does not treat group-local UIA IDs
-as global Shell indices. Flat views retain indexed lookup. The route stays
-experimental, with all ambiguity/freshness/path checks and optional confirmation.
-No conversion, packaging or Send to behavior was changed.
+The user confirms the grouped Explorer fix works. Do not repeat that investigation.
+Current UI changes: only In progress/percentage plus the existing round ring;
+results use simple words, with details retained in tooltips/logs. Conversion and
+results stay in a non-modal topmost Tool window when clicking elsewhere. Selection
+menus still use normal popup dismissal. Wheel size stays 170 logical pixels.
 
-Linux checks: 352 tests / 360 subtests, scoped Ruff and compilation pass.
-Focused review found no remaining material blockers.
+Linux checks: 357 tests / 362 subtests passed, plus scoped Ruff, compilation
+and focused review. Native Windows persistence still requires acceptance.
 
 ## Windows test
 
-Quit the running tray process before launching the updated checkout:
+Quit the old tray process, update the checkout, then start:
 
 ```powershell
 .\.venv-filewheel\Scripts\python.exe -m filewheel --tray
 ```
 
-Enable Experimental Mouse3. In Downloads grouped by date, middle-click ordinary
-files under Today, Yesterday and Earlier this week, including the first/last file
-of each group. Verify the exact filename/path via tooltip and the intended output.
-Test a later group after scrolling, sorting, collapsing/reopening a group and
-switching Explorer tabs. Group headers/background must not activate. A duplicate
-or hidden/shortened label remains a safe rejection; use visible file extensions
-for the positive test. Confirm the previously working flat large folder still
-works and latency is acceptable. No Windows success is claimed from Linux tests.
+Enable Experimental Mouse3, open a file and choose a conversion. Use a conversion
+long enough to click Explorer/Notepad while it runs. The circular progress window
+must remain visible at its original position, above ordinary windows, without
+cancelling or blocking interaction with the other app. It should show only In
+progress, a percentage/ring and Cancel. After completion, simple Done/File saved
+(or Failed/Cancelled) must remain visible until Done/Escape. Hover for output,
+warning or error details; detailed diagnostic logging must still be available.
 
-The wheel is now 170 logical pixels (50px smaller). Check Docs, Image and Text/MD
-labels, hover, Back, Esc, outside dismissal, progress Cancel and result Done at
-Windows DPI settings. Full category names and paths stay in tooltips. The same
-circular forest/ivory/brass appearance remains.
+Cancel or Escape while busy should show Stopping until the worker finishes,
+then Cancelled; it must not destroy a running worker. Tray Quit must still exit
+cleanly after owned cleanup. Start a second invocation while busy: it must reject
+without cancelling. After finishing/dismissing, open another file: the normal
+category/format wheel must again dismiss on outside click and keep correct near-
+cursor/DPI placement. Check transparent corners and no native rectangular frame.
 
-If a later group still rejects, paste one existing rejection/evidence record;
-actual group IDs/provider behavior are needed to isolate that specific case.
-Do not add unrelated diagnostic tooling or guess a selected file. Keep Send to
-available. Record native results in STATUS.md; do not push without authorization.
+Linux offscreen flags/worker/visibility tests do not establish Windows z-order,
+focus or compositor behavior. Record actual native acceptance in STATUS.md.
+Send to and Mouse3 evidence filters are unchanged. Do not push without separate
+authorization.
