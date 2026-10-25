@@ -6,15 +6,20 @@ build-backend = "setuptools.build_meta"
 name = "filewheel"
 version = "0.0.1"
 description = "Private local Windows radial file converter"
-requires-python = ">=3.12"
+requires-python = ">=3.14,<3.15"
 dependencies = []
 
 [project.optional-dependencies]
+desktop = [
+    "PySide6-Essentials==6.12.0", "Pillow==13.0.0", "PyMuPDF==1.28.2",
+    "pdf2docx==0.5.13", "markitdown[docx,pdf,pptx,xlsx]==0.1.9",
+    "pillow-heif==1.8.1", "comtypes==1.4.17; sys_platform == 'win32'",
+]
 ui = ["PySide6-Essentials>=6.12,<7"]
 images = ["Pillow>=12,<14", "PyMuPDF>=1.26,<2"]
 heif = ["pillow-heif>=1.0,<2"]
 pdf = ["PyMuPDF>=1.26,<2", "pdf2docx>=0.5.13,<0.6"]
-markdown = ["markitdown[docx,pdf,pptx,xlsx]>=0.1.9,<0.2; python_version < '3.15'", "PyMuPDF>=1.26,<2"]
+markdown = ["markitdown[docx,pdf,pptx,xlsx]>=0.1.9,<0.2", "PyMuPDF>=1.26,<2"]
 office = ["PyMuPDF>=1.26,<2"]
 windows = ["comtypes>=1.4; sys_platform == 'win32'"]
 dev = ["pytest>=8", "ruff>=0.9"]
@@ -31,5 +36,5 @@ testpaths = ["tests/unit"]
 markers = ["windows_integration: requires an interactive Windows 11 desktop"]
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 line-length = 100

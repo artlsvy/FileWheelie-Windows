@@ -14,7 +14,7 @@ WebEngine/Addons distributions. It retains the same PySide6 Python API.
 | Pillow | PNG/JPEG/WebP between different formats; HEIC/HEIF→JPEG/PNG with pillow-heif; images→PDF with PyMuPDF validation | 100MiB /40M pixels; single-frame only; EXIF orientation; JPEG quality90; white background for JPEG/PDF alpha; PNG/WebP retain alpha |
 | PyMuPDF | PDF→PNG/JPEG, every page | 50MiB /100pages /40M pixels per page,144DPI; numbered outputs; rasterized, not editable |
 | pdf2docx | PDF→editable DOCX | 50MiB /100pages; text-based PDF; reconstructed fonts/layout/tables may differ; scanned/blank PDFs rejected with OCR guidance |
-| MarkItDown | DOCX/PDF/PPTX/XLSX/HTML→UTF-8 MD | Python<3.15; per-format dependency checks;50MiB input /200MiB expanded Office;100PDF pages; lossy extraction, no OCR |
+| MarkItDown | DOCX/PDF/PPTX/XLSX/HTML→UTF-8 MD | Python3.14; per-format dependency checks;50MiB input /200MiB expanded Office;100PDF pages; lossy extraction, no OCR |
 | LibreOffice | DOCX→PDF | Installed LibreOffice + PyMuPDF required;50MiB /200MiB expanded;90s process deadline; isolated profile; external resources/macros rejected; installed fonts affect layout |
 
 Unavailable engines/codecs are omitted from the live menu. Markdown/Text, Image
@@ -37,47 +37,39 @@ application exit wait for that worker. A cancellation arriving after a completed
 publication cannot undo a successful conversion. Success/error and warnings appear
 inside the same popup; output/warning details are available through tooltips.
 
-## Windows setup (existing Python3.15 venv)
+## One Python3.14 environment (development and builds)
 
-From the synced checkout:
+Normal Filewheel now requires Python>=3.14,<3.15. This one runtime supports every
+current Python converter, including MarkItDown0.1.9. Do not force packages into
+3.15 or maintain separate application environments for Markdown.
 
-```powershell
-.\.venv\Scripts\python.exe -m pip install -e ".[ui,images,pdf,heif,office,markdown]"
-.\.venv\Scripts\python.exe -m filewheel.platforms.windows.sendto stage --mode gui
-.\.venv\Scripts\python.exe -m filewheel.platforms.windows.sendto install --mode gui
-```
-
-Install LibreOffice separately if DOCX→PDF is needed; its command must be on PATH
-or in the usual Program Files directory. The installer is not downloaded or run
-by Filewheel. Optional Microsoft Word COM is not implemented or required.
-
-The menu entry remains **Filewheel preview** to preserve ownership of existing
-shortcuts; it now launches real converters. Existing owned shortcuts continue
-working without reinstall when interpreter/checkout are unchanged. Diagnostic mode
-is still separately named and never converts. Install/remove ownership checks
-remain strict; no registry changes, admin requirement or background service.
-
-MarkItDown0.1.9 declares Python>=3.10,<3.15; the markdown dependency marker skips
-it on3.15, and those menu choices remain hidden. Do not force unsupported wheels.
-For all Markdown pairs use a separate Python3.14 venv if installed:
+From the synced Windows checkout:
 
 ```powershell
-py -3.14 -m venv .venv314
-.\.venv314\Scripts\python.exe -m pip install -e ".[ui,images,pdf,heif,office,markdown]"
+py -3.14 -m venv .venv-filewheel
+.\.venv-filewheel\Scripts\python.exe -m pip install -e ".[desktop]"
+.\.venv-filewheel\Scripts\python.exe -m filewheel.platforms.windows.sendto install --mode gui
 ```
 
-To point Send to at it, first remove the GUI link using the old interpreter, then
-install with the new one (keep the old environment intact):
+Alternatively `powershell -File scripts/setup-windows.ps1` creates/checks the same
+venv and installs the complete pinned desktop extra. It refuses to replace an
+existing different runtime. Kubuntu uses Python3.14 with the same desktop extra.
+
+If migrating an existing shortcut, first remove it using the interpreter that
+originally installed it, for example the old .venv3.15 interpreter:
 
 ```powershell
 .\.venv\Scripts\python.exe -m filewheel.platforms.windows.sendto remove --mode gui
-.\.venv314\Scripts\python.exe -m filewheel.platforms.windows.sendto install --mode gui
 ```
 
-A differing staged shortcut also needs explicit removal in Explorer if switching
-interpreters; staging never overwrites a different file. Live installation does
-not require staging. Removal of the new owned link uses the same .venv314 command
-with `remove --mode gui`.
+This cleanup command remains importable on the old runtime; GUI conversion now
+rejects unsupported runtime with a clear3.14 message. Keep old environments intact
+until migration succeeds. A differing shortcut is never overwritten automatically.
+
+LibreOffice is needed only for DOCX→PDF. PDF→DOCX uses pdf2docx/PyMuPDF and does
+not depend on LibreOffice. G12's full portable bundle is documented separately;
+a system LibreOffice installation may also be detected. Optional Word COM is not
+implemented or required.
 
 ## Windows manual smoke and acceptance (new conversions still unverified)
 
@@ -85,14 +77,14 @@ Create a new, uniquely named PNG and open the actual menu:
 
 ```powershell
 $filewheelSmoke = Join-Path $env:TEMP ("filewheel-smoke-" + [guid]::NewGuid().ToString("N") + ".png")
-.\.venv\Scripts\python.exe -c "from PIL import Image; import sys; Image.new('RGBA',(320,200),(70,130,210,128)).save(sys.argv[1])" $filewheelSmoke
+.\.venv-filewheel\Scripts\python.exe -c "from PIL import Image; import sys; Image.new('RGBA',(320,200),(70,130,210,128)).save(sys.argv[1])" $filewheelSmoke
 $filewheelBefore = (Get-FileHash -LiteralPath $filewheelSmoke).Hash
-.\.venv\Scripts\python.exe -m filewheel.platforms.windows.explicit_path_diagnostics --gui -- $filewheelSmoke
+.\.venv-filewheel\Scripts\python.exe -m filewheel.platforms.windows.explicit_path_diagnostics --gui -- $filewheelSmoke
 $LASTEXITCODE
 (Get-FileHash -LiteralPath $filewheelSmoke).Hash -eq $filewheelBefore
 ```
 
-If using .venv314 replace that interpreter consistently. Choose Image→JPEG:
+Use the unified .venv-filewheel interpreter consistently. Choose Image→JPEG:
 expect progress then Converted, a readable320×200 JPEG, white alpha background
 and unchanged source hash. Repeat to check `(2)` collision handling. Then test
 Send to on that same PNG. Retain created test files for inspection; no automatic
@@ -113,7 +105,7 @@ not inferred from Linux tests. Headless basic Send to need not be repeated.
 
 ```bash
 python3 -m venv .venv-dev
-.venv-dev/bin/python -m pip install -e '.[ui,images,pdf,heif,markdown,office,dev]'
+.venv-dev/bin/python -m pip install -e '.[desktop,dev]'
 QT_QPA_PLATFORM=offscreen .venv-dev/bin/python -m pytest -q
 ```
 
@@ -130,3 +122,13 @@ Linux tests do not establish Windows integration.
 - [Pillow documentation](https://pillow.readthedocs.io/en/stable/), [pillow-heif](https://pillow-heif.readthedocs.io/en/latest/).
 - [PyMuPDF package/license](https://pypi.org/project/PyMuPDF/): AGPL/commercial licensing; private local use does not add redistribution infrastructure.
 - [ONNX Runtime privacy](https://github.com/microsoft/onnxruntime/blob/main/docs/Privacy.md): Filewheel sets ORT_DISABLE_TELEMETRY before optional imports and also disables telemetry through the API. No MarkItDown plugins, remote/LLM adapters or HTTP input routes are enabled.
+
+## Local conversion debugging
+
+Failures name the selected engine and operation in the popup/tooltip and write
+actual exception chains to `%LOCALAPPDATA%/Filewheel/logs/conversion-debug.log`
+(on Linux, `$XDG_STATE_HOME/filewheel/logs` or `~/.local/state/filewheel/logs`).
+FILEWHEEL_LOG_DIR overrides the directory. Logs rotate2MB with3 backups and contain
+local paths/tracebacks; they are never uploaded. Missing dependencies are distinct
+from encoder/parser failures. PDF→DOCX errors must be diagnosed as pdf2docx errors,
+not assumed to require LibreOffice. Preserve the source and inspect the named log.

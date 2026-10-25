@@ -100,6 +100,13 @@ def main(argv=None) -> int:
     destination.add_argument("--output-dir", type=Path, help="directory for unique invocation logs")
     parser.add_argument("paths", nargs="*", help="exactly one absolute file path after --")
     args = parser.parse_args(argv)
+    if args.gui:
+        from filewheel.runtime import require_runtime
+        try:
+            require_runtime()
+        except RuntimeError as error:
+            print(str(error), file=sys.stderr)
+            return 7
     if not args.gui and not (args.output or args.output_dir):
         parser.error("headless diagnostics require --output or --output-dir")
     if (not args.gui or args.output or args.output_dir) and not args.enable:

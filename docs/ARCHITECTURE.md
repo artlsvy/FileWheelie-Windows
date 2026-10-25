@@ -1,6 +1,6 @@
 # Architecture and portable test seams
 
-Target: Python 3.12+; Windows 11 at runtime; Kubuntu for primary development.
+Target: Python3.14; Windows 11 at runtime; Kubuntu for primary development.
 
 Current headless entry: explicit_path_diagnostics accepts Shell argv and calls
 InvocationController.handle_explicit with injected file metadata inspection and
@@ -88,8 +88,7 @@ fail closed. Engine code does not choose arbitrary final paths.
 Pillow handles image transcoding/alpha/orientation and image PDFs. PyMuPDF renders
 all PDF pages with size limits. pdf2docx reconstructs editable text with scanned-PDF
 rejection and fidelity warnings. MarkItDown registers one local Python converter
-with plugins/builtins off and HTTP denied; Python3.15 capabilities are hidden per
-upstream metadata. ONNX telemetry opt-out is set before optional imports.
+with plugins/builtins off and HTTP denied; the unifiedPython3.14 runtime satisfies upstream support metadata. ONNX telemetry opt-out is set before optional imports.
 LibreOffice uses a private profile and fixed argv in a bounded process tree;
 DOCX external resources/macros are not loaded. No Word/LLM/cloud service required.
 

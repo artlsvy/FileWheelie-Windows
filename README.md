@@ -13,12 +13,13 @@ collisions get numbered filenames. No accounts, cloud uploads, OCR or LLM client
 From the Windows checkout:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -e ".[ui,images,pdf,heif,markdown,office]"
-.\.venv\Scripts\python.exe -m filewheel.platforms.windows.sendto install --mode gui
+py -3.14 -m venv .venv-filewheel
+.\.venv-filewheel\Scripts\python.exe -m pip install -e ".[desktop]"
+.\.venv-filewheel\Scripts\python.exe -m filewheel.platforms.windows.sendto install --mode gui
 ```
 
-MarkItDown0.1.9 excludes Python3.15, so its pairs are hidden there; use a separate
-Python3.14 venv for all Markdown formats. LibreOffice must be installed separately
+The application/build runtime is Python3.14 for every converter; Python3.15
+is not a supported application environment. LibreOffice must be installed separately
 for DOCX→PDF. [Setup, exact smoke commands and engine limits](docs/CONVERTERS.md)
 explain both environments, results, cancellation and collision handling.
 [Send to management](docs/SEND_TO.md) covers staging/removal and ownership checks.

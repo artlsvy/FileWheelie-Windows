@@ -694,3 +694,16 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
 - Full suite246tests/220subtests passed; focused reviewer found wrapped-dependency
   classification and log-path failure masking, both fixed with regressions. Final
   focused9tests/9subtests pass; no native rendering or conversion success inferred.
+
+## G9-B — one Python3.14 runtime
+- Project requires>=3.14,<3.15; .python-version and setup-windows.ps1 create/check
+  .venv-filewheel without replacing existing environments. Pinned desktop extra
+  includesQtEssentials/Pillow/PyMuPDF/pdf2docx/MarkItDown/heif and Windowscomtypes.
+  Normal usage no longer splits Markdown into a separate runtime. Old shortcut
+  removal remains importable; GUI on3.15 returns actionable runtime error/code7.
+- Windows3.14 amd64 wheel/dependency resolution succeeded for the complete engine
+  set,comtypes1.4.17 and PyInstaller6.22.3. Linux3.14 engines remain fixture-tested.
+  This is metadata/resolver evidence, not a Windows native DLL/runtime test.
+- Runtime/setup tests10passed/5subtests with GUI boundary tests. Docs now use one
+  .venv-filewheel and explain safe old-shortcut migration. Native3.14 setup still
+  WINDOWS_VALIDATION_REQUIRED; proceed to G10 without waiting.

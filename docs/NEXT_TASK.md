@@ -2,7 +2,7 @@
 
 G9-A single-stroke annulus and private backend traceback diagnostics implemented;
 reviewed portable tests pass, native compositor/converter diagnosis still pending.
-Next G9-B unify all normal runtime/build/install commands onPython3.14, then G10
+G9-B unifiedPython3.14 complete. Next finish G10
 opt-in candidate confirmation/tray, G11 Windows PyInstaller onedir scripts/spec,
 G12 portable LibreOffice seams. Continue sequentially without waitingWindows.
 

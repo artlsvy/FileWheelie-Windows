@@ -15,7 +15,7 @@ Read `docs/STATUS.md` and `docs/NEXT_TASK.md` first, then `docs/ROADMAP.md`, `do
 - Never mark a Windows-dependent milestone verified based on mocks or Linux tests alone.
 
 ## Immediate architecture
-- Python >=3.12. Windows API adapter isolated from Qt UI and future converters.
+- Python3.14 (>=3.14,<3.15). Windows API adapter isolated from Qt UI and future converters.
 - Propose and test `WindowsMouseSource` (fast `WH_MOUSE_LL` callback → queue), `ExplorerTargetResolver` (point → validated item/path or None), and `InvocationController` (routing and deduplication).
 - The hook callback must return quickly, avoid COM/UIA/filesystem calls, retain callback references and maintain a message loop. Do not suppress the middle click during the first proof-of-concept.
 - Verify Explorer provenance, file-item control, bounding rectangle and item identity. **Do not substitute Explorer's selected or focused item for the item under the pointer**.
