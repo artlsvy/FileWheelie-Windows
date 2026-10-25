@@ -41,7 +41,7 @@ class ShellEvidenceCollector:
             }
             matches.append(entry)
             if self._view_probe is not None:
-                if ancestry is None or provisional_index is None:
+                if ancestry is None or len(rows) != 1:
                     continue
                 try:
                     entry.update(self._view_probe.capture(window, ancestry, provisional_index))
@@ -53,6 +53,8 @@ class ShellEvidenceCollector:
                     continue  # Excluded tabs need no Folder.Items calls at all.
                 if entry.get("native_view_candidate") is None:
                     continue
+                if entry.get("lookup_mode") == "grouped_name":
+                    continue  # Grouped parsing/count/snapshot evidence is already complete.
             items = window.Document.Folder.Items()
             count = items.Count
             entry["item_count"] = count

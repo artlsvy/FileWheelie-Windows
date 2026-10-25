@@ -10,6 +10,8 @@ import stat
 from pathlib import PureWindowsPath
 
 from filewheel.core.probe_errors import ProbeFailure, probe_step
+from filewheel.platforms.windows import name_ambiguity
+from filewheel.platforms.windows.grouped_view import capture_grouped, grouping_key
 from filewheel.platforms.windows.native import require_windows
 
 
@@ -178,6 +180,10 @@ class ShellViewProbe:
             return {"active_view_association": association}
         folder = step("query_folder_view2", lambda: view.QueryInterface(folder_type))
         count = step("get_view_item_count", lambda: folder.ItemCount(2))  # SVGIO_ALLVIEW
+        group = grouping_key(self, folder, ancestry)
+        if group is not None:
+            return capture_grouped(self, shell_window, ancestry, folder, browser,
+                                   view_hwnd, association, count, group, step)
         if type(index) is not int or not 0 <= index < count:
             return {"active_view_association": association, "native_error": "view_index_or_size"}
         item = step("get_indexed_shell_item", lambda: folder.GetItem(index, c.byref(item_type._iid_)))
@@ -198,15 +204,14 @@ class ShellViewProbe:
                 }
             except OSError:
                 pass
-        name_ambiguity = None
+        collision = None
         names = [node.get("name") for node in ancestry if node.get("class_name") == "UIItem"
                  and node.get("control_type") == 50007]
         if (count > 32 and local and file_state["exists_regular_file"]
                 and file_state["is_reparse_point"] is False
                 and bool(attributes & 0x40000000) and not bool(attributes & 0x20000000)
                 and len(names) == 1 and names[0] == local_path.name):
-            from filewheel.platforms.windows.name_ambiguity import probe_name_ambiguity
-            name_ambiguity = step("check_name_collision", lambda: probe_name_ambiguity(path, names[0]))
+            collision = step("check_name_collision", lambda: name_ambiguity.probe_name_ambiguity(path, names[0]))
         position = None
         position_error = None
         try:
@@ -228,7 +233,7 @@ class ShellViewProbe:
         )
         return {
             "active_view_association": association,
-            "name_ambiguity": name_ambiguity,
+            "name_ambiguity": collision,
             "native_view_candidate": {
                 "index": index, "candidate_path": path,
                 "is_filesystem": bool(attributes & 0x40000000),

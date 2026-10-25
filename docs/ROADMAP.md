@@ -28,9 +28,9 @@ repeated file-confirmation dialog. Controller validation, freshness, ambiguous
 file rejection and experimental source provenance remain; optional confirmation
 can be restored in the tray. The listener stays opt-in and Send to stays usable.
 
-Compact UI polish is implemented: 220px wheel, larger labels, small Esc/Back
+Compact UI polish is implemented: 170px wheel, larger labels, small Esc/Back
 center, forest/ivory/brass themes and circular progress/results. Linux checks:
-341 tests and 322 subtests pass; new direct-route/native visuals await Windows
+352 tests and 360 subtests pass; new direct-route/native visuals await Windows
 acceptance. G11/G12 source build/bundle seams remain implemented, with native
 packaging/portable-office checks queued separately. No push was performed.
 
@@ -53,3 +53,9 @@ G6-B: local MarkItDown pairs implemented/Linux-tested on3.14; unavailable on3.15
 G6-C: LibreOffice DOCX→PDF implemented/real Linux-tested; bounded process-tree timeout. G7 next.
 
 G7 complete with codec-gated real image/PDF paths; G8 240px transparency/feedback next.
+
+
+Grouped Explorer date sections now use bounded exact-name/active-parent Shell
+corroboration, with group-local UIA IDs excluded from flat index claims. Native
+Today/Yesterday/Earlier acceptance and 170px readability remain pending. See
+NEXT_TASK.md; no selected-file fallback or full-directory scan was introduced.

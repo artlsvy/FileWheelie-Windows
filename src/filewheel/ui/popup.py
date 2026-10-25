@@ -92,7 +92,7 @@ class RadialPopup(QWidget):
 
     selected = Signal(object)
     finished = Signal()
-    diameter = 220
+    diameter = 170
     reference_diameter = 324
     center_radius = 30
     outer_radius = 148
@@ -104,10 +104,10 @@ class RadialPopup(QWidget):
         point_mapper=logical_point,
         manager=None,
         source_mapper=lambda path: Path(str(path)),
-        diameter=220,
+        diameter=170,
     ):
-        if type(diameter) is not int or not 220 <= diameter <= 324:
-            raise ValueError("Wheel diameter must be an integer between 220 and 324")
+        if type(diameter) is not int or not 170 <= diameter <= 324:
+            raise ValueError("Wheel diameter must be an integer between 170 and 324")
         super().__init__(
             None,
             Qt.WindowType.Popup
@@ -476,12 +476,31 @@ class RadialPopup(QWidget):
         painter.setFont(font)
         flags = Qt.AlignmentFlag.AlignCenter
         if wrap:
+            # Qt's ordinary word wrap lets a long unbroken category overflow its
+            # rectangle. Balance only overlong words into short lines first.
+            text = self._wrap_long_words(text, painter.fontMetrics(), rect.width())
             flags |= Qt.TextFlag.TextWordWrap
         else:
             text = painter.fontMetrics().elidedText(
                 text, Qt.TextElideMode.ElideMiddle, int(rect.width())
             )
         painter.drawText(rect, flags, text)
+
+    @staticmethod
+    def _wrap_long_words(text, metrics, width):
+        lines = []
+        for line in text.split("\n"):
+            words = []
+            for word in line.split(" "):
+                pieces = [word]
+                for count in range(2, len(word) + 1):
+                    if all(metrics.horizontalAdvance(piece) <= width for piece in pieces):
+                        break
+                    length = math.ceil(len(word) / count)
+                    pieces = [word[index:index + length] for index in range(0, len(word), length)]
+                words.append("\n".join(pieces))
+            lines.append(" ".join(words))
+        return "\n".join(lines)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -526,7 +545,8 @@ class RadialPopup(QWidget):
                 warnings = self.conversion_result.warnings if self.conversion_result else ()
                 detail = warnings[0] if warnings else ""
             title_color = QColor(theme.error if self.conversion_error is not None else theme.accent)
-            self._text(painter, QRectF(60, 62, 204, 30), title, title_color, 12, True)
+            self._text(painter, QRectF(54, 60, 216, 34), title, title_color,
+                       10.5 if self.diameter < 220 else 12, True)
             self._text(painter, QRectF(54, 103, 216, 29), filename, foreground, 10, True)
             self._text(painter, QRectF(54, 145, 216, 58), message, muted, 10, wrap=True)
             self._text(painter, QRectF(64, 210, 196, 25), detail, muted, 9)
@@ -600,17 +620,19 @@ class RadialPopup(QWidget):
             angle = math.radians(-90 + (index + 0.5) * 360 / count)
             x, y = 162 + 88 * math.cos(angle), 162 + 88 * math.sin(angle)
             label = option if isinstance(option, str) else option.label
+            if self.diameter < 220 and isinstance(option, str):
+                label = {"Document": "Docs", "Markdown/Text": "Text/MD"}.get(label, label)
             self._text(
                 painter,
-                QRectF(x - 55, y - 25, 110, 50),
-                label.replace("/", "/\n"),
+                QRectF(x - 55, y - 52, 110, 104),
+                label.replace("/", "\n"),
                 foreground,
-                10.5,
+                9.5 if self.diameter < 220 else 10.5,
                 True,
                 True,
             )
         self._text(painter, QRectF(125, 147, 74, 30),
-                   "Back" if self.state.stage == "formats" else "Esc", muted, 10, True)
+                   "Back" if self.state.stage == "formats" else "Esc", muted, 9, True)
         if not count:
             self._text(painter, QRectF(62, 214, 200, 38), "No available formats", muted, 10)
 
@@ -621,7 +643,7 @@ def run_popup(
     registry=DEFAULT_PREVIEW_REGISTRY,
     *,
     manager=None,
-    diameter=220,
+    diameter=170,
 ):
     """Run one popup, returning its preview or real conversion outcome on dismissal.
 

@@ -210,3 +210,18 @@ old-money style; semantic color roles and contrast come from
 [W3C minimum text contrast](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum).
 Target at least 4.5:1 for text and 3:1 for meaningful controls; measured token
 contrast is portable evidence, not native Windows compositor acceptance.
+
+
+## D-017 — Grouped views and 170px size
+
+The user reports activation only in the first date group and requests another
+50px reduction. Use a 170px default with compact category labels. Do not infer
+flat Shell indices from group-local UIA identifiers or count preceding groups.
+Grouped views instead use exact-name, real-parent and independent native-item
+corroboration, preserving experimental provenance and safe ambiguity rejection.
+This is not a documented point-to-file identity proof; Windows acceptance is
+required. The existing direct-open preference and optional confirmation remain.
+
+Primary API references: [GetGroupBy](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ifolderview2-getgroupby),
+[Folder.ParseName](https://learn.microsoft.com/en-us/windows/win32/shell/folder-parsename),
+[SHCreateItemFromParsingName](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-shcreateitemfromparsingname).

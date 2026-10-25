@@ -908,3 +908,49 @@ a design choice, not a claim of a universally best palette.
 - New Windows direct activation and 220px/circular/light-dark visuals remain
   WINDOWS_VALIDATION_REQUIRED. Prior user-reported large-folder success is
   recorded separately above. No push was performed.
+
+
+## Grouped Explorer sections and 170px wheel
+
+User reports Mouse3 activates only in the first Downloads date group (Today),
+while Yesterday/Earlier this week are ignored. The existing flat numeric UIA-ID
+assumption is incompatible with group-local/compound IDs; this is the working
+explanation, not a claim that a supplied Windows capture proved the precise ID
+format. No Windows session was run by Codex for this change.
+
+- Grouped views now use a separate grouped_name evidence route, detected through
+  native GetGroupBy metadata or a UIA group ancestor. No group-offset arithmetic,
+  selected/focused-item substitution or directory-wide scan is used.
+- A native GetItem(0) anchors the active real filesystem parent. The automation
+  Folder.Self path must agree with that parent, and Folder.ParseName resolves one
+  exact full UIA filename. An independent native IShellItem corroborates both
+  child path and parent. The bounded filename-collision probe, regular/local/
+  non-reparse-file checks and count/HWND/parent/name/anchor/group rechecks remain.
+- Group-local IDs are retained as opaque UIA metadata; candidate_index is None,
+  index_in_range is false and native_index_path_match is None for this route.
+  The runtime requires native_item_path_match after the assessor validates the
+  chosen lookup route. Flat views still require their original numeric index
+  and native index/path match. Trusted resolution still returns None; activation
+  keeps experimental_candidate provenance and existing path revalidation.
+- Hidden/shortened names, ambiguous display names, virtual/remote folders,
+  contradictory parents, changed snapshots and stale events reject safely.
+  Grouped-name lookups consume a bounded number of Shell calls independent of
+  folder size. Actual native grouping/parser behavior and the unchanged 500ms
+  freshness deadline require Windows acceptance.
+- Default wheel reduced exactly 50 logical pixels: 220 → 170. Small layouts use
+  9.5pt labels, deliberate wrapping and compact Docs/Text-MD category labels;
+  full labels/path details remain in tooltips. Paint and hit geometry stay scaled
+  together, including circular progress, Cancel, Done and Esc/Back. Reviewed a
+  170px offscreen PDF category render; no Windows font/DPI claim is inferred.
+- Tests cover Today/Yesterday/Earlier-style names with repeated, compound and
+  empty group IDs; native grouping without UIA group containers; parent/path/
+  count/snapshot contradictions; group headers; duplicate/hidden names and mixed
+  tabs. Fakes assert two native anchor reads, two exact ParseName reads and no
+  group-wide item enumeration. Grouped-first/UI test order also passes after
+  isolating file-stat mocks from Qt's import/source inspection.
+
+- Final available checks: **352 tests and 360 subtests passed**, scoped Ruff,
+  compileall and git diff --check passed. Focused read-only review found no
+  remaining material blockers; its grouped-first/UI-order run passed 82 tests
+  and 166 subtests. Windows grouped-provider behavior, latency and 170px font/DPI
+  rendering remain WINDOWS_VALIDATION_REQUIRED. No push was performed.

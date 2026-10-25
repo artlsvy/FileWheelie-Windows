@@ -41,5 +41,5 @@ For Kubuntu development use the optional extras and pytest commands in
 
 Current personal workflow (D-016): opt-in experimental Mouse3 opens the wheel
 directly after evidence/path checks. The optional tray checkbox restores per-file
-confirmation. Latest UI uses a 220px forest/ivory/brass wheel with a small Esc/Back
+confirmation. Latest UI uses a 170px forest/ivory/brass wheel with a small Esc/Back
 center and circular conversion feedback. See docs/NEXT_TASK.md for Windows checks.

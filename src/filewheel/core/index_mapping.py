@@ -94,7 +94,7 @@ def _tab_window_index(windows: list, frame: int, ancestry: list, view: int, tab:
         if not is_matched and not is_excluded:
             return None  # Unknown or partially matching relationships cannot be ignored.
         count, candidates = entry.get("item_count"), entry.get("candidates")
-        if entry.get("lookup_mode") == "targeted_index":
+        if entry.get("lookup_mode") in ("targeted_index", "grouped_name"):
             # A positively excluded tab has no item enumeration or path lookup.
             if is_excluded:
                 if count is not None or candidates != [] or entry.get("truncated") is not False:
@@ -230,9 +230,12 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
             return reject("invalid_view_ancestry")
         checks["ancestry_provenance"] = True
         automation_id = item.get("automation_id")
-        if not isinstance(automation_id, str) or not re.fullmatch(r"0|[1-9][0-9]{0,9}", automation_id):
+        if not isinstance(automation_id, str) or len(automation_id) > 256:
             return reject("invalid_automation_index")
-        index = int(automation_id)
+        # Grouped IDs may be local/compound. Preserve the opaque ID for UIA
+        # snapshot consistency; only indexed lookups interpret canonical numbers.
+        index = (int(automation_id) if re.fullmatch(r"0|[1-9][0-9]{0,9}", automation_id)
+                 else None)
         result["candidate_index"] = index
         shell = record["shell_candidates"]
         if not isinstance(shell, dict) or shell.get("windows_truncated") is not False:
@@ -278,8 +281,13 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
             checks["active_view_associated"] = True
         candidates = shell_window.get("candidates")
         count = shell_window.get("item_count")
-        targeted = shell_window.get("lookup_mode") == "targeted_index"
-        if shell_window.get("lookup_mode") not in (None, "targeted_index"):
+        grouped = shell_window.get("lookup_mode") == "grouped_name"
+        targeted = shell_window.get("lookup_mode") in ("targeted_index", "grouped_name")
+        if grouped:
+            result["candidate_index"] = None  # UIA group IDs are not flat Shell indices.
+        if index is None and not grouped:
+            return reject("invalid_automation_index")
+        if shell_window.get("lookup_mode") not in (None, "targeted_index", "grouped_name"):
             return reject("invalid_lookup_mode")
         if targeted:
             if (_tab_window_index(windows, event.window_id, ancestry, view[0], tab[0])
@@ -294,9 +302,15 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
                     or native["view_item_count"] != count):
                 return reject("native_count_mismatch")
             candidate = candidates[0]
-            if (not isinstance(candidate, dict)
-                    or type(candidate.get("enumeration_index")) is not int
-                    or candidate["enumeration_index"] != index):
+            if not isinstance(candidate, dict):
+                return reject("malformed_evidence")
+            if grouped and count < 1:
+                return reject("invalid_candidate_index")
+            if grouped:
+                if candidate.get("lookup_name") != item.get("name") or native.get("index") is not None:
+                    return reject("grouped_name_mismatch")
+            elif (type(candidate.get("enumeration_index")) is not int
+                  or candidate["enumeration_index"] != index):
                 return reject("inconsistent_candidate_indices")
         else:
             if (
@@ -310,15 +324,37 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
             checks["complete_candidates"] = True
             candidate = next((candidate for candidate in candidates
                               if candidate["enumeration_index"] == index), None)
-        if not 0 <= index < count:
-            return reject("invalid_candidate_index")
-        checks["index_in_range"] = True
+        if not grouped:
+            if not 0 <= index < count:
+                return reject("invalid_candidate_index")
+            checks["index_in_range"] = True
         checks["candidate_lookup_complete"] = True
         if candidate.get("is_folder") is not False or candidate.get("is_filesystem") is not True:
             return reject("unsupported_shell_object")
         path = _local_file_path(candidate.get("candidate_path"))
         if path is None:
             return reject("unsupported_candidate_path")
+        if grouped:
+            context = shell_window.get("grouped_context")
+            if not isinstance(context, dict) or context.get("method") != "active_folder_exact_name":
+                return reject("grouped_context_incomplete")
+            parent = _local_file_path(context.get("folder_path"))
+            anchor = _local_file_path(context.get("native_anchor_path"))
+            if (parent is None or anchor is None or anchor.parent != parent or path.parent != parent
+                    or _local_file_path(context.get("native_parent_path")) != parent
+                    or context.get("native_anchor_is_filesystem") is not True):
+                return reject("grouped_parent_mismatch")
+            key = context.get("grouping_key")
+            if key == "uia_group":
+                groups = [node for node in ancestry[item_index + 1:view[0]]
+                          if node.get("control_type") == 50026]
+                if not groups or not all(_contains(node.get("bounds"), point) for node in groups):
+                    return reject("grouped_context_incomplete")
+            elif (not isinstance(key, str)
+                  or not re.fullmatch(r"\{[0-9A-Fa-f]{8}(?:-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}\}:[0-9]{1,10}", key)
+                  or key.lower().startswith("{00000000-0000-0000-0000-000000000000}")):
+                return reject("grouped_context_incomplete")
+            checks["native_group_parent_match"] = True
         name = item.get("name")
         if not isinstance(name, str) or not name or len(name) > 512:
             return reject("invalid_uia_name")
@@ -370,8 +406,12 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
             if not isinstance(native, dict):
                 return reject("malformed_native_evidence")
             native_path = _local_file_path(native.get("candidate_path"))
-            matches = _integer(native.get("index")) and native["index"] == index and native_path == path
-            checks["native_index_path_match"] = matches
+            matches = native_path == path and (
+                native.get("index") is None if grouped
+                else _integer(native.get("index")) and native["index"] == index
+            )
+            checks["native_item_path_match"] = matches
+            checks["native_index_path_match"] = None if grouped else matches
             if not matches:
                 return reject("native_candidate_mismatch")
             regular = native.get("exists_regular_file")

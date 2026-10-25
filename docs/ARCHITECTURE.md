@@ -92,7 +92,7 @@ with plugins/builtins off and HTTP denied; the unifiedPython3.14 runtime satisfi
 LibreOffice uses a private profile and fixed argv in a bounded process tree;
 DOCX external resources/macros are not loaded. No Word/LLM/cloud service required.
 
-UI geometry/transparency is independent of engines: configurable 220px wheel uses
+UI geometry/transparency is independent of engines: configurable 170px wheel uses
 one scaled reference layout for hit testing and paint, with transparent clear and
 no OS rectangular shadow. Linux tests establish code paths, not native compositor
 or Windows engine operation. CONVERTERS.md records runtime instructions/limits.
@@ -124,3 +124,16 @@ experimental_candidate. It never claims proven hover identity. Optional tray
 confirmation still uses confirm() and source user_confirmed_candidate; Send to
 uses shell_explicit. All share the same popup and conversion manager. Source is
 kept distinct even though the validated-path DTO is shared.
+
+
+### Grouped Shell lookup
+
+Grouped views use native GetGroupBy metadata or an in-content UIA group marker.
+The bounded grouped_name route cross-checks an active-view native anchor's parent
+with the automation folder, parses one literal full filename, and corroborates
+native child/parent paths through SHCreateItemFromParsingName. Collision and
+snapshot checks remain mandatory. UIA IDs are never treated as flat indices in
+this route; native_item_path_match is the shared positive path check after the
+route-specific assessor succeeds. Indexed views still check range and native
+index correspondence. Both remain experimental until a real identity bridge
+exists. No full group enumeration or selection lookup is involved.

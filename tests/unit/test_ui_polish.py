@@ -8,7 +8,8 @@ from unittest.mock import Mock
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 try:
-    from PySide6.QtCore import QEvent, QPoint, Qt
+    from PySide6.QtCore import QEvent, QPoint, QRect, Qt
+    from PySide6.QtGui import QFont, QFontMetrics
     from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication
 
@@ -59,12 +60,12 @@ class UiPolishTests(unittest.TestCase):
         self.assertEqual(self.popup.state.stage, "confirmation")
 
     def test_default_and_configurable_diameter(self):
-        self.assertEqual((self.popup.width(), self.popup.height()), (220, 220))
-        for diameter in (220, 260, 324):
+        self.assertEqual((self.popup.width(), self.popup.height()), (170, 170))
+        for diameter in (170, 190, 220, 260, 324):
             popup = RadialPopup(diameter=diameter)
             self.assertEqual(popup.width(), diameter)
             popup.deleteLater()
-        for diameter in (219, 325, 240.0, True):
+        for diameter in (169, 325, 240.0, True):
             with self.assertRaises(ValueError):
                 RadialPopup(diameter=diameter)
 
@@ -193,3 +194,26 @@ class UiPolishTests(unittest.TestCase):
         self.popup.state.stage = "converting"
         QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(24, 60))
         self.assertFalse(self.popup.isVisible())
+
+    def test_compact_long_category_labels_fit_without_unbroken_word_overflow(self):
+        font = QFont("Segoe UI")
+        font.setPointSizeF(9.5 / self.popup._scale)
+        font.setBold(True)
+        metrics = QFontMetrics(font)
+        for label in ("Document", "Markdown\nText"):
+            with self.subTest(label=label):
+                wrapped = self.popup._wrap_long_words(label, metrics, 110)
+                bounds = metrics.boundingRect(QRect(0, 0, 110, 104),
+                                              Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap,
+                                              wrapped)
+                self.assertLessEqual(bounds.width(), 110)
+                self.assertLessEqual(bounds.height(), 104)
+                self.assertEqual(wrapped.replace("\n", ""), label.replace("\n", ""))
+
+    def test_compact_size_preserves_action_hit_regions(self):
+        self.choose_preview()
+        self.assertEqual(self.popup.width(), 170)
+        action = self.popup._action_rect()
+        center = action.center()
+        self.assertEqual(self.popup._hit(self.point(center.x(), center.y())), -2)
+        self.assertEqual(self.popup._hit(self.point(24, 60)), -1)

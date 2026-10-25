@@ -9,9 +9,10 @@ it does not claim trusted hover identity. The optional tray checkbox “Confirm
 file before opening” restores the per-file dialog. The listener remains opt-in.
 No selected/focused-file lookup or permanent main window.
 
-Default widget diameter 220 logical pixels, internally configurable 220–324.
+Default widget diameter 170 logical pixels, internally configurable 170–324.
 Paint and hit testing share scaled geometry. Segment labels use a larger readable
-minimum; the smaller center contains only Esc at the category level and Back at
+minimum (9.5pt below 220px; 10.5pt at larger sizes); compact Docs/Text-MD
+labels and deliberate wrapping avoid clipping. The smaller center contains only Esc at the category level and Back at
 the format level. Clicking Esc dismisses; clicking Back returns to categories.
 Source path remains available in the tooltip rather than crowding the center.
 Frameless/translucent Qt.Popup, explicit transparent source clearing, no system
