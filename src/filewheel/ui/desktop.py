@@ -72,6 +72,14 @@ class DesktopApplication(QObject):
         if tray:
             self.tray.show()
 
+    def ensure_tray(self):
+        """Adopt tray mode when a later no-file launch reaches a transient owner."""
+        if self.quitting or not QSystemTrayIcon.isSystemTrayAvailable():
+            return False
+        self.tray_mode = True
+        self.tray.show()
+        return True
+
     @staticmethod
     def _icon():
         pixmap = QPixmap(32, 32)

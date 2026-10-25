@@ -55,7 +55,7 @@ def main(argv=None):
             if host is None:
                 return False
             return (host.present_explicit(request['paths'], tuple(request['point']))
-                    if request['paths'] else True)
+                    if request['paths'] else host.ensure_tray())
         broker = SingleInstance(receive)
         outcome = broker.acquire_or_forward(packet)
         if outcome != 'owner':

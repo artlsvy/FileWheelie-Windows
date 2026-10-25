@@ -182,3 +182,13 @@ class DesktopConsentTests(unittest.TestCase):
         self.desktop.mouse_error('hook failed')
         self.assertFalse(self.desktop.experimental_enabled)
         self.assertIn('off', self.desktop.tray.toolTip())
+
+    def test_no_file_invocation_adopts_tray_without_enabling_experiment(self):
+        self.desktop.tray_mode = False
+        with patch('filewheel.ui.desktop.QSystemTrayIcon.isSystemTrayAvailable', return_value=True):
+            self.assertTrue(self.desktop.ensure_tray())
+        self.assertTrue(self.desktop.tray_mode)
+        self.assertIsNone(self.desktop.runtime)
+        self.assertFalse(self.desktop.experimental_enabled)
+        self.desktop.quitting = True
+        self.assertFalse(self.desktop.ensure_tray())
