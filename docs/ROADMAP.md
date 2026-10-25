@@ -52,3 +52,5 @@ Codex on Kubuntu can always advance G0/G3 tests, diagnostics, mocks, docs, and i
 Overnight checkpoint: G5 real converter and background GUI implemented; G6-A next.
 
 G6-A: PDF→editable DOCX implemented/Linux fixture-tested; G6-B MarkItDown next.
+
+G6-B: local MarkItDown pairs implemented/Linux-tested on3.14; unavailable on3.15. G6-C next.

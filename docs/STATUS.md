@@ -575,3 +575,21 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   Windows PDF→DOCX remains pending. Continue directly to G6-B MarkItDown.
 - G6-A final suite203 tests pass (197 subtests),9 focused tests independently
   reproduced by reviewer; no material findings. Compilation/whitespace pass.
+
+## G6-B — local MarkItDown Python API implemented
+- DOCX/PDF/PPTX/XLSX/HTML→UTF-8 MD, actual document fixtures validate useful
+  headings/lists/tables/text and Unicode. Built-ins/plugins are disabled and only
+  the selected local document converter is registered; convert_local is called
+  directly with a network-denying requests session. No CLI, LLM or cloud adapter.
+- ORT_DISABLE_TELEMETRY=1 set at package bootstrap before optional dependency
+  imports; disable_telemetry_events also called. Lossy extraction/OCR limitations
+  are reported; scanned PDFs and corrupt documents fail without published output.
+- MarkItDown0.1.9 officially supports Python>=3.10,<3.15. Per-format availability
+  hides missing dependencies, and all its pairs are hidden on3.15. The markdown
+  extra uses a Python<3.15 marker; use a Python3.14 environment for these features.
+  Do not force-install an unsupported release on the target's3.15 runtime.
+- Actual checks:8 focused fixture tests +5 subtests passed before review; full
+  suite215 passed including prepared G6-C tests. Review found a missingpdfplumber
+  availability guard; added guard and regression. Native Windows MD conversion
+  and Python3.14 environment setup remain queued. Continue directly G6-C.
+- G6-B regression fixed;9 focused tests +5 subtests and scoped Ruff pass.
