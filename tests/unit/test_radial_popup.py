@@ -1,15 +1,17 @@
 import os
 import unittest
-from unittest.mock import patch
 from pathlib import PureWindowsPath
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 try:
     from PySide6.QtCore import QEvent, QPoint, QPointF, Qt, QTimer
-    from PySide6.QtGui import QFocusEvent, QMouseEvent
+    from PySide6.QtGui import QFocusEvent
     from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication
+
     from filewheel.ui.popup import RadialPopup, run_popup
+
     QT_AVAILABLE = True
 except ImportError:
     QT_AVAILABLE = False
@@ -18,7 +20,9 @@ from filewheel.core.models import TargetResolution
 
 
 def target(name="image.png"):
-    return TargetResolution(PureWindowsPath("C:/fixtures") / name, 0, (400, 350), 1.0, "shell_explicit")
+    return TargetResolution(
+        PureWindowsPath("C:/fixtures") / name, 0, (400, 350), 1.0, "shell_explicit"
+    )
 
 
 @unittest.skipUnless(QT_AVAILABLE, "PySide6 optional dependency unavailable")
@@ -29,7 +33,7 @@ class RadialPopupTests(unittest.TestCase):
         cls.app.setQuitOnLastWindowClosed(False)
 
     def setUp(self):
-        self.popup = RadialPopup(point_mapper=lambda point, screens: point)
+        self.popup = RadialPopup(point_mapper=lambda point, screens: point, diameter=324)
         self.popup.present(target())
 
     def tearDown(self):
@@ -93,20 +97,29 @@ class RadialPopupTests(unittest.TestCase):
         self.popup.close()
         self.app.processEvents()
         previous = self.app.quitOnLastWindowClosed()
+
         def confirm_and_close():
-            popups = [widget for widget in self.app.topLevelWidgets()
-                      if isinstance(widget, RadialPopup) and widget.isVisible()]
+            popups = [
+                widget
+                for widget in self.app.topLevelWidgets()
+                if isinstance(widget, RadialPopup) and widget.isVisible()
+            ]
             self.assertEqual(len(popups), 1)
             popup = popups[0]
             popup._choose(0)
             popup._choose(0)
             popup.dismiss()
+
         QTimer.singleShot(0, confirm_and_close)
         result = run_popup(target())
         self.assertEqual(result.output_extension, ".jpg")
         self.assertEqual(self.app.quitOnLastWindowClosed(), previous)
-        self.assertFalse(any(isinstance(widget, RadialPopup) and widget.isVisible()
-                             for widget in self.app.topLevelWidgets()))
+        self.assertFalse(
+            any(
+                isinstance(widget, RadialPopup) and widget.isVisible()
+                for widget in self.app.topLevelWidgets()
+            )
+        )
 
     def test_nonleft_outside_dismisses_but_inner_click_cannot_choose(self):
         QTest.mouseClick(self.popup, Qt.MouseButton.RightButton, pos=QPoint(267, 162))
@@ -129,8 +142,10 @@ class RadialPopupTests(unittest.TestCase):
     def test_mapping_failure_replacement_finishes_live_invocation_once(self):
         finished = []
         self.popup.finished.connect(lambda: finished.append(True))
+
         def fail_mapping(point, screens):
             raise RuntimeError("monitor unavailable")
+
         self.popup.point_mapper = fail_mapping
         with self.assertRaisesRegex(RuntimeError, "position_popup"):
             self.popup.present(target("replacement.docx"))

@@ -1,43 +1,53 @@
-# UI specification — G4 radial preview
+# Radial conversion UI — G8
 
-## Activation
-The primary prototype entry is an explicit path from Send to through
-InvocationController. Future verified Mouse3 invocations use the same controller
-and TargetResolution DTO. Hover diagnostics currently return None and must not
-activate a wheel. No path lookup from selection or UIA is added for the GUI.
-Show a compact frameless translucent wheel near the invocation's cursor point,
-clamped within the monitor work area; default diameter260–320 logical pixels.
-Convert the DTO's physical desktop coordinates at the Qt boundary, including
-scaled displays and negative monitor coordinates.
+## Activation and placement
 
-## Stages
-1. **Category**: dynamic available outputs for the detected input (Image, Document, Markdown/Text, Audio, Video); do not show empty categories.
-2. **Format**: dynamic concrete outputs in category (e.g., PNG → Image → JPG, WebP, TIFF; DOCX → Markdown/Text → MD). Choosing a format records one dry-run selection and shows filename, original format, destination and intended output filename in the same popup. No files change; Done closes it.
+A validated TargetResolution from InvocationController is required before opening.
+Normal activation is Explorer Send to with one explicit absolute path. Future
+trusted Mouse3 uses the same interface; provisional hover candidates cannot open
+it. No selected/focused-file lookup, tray, IPC or permanent main window.
 
-Controls: center=Back in stage 2; Escape/outside click=cancel; no hold or drag necessary; use hover highlight and clear labels; usable on keyboard/focus where practical. Reopening a wheel cancels the prior menu. Display source basename and readable format. Provide a non-radial fallback for 6+ choices or accessibility rather than overcrowding slices.
+Default widget diameter240 logical pixels, internally configurable220–324
+(220–260 preferred;324 preserves legacy fixture geometry). The324-unit layout is
+scaled identically for painting and hit testing; text has a readable minimum8pt.
+Frameless/translucent Qt.Popup, explicit transparent source clearing, no system
+background/autofill or native rectangular drop shadow. Painted shadow follows the
+circle. Palette-based light/dark colors and animated hover are retained.
 
-## Output behavior (later)
-Default save location is alongside source; never change source. Output collision: produce `stem (2).ext`, `stem (3).ext`, etc., using race-safe allocation. Toast on success and actionable error on failure. No network dependency.
+Native monitor origin/dimensions uniquely match Qt geometry and DPR, independent
+of friendly display names. Cursor conversion is relative to that monitor; edge
+rounding is bounded to it. Placement clamps to available work area. Real Windows
+compositor, detailed mixed-DPI and focus behavior remain acceptance items.
 
-## State contract
-`Dormant → Resolving → CategoryWheel → FormatWheel → Converting → Result → Dormant`; `Resolving` can transition directly to `Dormant` on None/timeout, and Escape cancels before conversion. No wheel appears before a validated target.
+## Navigation and real capabilities
 
-## Open questions (do not block GUI work)
-- Whether to intercept/suppress native Mouse3 in Explorer when our menu appears; **POC should not intercept**.
-- Whether multiple-selection should ever convert more than the clicked file; default **single hovered file**.
-- How to visually represent categories with one format.
+Level1 contains only categories with installed working engines (Image, Document,
+Markdown/Text; Audio/Video hidden until implemented). Level2 contains specific
+formats from the same injected registry. Unknown inputs show No available formats.
+Clicking a format starts exactly one real conversion worker. The old injected
+preview registry remains a test-only seam with explicit PREVIEW/dry-run UI.
 
-## Implemented G4 prototype
+Center/Backspace navigates back from formats. Escape, outside any-button click or
+focus loss dismiss; inner choices are left-click only. Gaps/invalid indices do
+nothing. Tab/arrows + Return provide basic keyboard access. Reopening resets idle
+menu state; a busy instance requests cancellation rather than starting overlapping
+work. Six or more injected options use a compact scrollable list.
 
-324 logical pixel widget includes shadow; circular content is296px. Palette-based
-light/dark styling, animated hover, topmost Qt.Popup with translucent corners.
-Center displays an elided input filename; stage2 center/Backspace returns; Escape,
-outside/focus loss and confirmation Done dismiss. Tab/arrows and Return select.
-Reopening resets state; six or more injected choices use a scrollable compact list.
+## Conversion feedback and exit
 
-Injected CapabilityRegistry contains explicit preview edges only. PREVIEW appears
-in the wheel and confirmation says No files changed. No engine is installed or
-claimed. Unknown suffixes display No preview options. Source controller DTO is
-required before opening; both invocation sources use present(target)/run_popup.
-No selected-file lookup, conventional main window, tray or service is required.
-Native Windows placement, activation and dismissal remain manual acceptance items.
+One popup displays preparing/encoding/rendering progress, percentage/bar, result
+and errors. Source filename remains visible; long filename/output/warning details
+are in tooltips. Multi-page results show first output plus count and all paths in
+the tooltip. Success uses actual published paths, not predicted collision names.
+Done closes. Conversion outcomes are converted/conversion_failed/conversion_cancelled,
+including dismissal while working; the CLI returns6 for a conversion failure.
+
+A QThread owns only backend work; signals update Qt on its GUI thread. Dismissal
+requests cooperative cancellation, hides the popup and retains worker/widget
+ownership until cleanup completes. Library calls cannot all be interrupted
+mid-call; LibreOffice has a bounded process-tree deadline. The application does
+not destroy a running QThread or leave an unowned worker behind.
+
+Outputs are adjacent to source, numbered on collision, validated before atomic
+publication. See CONVERTERS.md for limits, alpha behavior, OCR/fidelity and engine
+availability. No real conversion is claimed for preview edges or missing engines.

@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "filewheel"
 version = "0.0.1"
-description = "Local Windows radial file conversion preview"
+description = "Private local Windows radial file converter"
 requires-python = ">=3.12"
 dependencies = []
 
 [project.optional-dependencies]
-ui = ["PySide6>=6.12,<7"]
+ui = ["PySide6-Essentials>=6.12,<7"]
 images = ["Pillow>=12,<14", "PyMuPDF>=1.26,<2"]
 heif = ["pillow-heif>=1.0,<2"]
 pdf = ["PyMuPDF>=1.26,<2", "pdf2docx>=0.5.13,<0.6"]

@@ -1,0 +1,159 @@
+"""Scaled offscreen interaction, alpha compositing and conversion outcome feedback."""
+
+import os
+import time
+import unittest
+from pathlib import Path, PureWindowsPath
+from unittest.mock import Mock
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+try:
+    from PySide6.QtCore import QEvent, QPoint, Qt
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QApplication
+
+    from filewheel.ui.popup import RadialPopup
+
+    AVAILABLE = True
+except ImportError:
+    AVAILABLE = False
+
+from filewheel.converters.base import ConversionCancelled, ConversionError, ConversionResult
+from filewheel.core.models import TargetResolution
+from filewheel.ui.radial import DEFAULT_PREVIEW_REGISTRY
+
+
+def target():
+    return TargetResolution(
+        PureWindowsPath("C:/fixtures/Résumé very long filename.png"),
+        0,
+        (350, 300),
+        1.0,
+        "shell_explicit",
+    )
+
+
+@unittest.skipUnless(AVAILABLE, "Optional PySide6 required for offscreen polish tests")
+class UiPolishTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = QApplication.instance() or QApplication(["filewheel-polish-tests"])
+        cls.app.setQuitOnLastWindowClosed(False)
+
+    def setUp(self):
+        self.popup = RadialPopup(point_mapper=lambda point, screens: point)
+        self.popup.present(target())
+
+    def tearDown(self):
+        self.popup.close()
+        self.app.processEvents()
+        self.popup.deleteLater()
+        self.app.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
+    def point(self, x, y):
+        return QPoint(round(x * self.popup.width() / 324), round(y * self.popup.height() / 324))
+
+    def choose_preview(self):
+        QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(267, 162))
+        QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(253, 110))
+        self.assertEqual(self.popup.state.stage, "confirmation")
+
+    def test_default_and_configurable_diameter(self):
+        self.assertEqual((self.popup.width(), self.popup.height()), (240, 240))
+        for diameter in (220, 260, 324):
+            popup = RadialPopup(diameter=diameter)
+            self.assertEqual(popup.width(), diameter)
+            popup.deleteLater()
+        for diameter in (219, 325, 240.0, True):
+            with self.assertRaises(ValueError):
+                RadialPopup(diameter=diameter)
+
+    def test_scaled_category_format_center_back_and_escape(self):
+        QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(267, 162))
+        self.assertEqual(self.popup.state.stage, "formats")
+        QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(162, 162))
+        self.assertEqual(self.popup.state.stage, "categories")
+        self.choose_preview()
+        self.assertEqual(self.popup.last_selection.output_extension, ".jpg")
+        QTest.keyClick(self.popup, Qt.Key.Key_Escape)
+        self.assertFalse(self.popup.isVisible())
+
+    def test_corners_remain_transparent_after_state_changes(self):
+        for change in (lambda: None, self.choose_preview):
+            change()
+            self.app.processEvents()
+            image = self.popup.grab().toImage()
+            for x, y in ((0, 0), (239, 0), (0, 239), (239, 239), (4, 4)):
+                self.assertEqual(image.pixelColor(x, y).alpha(), 0)
+        self.assertTrue(self.popup.testAttribute(Qt.WidgetAttribute.WA_TranslucentBackground))
+        self.assertFalse(self.popup.autoFillBackground())
+        self.assertTrue(self.popup.windowFlags() & Qt.WindowType.NoDropShadowWindowHint)
+
+    def test_full_source_tooltip_and_scaled_outside_right_click(self):
+        QTest.mouseMove(self.popup, self.point(162, 162))
+        self.assertIn("Résumé very long filename.png", self.popup.toolTip())
+        QTest.mouseClick(self.popup, Qt.MouseButton.RightButton, pos=QPoint(1, 1))
+        self.assertFalse(self.popup.isVisible())
+
+    def test_failure_and_cancel_have_real_outcome_even_when_closed(self):
+        for error, action, title in (
+            (ConversionError("Broken document"), "conversion_failed", "Conversion failed"),
+            (ConversionCancelled("Stopped"), "conversion_cancelled", "Cancelled"),
+        ):
+            self.popup.present(target())
+            self.choose_preview()
+            fake_job = Mock()
+            self.popup.job = fake_job
+            self.popup._closing = True
+            self.popup._conversion_done(None, error)
+            fake_job.wait.assert_called_once()
+            fake_job.deleteLater.assert_called_once()
+            self.assertEqual(self.popup.last_selection.action, action)
+            self.assertEqual(self.popup.last_selection.outputs, ())
+            self.assertEqual(self.popup.status_title, title)
+            self.assertIs(self.popup.conversion_error, error)
+            self.assertTrue(self.popup._finished)
+
+    def test_multi_output_success_metadata_and_warning_tooltip(self):
+        self.choose_preview()
+        result = ConversionResult(
+            (Path("/tmp/page-001.png"), Path("/tmp/page-002.png")),
+            ("Rasterized pages", "No editable text"),
+            "test",
+        )
+        self.popup.job = Mock()
+        self.popup._conversion_done(result, None)
+        self.assertEqual(self.popup.last_selection.action, "converted")
+        self.assertEqual(self.popup.last_selection.outputs, result.outputs)
+        self.assertEqual(self.popup.conversion_result, result)
+        self.assertIn("+1 files", self.popup.status_message)
+        for detail in ("page-001.png", "page-002.png", "Rasterized pages", "No editable text"):
+            self.assertIn(detail, self.popup.toolTip())
+
+    def test_actual_worker_cancel_updates_metadata_before_finished(self):
+        class Manager:
+            def convert(self, source, extension, *, progress, cancel):
+                progress(0.25, "Waiting for cancellation")
+                if cancel.wait(2):
+                    raise ConversionCancelled("Stopped before publication")
+                raise ConversionError("Cancellation was not received")
+
+        self.popup.close()
+        self.popup.deleteLater()
+        self.popup = RadialPopup(
+            DEFAULT_PREVIEW_REGISTRY, manager=Manager(), point_mapper=lambda point, screens: point
+        )
+        self.popup.present(target())
+        outcomes = []
+        self.popup.finished.connect(lambda: outcomes.append(self.popup.last_selection.action))
+        self.popup._choose(0)
+        self.popup._choose(0)
+        self.assertEqual(self.popup.last_selection.action, "conversion_started")
+        self.popup.dismiss()
+        deadline = time.monotonic() + 3
+        while self.popup.job is not None and time.monotonic() < deadline:
+            self.app.processEvents()
+            time.sleep(0.002)
+        self.assertIsNone(self.popup.job)
+        self.assertEqual(outcomes, ["conversion_cancelled"])
+        self.assertFalse(self.popup.isVisible())

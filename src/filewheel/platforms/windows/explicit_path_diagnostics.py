@@ -73,8 +73,8 @@ def invocation_record(arguments, point, *, controller=None, inspector=None) -> d
 
 def show_preview(target):
     # Optional import after validation; headless mode never imports Qt.
-    from filewheel.ui.popup import run_popup
     from filewheel.converters import ConversionManager
+    from filewheel.ui.popup import run_popup
     manager = ConversionManager()
     return run_popup(target, manager.registry, manager=manager)
 
@@ -94,7 +94,7 @@ def write_invocation(record: dict, *, output: Path | None, directory: Path | Non
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--enable", action="store_true", help="opt in to local path diagnostics")
-    parser.add_argument("--gui", action="store_true", help="open the radial dry-run preview")
+    parser.add_argument("--gui", action="store_true", help="open the local radial conversion menu")
     destination = parser.add_mutually_exclusive_group()
     destination.add_argument("--output", type=Path, help="new JSONL file; never overwritten")
     destination.add_argument("--output-dir", type=Path, help="directory for unique invocation logs")
@@ -112,7 +112,7 @@ def main(argv=None) -> int:
         return 3
     target, record = resolve_invocation(args.paths, point)
     if args.gui:
-        record["action"] = "radial_preview"
+        record["action"] = "radial_menu"
     output = None
     if args.output or args.output_dir:
         try:
@@ -148,7 +148,10 @@ def main(argv=None) -> int:
                               "category": selection.category,
                               "original_format": selection.original_format,
                               "destination_format": selection.output_extension,
-                              "intended_output": str(selection.intended_path)}, ensure_ascii=True))
+                              "intended_output": str(selection.intended_path),
+                              "outputs": [str(path) for path in selection.outputs]}, ensure_ascii=True))
+            if selection.action == "conversion_failed":
+                return 6
     return 0
 
 

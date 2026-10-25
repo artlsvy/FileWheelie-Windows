@@ -1,7 +1,7 @@
 """GUI integration rejects invalid argv before importing optional Qt."""
 import io
 import unittest
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import PureWindowsPath
 from unittest.mock import patch
 
@@ -12,7 +12,8 @@ from filewheel.platforms.windows.sendto import shortcut_plan
 
 
 class GuiLauncherTests(unittest.TestCase):
-    def invoke(self, paths, check=FileCheck(True, True), preview=None):
+    def invoke(self, paths, check=None, preview=None):
+        check = FileCheck(True, True) if check is None else check
         with (patch.object(cli, 'require_windows'),
               patch.object(cli, 'cursor_point', return_value=(-500, 200)),
               patch.object(cli, 'inspect_file', return_value=check),
@@ -80,3 +81,17 @@ class GuiLauncherTests(unittest.TestCase):
         self.assertEqual(report['stage'], 'match_qt_screen')
         self.assertEqual(report['details']['native_device'], 'DISPLAY2')
         self.assertNotIn(r'C:\a.png', err.getvalue())
+
+    def test_conversion_failure_exit_code_and_real_outputs(self):
+        from pathlib import Path
+
+        from filewheel.ui.radial import DryRunSelection
+        source = PureWindowsPath('C:/input.png')
+        result = DryRunSelection(source, 'Image', '.jpg', source.with_suffix('.jpg'),
+                                 action='conversion_failed')
+        code, _ = self.invoke([str(source)], preview=result)
+        self.assertEqual(code, 6)
+        result = DryRunSelection(source, 'Image', '.jpg', source.with_suffix('.jpg'),
+                                 action='converted', outputs=(Path('output.jpg'),))
+        code, _ = self.invoke([str(source)], preview=result)
+        self.assertEqual(code, 0)

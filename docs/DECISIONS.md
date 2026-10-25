@@ -144,6 +144,21 @@ G4 native overlay/DPI/focus and broader explicit-path acceptance remain queued.
 NEXT milestone G5 is real PNG→JPEG, followed by PDF→DOCX and MarkItDown. Preview
 edges are no evidence of installed engine capability. Native G2 remains unproven.
 
+## D-014 — Authorized local conversion milestones (2026-10-25, active)
+
+User authorized autonomous G5→G8 without waiting for Windows. G4 basic rendering
+is now user-reported Windows success. G5/G6/G7 use one safe staged manager and
+optional available-engine registry, not preview claims. Same validated controller
+input serves explicit Shell and future trusted hover; Mouse3 stays preserved.
+Pillow/pdf2docx/MarkItDown/LibreOffice/PyMuPDF are local only. Word COM is optional
+and not implemented. MarkItDown0.1.9 Python3.15 exclusion is honored; use3.14 for
+those pairs. ONNX opt-out precedes imports, HTTP/plugins/LLM routes are disabled.
+Qt work is separate from encoding; cooperative cancellation retains worker
+ownership, and LibreOffice has bounded process-tree termination. Publication uses
+no-replacement hardlinks; unsupported filesystems fail safely. G8 uses240px default,
+transparent clear and no native rectangular shadow. Windows new behavior remains
+provisionally implemented until actual target runs; no claim follows from mocks.
+
 ## Pending experiments
 - Latest hidden-extension test preserves the non-ASCII Shell path and rejects
   both report labels. Keep D-008: no identity bridge follows from matching index

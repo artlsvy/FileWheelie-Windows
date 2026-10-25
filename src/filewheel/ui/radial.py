@@ -1,7 +1,7 @@
-"""Preview capabilities and menu transitions, independent of Qt and filesystems."""
+"""Menu state and explicit preview fixtures, independent of Qt and filesystems."""
 
 from dataclasses import dataclass
-from pathlib import PureWindowsPath
+from pathlib import Path, PureWindowsPath
 
 from filewheel.core.models import TargetResolution
 
@@ -76,11 +76,14 @@ DEFAULT_PREVIEW_REGISTRY = _defaults()
 
 @dataclass(frozen=True)
 class DryRunSelection:
+    """Legacy DTO name; action distinguishes preview, real result, error and cancellation."""
+
     input_path: PureWindowsPath
     category: str
     output_extension: str
     intended_path: PureWindowsPath
     action: str = "dry_run_only"
+    outputs: tuple[Path, ...] = ()
 
     @property
     def original_format(self):

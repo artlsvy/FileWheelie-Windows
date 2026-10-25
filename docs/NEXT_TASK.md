@@ -1,15 +1,27 @@
-# Overnight continuation — finish G8 UI refinement and final integration
+# Resume checkpoint — authorized G5 through G8 complete
 
-G5/G6-A/B/C/G7 engines are implemented and Linux-tested. G8 popup.py changes are
-owned by implementer conversion_core: default240px configurable sizing, transparent
-paint/OSshadow fix, readable labels, coherent scaledhitregions, resultactions and
-cancellation feedback. Do not overwrite its ongoing edits. Review and test it,
-update runtime/docs/Windows commands and commit G8 separately, then final audit.
+All overnight milestones are implemented/Linux-tested and separately committed.
+Latest full suite238passed +211subtests, no skips/failures in provisionedPython3.14
+venv; final scopedRuff/compileall/whitespace/wheel checks pass. A separate QtEssentials-
+only setup passed17 popup/polish tests. RealLibreOffice fixtures passed outside
+restricted desktop sandbox; inside dconf runtime writes are read-only.
 
-Full suite last229pass; codec regression now27 focused tests pass. RealLibreOffice
-fixtures need `env PYTHONPATH=src .venv-ui/bin/python -m pytest` outside desktop
-sandbox (approvedprefix); restricted runtime dconf writes fail inside. No Windows
-conversion/DPI claim. G4 basic launch/render is user-verified. Preserve Mouse3.
-MarkItDown0.1.9 excludesPython3.15: extra marker skips it; Python3.14 for all MDpairs.
-Continue until G8 and consolidated test/docs audit finished, no approval between
-milestones and no waiting for liveWindows. No pushes authorized.
+## Next actionable job: native acceptance and evidenced fixes
+
+Read STATUS.md, CONVERTERS.md and SEND_TO.md. On the target Windows checkout,
+install optional extras and follow the uniquePNG smoke. Test real PNG→JPEG source
+hash/collision and Send to, then PDFs/documents/images. Test240px transparency,
+worker cancel/exit, native focus/DPI and negative monitors. Record actual evidence;
+fix narrowly reported defects. Basic G2-F and G4 launch/render are already user-
+verified; don't repeat headless smoke without a regression.
+
+MarkItDown0.1.9 excludesPython3.15: capabilities stay hidden there. For its5pairs,
+create a separate3.14 venv and switch the owned GUI shortcut with the old/new
+interpreter remove/install sequence in CONVERTERS.md. Do not force unsupported
+wheels or discard environments. Windows3.15 amd64 dependency resolution succeeded
+for the other engines/Qt packages; this is not Windows runtime verification.
+
+No further engine expansion is part of the completed overnight task. Word COM,
+OCR/media/other formats remain optional future scope. Preserve Mouse3/hook/
+diagnostic infrastructure and shared validated controller. No cloud/LLM/telemetry,
+source overwrite, IPC/tray service, destructive reset or push is authorized.

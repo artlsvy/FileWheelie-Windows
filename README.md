@@ -1,48 +1,38 @@
-# Filewheel — Codex starter package
+# Filewheel
 
-Private Windows 11 file converter prototype. **Current phase: headless explicit-path
-launcher complete; PySide6 radial GUI preview is implemented.** Conversion is not implemented.
+Private, local Windows11 file converter with a cursor-centered two-stage radial
+menu. Explorer **Send to → Filewheel preview** supplies an explicit file path;
+choose an available category and format to convert in a background worker.
+The historical shortcut label is retained for compatibility: it now converts.
 
-G0-A now includes portable contracts/tests and an opt-in Windows diagnostic
-scaffold. See [diagnostic instructions and limitations](docs/DIAGNOSTIC_POC.md).
-Experimental Mouse3 remains available and emits no trusted hover targets.
-The [explicit-path/Send to launcher](docs/SEND_TO.md) validates one file through
-the shared controller. Basic single-file headless direct/Send to is Windows-verified;
-the new GUI and broader argument/removal acceptance remain queued.
+Implemented: PNG/JPEG/WebP and optional HEIC, image/PDF rendering, editable
+PDF→DOCX, MarkItDown document→Markdown, and LibreOffice DOCX→PDF. Only installed
+engine/codec capabilities appear. Sources and existing outputs are preserved;
+collisions get numbered filenames. No accounts, cloud uploads, OCR or LLM clients.
 
-## What this bundle contains
-- `AGENTS.md`: current project-wide rules, replacing older versions.
-- `.codex/config.toml`, `.codex/agents/*.toml`: agent settings, replacing earlier examples.
-- `docs/ROADMAP.md`, `NEXT_TASK.md`, `STATUS.md`: long-lived work queue and checkpoints.
-- `docs/EXPLORER_HIT_TEST.md`: first stage contract and hard gate.
-- `docs/UI_SPEC.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `CONVERSION_MATRIX.md`, `TEST_PLAN.md`: design and future requirements.
-- `docs/MCP_AND_REMOTE_WINDOWS.md`: optional Windows desktop testing from a Kubuntu Codex session.
-- `prompts/01-kubuntu-start.md`: first Codex instruction (paste or use as source).
+From the Windows checkout:
 
-## Set up on Kubuntu
-1. Create a new Git repo or merge the **contents** of this directory into your existing repo. Review differences before replacing existing source or docs.
-2. Run `git status`, `codex --version`, and `codex mcp list`.
-3. Start a **new** Codex session in the trusted repo root so project `AGENTS.md` and `.codex/config.toml` are loaded.
-4. Paste `prompts/01-kubuntu-start.md` into Codex, or instruct Codex to read it and execute its scope.
-5. Work/test overnight on Linux. When Windows is on, copy/checkout the same Git revision on Windows and perform real desktop validation; keep results in `docs/STATUS.md`.
-6. If desired, enable optional Windows-MCP via SSH loopback tunnel, per `docs/MCP_AND_REMOTE_WINDOWS.md`. It is **not a prerequisite** for any nightly work.
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[ui,images,pdf,heif,markdown,office]"
+.\.venv\Scripts\python.exe -m filewheel.platforms.windows.sendto install --mode gui
+```
 
-## No old content needs copying
-This package supersedes all prior draft `AGENTS.md`, agent TOMLs, roadmaps and first prompts from the chat. Preserve **existing application source code** if you have already implemented any; this pack supplies project guidance, not an app implementation.
+MarkItDown0.1.9 excludes Python3.15, so its pairs are hidden there; use a separate
+Python3.14 venv for all Markdown formats. LibreOffice must be installed separately
+for DOCX→PDF. [Setup, exact smoke commands and engine limits](docs/CONVERTERS.md)
+explain both environments, results, cancellation and collision handling.
+[Send to management](docs/SEND_TO.md) covers staging/removal and ownership checks.
 
-## Official references
-- Codex subagents: https://developers.openai.com/codex/subagents
-- Codex config: https://developers.openai.com/codex/config-reference
-- Microsoft UIA ElementFromPoint: https://learn.microsoft.com/en-us/windows/win32/api/uiautomationclient/nf-uiautomationclient-iuiautomation-elementfrompoint
-- Microsoft low-level mouse hook: https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelmouseproc
-- Windows-MCP: https://github.com/CursorTouch/Windows-MCP
+Basic explicit-path invocation and G4 rendering are user-verified on Windows.
+New conversions and240px UI polish are Linux/Qt-offscreen tested; Windows engine,
+worker, transparency, focus and mixed-DPI acceptance remain queued in
+[STATUS](docs/STATUS.md). No live Windows test is inferred from Linux checks.
 
-## Radial preview
+Experimental Mouse3 infrastructure is preserved, diagnostic-only and emits no
+trusted hover target. [Diagnostic instructions](docs/DIAGNOSTIC_POC.md) and its
+strict [identity gate](docs/EXPLORER_HIT_TEST.md) remain available. The conversion
+UI consumes the same validated controller target as future trusted Mouse3.
 
-Install the optional UI with `python -m pip install -e ".[ui]"` (PySide6>=6.12
-for Python3.15 support). On Windows, `python -m
-filewheel.platforms.windows.sendto install --mode gui` adds **Filewheel preview**
-to Send to. [Commands and manual acceptance](docs/SEND_TO.md) cover staging,
-removal, direct launching and pending Windows DPI/focus tests. The two-stage
-radial menu only previews declared conversions and changes no files. G5's real
-PNG→JPEG engine is next, followed by PDF→DOCX and MarkItDown.
+For Kubuntu development use the optional extras and pytest commands in
+[CONVERTERS.md](docs/CONVERTERS.md). Project checkpoints live in
+[ROADMAP](docs/ROADMAP.md) and [NEXT_TASK](docs/NEXT_TASK.md).

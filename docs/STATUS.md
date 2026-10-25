@@ -1,10 +1,10 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-25
-Current priority: autonomous G5→G8 execution authorized by user. G4 launched and
-rendered successfully on Windows11 (user report), monitor association corrected.
-Basic G2-F invocation is Windows-verified; detailed DPI/focus and future conversion
-Windows runs remain pending. Do not wait for native acceptance to progress.
+Current checkpoint: authorized G5/G6-A/B/C/G7/G8 implemented and Linux-tested.
+Real conversion registry and background radial UI are integrated; default240px.
+User-verified Windows scope: basic G2-F invocation and G4 launch/render. New engine,
+worker/compositor/DPI acceptance remains pending. No Mouse3 investigation resumed.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -627,3 +627,42 @@ must preserve the trusted-target barrier until the Windows gate is satisfied.
   +15 subtests pass, scoped Ruff passes. Previous full suite229 +209 subtests
   passed before the added codec guard test. No native Windows G7 run claimed.
 - Continue directly to G8 configurable240px wheel, transparency and feedback.
+
+## G8 — compact transparent UI and complete integration
+- Default240px internally configurable220–324, with a single scaled reference
+  layout for painting/hit regions. Minimum8pt labels, full filename/path/warning
+  tooltips, progress percentage/bar and success/error/cancel results. Outputs
+  include all PDF pages and actual collision-safe paths in GUI/console metadata.
+- Transparent Source clear each frame, no autofill/system background and no native
+  rectangular OS drop shadow; alpha corners verified across stage changes. Only
+  the existing painted circular shadow remains. Real Windows compositor boundary
+  fix is not claimed verified. Live registry displays real capabilities only.
+- Conversion outcome is recorded even when dismissed during work; no false dry-run
+  action after real work. CLI reports radial_menu intent, full outputs and exit6
+  on failure. Headless diagnostics remain metadata-only and import-isolated.
+- Actual final suite238 tests +211 subtests pass, including real codecs/HEIC,
+  PDF text/table/rasters,5 Markdown input types, LibreOffice render/child timeout,
+  Qt background lifecycle and smaller-size/transparency tests. Reviewer independently
+  reproduced238/211; no material remaining findings. Scoped production/new-test
+  Ruff checks pass, compileall and whitespace checks pass. No skipped/failing
+  tests in the fully provisioned run. Restricted desktop sandbox LO failure was
+  documented and resolved by approved test execution outside that sandbox.
+- Screenshots rendered/inspected for live categories/formats and real JPEG success
+  at240px. Published WindowsPython3.15 amd64 wheels/dependency resolution succeeds
+  for Pillow13, PyMuPDF1.28.2, pdf2docx0.5.13, pillow-heif1.8.1, Qt6.12 and dependencies;
+  this is resolver evidence, not a Windows run. MarkItDown0.1.9 remains3.14-only.
+- UI extra uses PySide6-Essentials (all usedCore/Gui/Widgets/Test modules belong to
+  it), avoiding unusedWebEngine/Addons. Existing fullPySide6 installations work.
+- WINDOWS_VALIDATION_REQUIRED: actual conversion outputs, collision/source hashes,
+  errors/cancel cleanup/exit, LibreOffice binary/process tree, supported3.14 MD
+  environment,240px transparent boundary/focus/negative mixed-DPI. Basic G4 render
+  success does not verify these new behaviors. CONVERTERS.md has exact smoke steps.
+- Final packaging audit built a wheel containing all engines/UI/native adapter,
+  PowerShell helper and Python-version optional-extra markers. QtEssentials-only
+  isolated installation passed10 popup +7 polish tests using systemPython3.14;
+  this confirms unusedAddons/WebEngine packages are unnecessary. Full suite remains
+ 238passed/211subtests. Final scopedRuff, compileall, git diff --check pass.
+- Completed milestone commits:4f6d556 G5;8601f65 G6-A;666c0f4 G6-B;7ff785e G6-C;
+ 36098aa G7; G8 checkpoint commit follows. No force-push/discard/unrelated changes.
+  All authorized milestones are now implemented and checked as far as this host
+  permits. Word COM/OCR/media and broader product work were not implemented.

@@ -39,8 +39,8 @@ Recommended first modules (actual names can adapt to existing repo):
 - `tests/unit/`: fakes and pure tests; `tests/windows/`: marked tests requiring an interactive Win11 session.
 
 Optional UI dependency: PySide6 for the radial prototype, isolated as an optional
-UI dependency. Image libraries, MarkItDown, LibreOffice and converters remain
-deferred. The personal Send to shortcut is a small invocation integration, not a
+UI dependency. Pillow, PyMuPDF, pdf2docx and MarkItDown are optional local extras; LibreOffice
+is detected as an external local executable. The personal Send to shortcut is a small invocation integration, not a
 distribution installer.
 
 ### Correctness and latency
@@ -69,5 +69,31 @@ monitor mapping lives in platforms/windows/qt_position.py and matches physical
 monitor origin/dimensions to one QScreen using its logical size and DPR before
 scaling relative to that screen's origin. Qt friendly names are diagnostic only. Work
 area clamping happens in logical pixels. Real Windows overlay behavior is unverified.
-No file I/O or engine runs in the UI. G5 will add PNG→JPEG through an independent
-worker and actual capability attestation; other choices remain dry-run previews.
+No engine runs on the GUI thread. ConversionJob owns a QThread and cooperative
+cancel event; popup lifetime extends until cleanup finishes. Normal launch injects
+ConversionManager.registry, not preview edges. Actual outcome/path tuples survive
+closure and are serialized safely by the CLI; headless diagnostics still never
+import Qt or convert.
+
+### G5–G8 local engines
+
+converters/base.py defines capabilities, EngineOutput, ConversionResult and the
+engine protocol. Registry includes only available engines/codecs. ConversionManager
+revalidates source metadata, creates a private staging directory beside it, asks
+the chosen engine to encode, validates every output, then atomically hardlinks to
+unused names. Collision retry never replaces existing files. Cleanup removes the
+stage and this job's known outputs on failure/cancel. Unsupported hardlink volumes
+fail closed. Engine code does not choose arbitrary final paths.
+
+Pillow handles image transcoding/alpha/orientation and image PDFs. PyMuPDF renders
+all PDF pages with size limits. pdf2docx reconstructs editable text with scanned-PDF
+rejection and fidelity warnings. MarkItDown registers one local Python converter
+with plugins/builtins off and HTTP denied; Python3.15 capabilities are hidden per
+upstream metadata. ONNX telemetry opt-out is set before optional imports.
+LibreOffice uses a private profile and fixed argv in a bounded process tree;
+DOCX external resources/macros are not loaded. No Word/LLM/cloud service required.
+
+UI geometry/transparency is independent of engines: configurable240px wheel uses
+one scaled reference layout for hit testing and paint, with transparent clear and
+no OS rectangular shadow. Linux tests establish code paths, not native compositor
+or Windows engine operation. CONVERTERS.md records runtime instructions/limits.

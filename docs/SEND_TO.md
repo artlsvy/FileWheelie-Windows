@@ -1,18 +1,20 @@
-# Explicit-path launcher, radial preview and personal Send to
+# Explicit-path launcher, radial converter and personal Send to
 
 Basic headless single-file direct CLI and Explorer Send to are **WINDOWS-VERIFIED**
 from user evidence: build26200, Python3.15.0, exact AGENTS.md path, source
 shell_explicit, accepted=true. Direct193.127ms/Send to0.334ms are diagnostic timings.
-Do not repeat that basic diagnostic without a regression. Broader argument/removal
-cases and the new radial GUI Windows behavior remain pending. The GUI is implemented
-and Linux/offscreen tested; it performs dry-run previews only, no conversion.
+Do not repeat that basic diagnostic without a regression. User also reports G4
+successfully launched/rendered on Windows after the monitor fix. Converters and
+240px refinement are Linux-tested only; detailed Windows acceptance is queued.
+**GUI format clicks now perform real conversion.** See [engines, installation and
+Windows smoke tests](CONVERTERS.md); headless diagnostics remain metadata-only.
 
 ## Install and launch the radial GUI on Windows
 
 From the updated project root (Python3.15 target supported by PySide6>=6.12):
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -e ".[ui]"
+.\.venv\Scripts\python.exe -m pip install -e ".[ui,images,pdf,heif,markdown,office]"
 .\.venv\Scripts\python.exe -c "import sys, PySide6; print(sys.version); print(PySide6.__version__)"
 .\.venv\Scripts\python.exe -m filewheel.platforms.windows.sendto stage --mode gui
 .\.venv\Scripts\python.exe -m filewheel.platforms.windows.sendto install --mode gui
@@ -33,15 +35,15 @@ $filewheelInput = (Resolve-Path .\AGENTS.md).Path
 $LASTEXITCODE
 ```
 
-AGENTS.md offers Document → DOCX preview; PNG offers Image → JPEG/WebP/TIFF
-(and a Document/PDF preview). DOCX offers Document/PDF and Markdown/Text/MD.
-Only declared preview categories appear. Unsupported suffixes show No preview
-options. No conversion engines are claimed. Choose a category then format;
-confirmation lists original filename/format, destination and intended output.
-Done/Escape/outside closes and exits. No files change and no GUI logs are written
-by default. A dry-run choice exists in memory; direct console execution also
-prints it as ASCII-safe JSON. To opt into invocation logs, append --enable and
---output-dir logs/invocations before the -- delimiter.
+PNG offers real JPEG/WebP (when codecs are available) and Document/PDF. PDF offers
+editable DOCX, raster page images and Markdown when installed/supported. DOCX→PDF
+needs LibreOffice; Markdown pairs need the supported Python3.14 environment.
+AGENTS.md is not a supported conversion input and shows no available formats.
+The shortcut's historical **Filewheel preview** label is preserved for ownership
+compatibility, but the menu now converts. Choose category then format to start a
+worker; success/error and actual output names appear in the popup. Existing output
+is never silently replaced. Escape/outside cancels cooperatively. Default GUI
+invocation writes no diagnostic logs; add --enable --output-dir before -- to opt in.
 
 Remove just the owned GUI entry (repeat safely):
 
@@ -136,7 +138,7 @@ query, comtypes or hook is loaded; Qt is imported only after GUI path validation
 preserved, with unverified hover still returning None.
 
 CLI exit codes:0 accepted/logged;2 rejected path/count or argparse usage error;
-3 unavailable Windows cursor context;4 log creation failure;5 GUI dependency/desktop failure. Shortcut management
+3 unavailable Windows cursor context;4 log creation failure;5 GUI dependency/desktop failure;6 conversion failure. Shortcut management
 returns0 on success or1 on script failure. Rejected inputs must never open UI.
 
 ## Manual Windows acceptance (pending)
@@ -159,47 +161,12 @@ PowerShell syntax/COM/shortcuts, Explorer quoting and physical cursor values
 cannot be certified by Linux fakes. Keep their validation queue in STATUS.md.
 GUI development proceeds independently under the user's updated priority.
 
-## New radial GUI Windows acceptance (pending)
+## Current Windows acceptance
 
-1. Install UI dependencies, stage/install GUI mode, invoke through Send to on
-   AGENTS.md and an existing PNG. Compare center filename with the explicit input.
-   Check only declared categories, then JPEG/WebP/TIFF for PNG's Image category.
-2. Check hover highlighting, center Back, Backspace, Escape at both levels,
-   transparent corners, clicks outside the window and switching focus to Explorer.
-   Nothing should remain visible or running after dismissal. Repeated invocations
-   start at categories. Invalid paths/multiple CLI arguments open no popup.
-3. Choose PNG→JPEG: confirmation shows filename, PNG→JPG and intended .jpg name.
-   Done closes. Compare directory listings/hashes independently: no output exists
-   and source/existing output have not changed. This is a preview only.
-4. Test light/dark appearance and100/150/200% display scaling, including two
-   monitors with mixed scaling and one left/above primary (negative coordinates).
-   Invoke near work-area edges/taskbar: wheel stays visible, click regions align,
-   appears above Explorer, and doesn't steal focus after being dismissed.
-5. Repeat GUI install and remove twice. Check diagnostic mode remains usable
-   without Qt import. Keep a differing same-name shortcut intact on refusal.
-   Actual PowerShell/COM ownership/removal remains unverified until observed.
-
-Published compatibility: [PyPI PySide6 metadata](https://pypi.org/project/PySide6/)
-allows Python3.14/3.15; [Qt release notes](https://doc.qt.io/qtforpython-6/release_notes/pyside6_release_notes.html)
-introduced3.14 in6.10.1 and3.15 in6.12.0. KubuntuPython3.14.4 ran6.12.0 here;
-the targetWindows3.15 Qt runtime still needs this manual run. See
-[Qt high-DPI model](https://doc.qt.io/qtforpython-6/overviews/qtdoc-highdpi.html)
-for logical screen origins/scaling; offscreen tests cannot certify native focus,
-outside routing, monitor mapping or Windows activation.
-
-## Reported Windows GUI startup failure
-
-The supplied --gui command accepted AGENTS.md, then failed desktop initialization.
-accepted=true attests the path only. Updated code prints a gui_startup_error JSON
-record to stderr with stage and bounded desktop details (monitor device names,
-geometry, numeric Windows error where applicable), rather than hiding the failure.
-After syncing, retry the same direct GUI command above once and retain that JSON
-plus exit code. No shortcut reinstall or repeated headless smoke test is required.
-The separate diagnostic_only argument_count0 record correctly rejects a missing
-argument; it does not diagnose the one-argument GUI failure.
-
-The next supplied error identified match_qt_screen: Win32 \\.\DISPLAY1 versus
-Qt friendly name MAG 244F. Updated mapping requires unique matching monitor
-origin and DPR-scaled dimensions instead of name equality. Zero/duplicate matches
-still fail closed. Sync and retry the same direct GUI command once; installation
-commands do not need repeating. This fix remains Windows-unverified until that run.
+Follow [CONVERTERS.md](CONVERTERS.md) for the unique PNG smoke, real conversions,
+engine dependencies, Python3.15 Markdown limitation, cancellation,240px transparency
+and mixed-DPI tests. Basic G4 rendering is user-verified; these new behaviors are
+not. The prior match_qt_screen failure was fixed by unique full monitor geometry
+and DPR association instead of comparing Win32 device IDs to Qt friendly names.
+Structured gui_startup_error still reports native geometry/stage on failures.
+No shortcut reinstall is needed solely for that fix. No Mouse3 lookup is used.

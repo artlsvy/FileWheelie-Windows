@@ -11,33 +11,27 @@ States: `NOT STARTED` · `IMPLEMENTED/UNVERIFIED` · `MOCK-TESTED` · `WINDOWS-V
 | G3 | Shared invocation/controller — IMPLEMENTED/MOCK-TESTED | Hover and explicit paths produce the same source-aware TargetResolution; cancellation/validation tests pass |
 | **G4** | PySide6 radial — basic launch/render WINDOWS-VERIFIED; full DPI/focus pending | Near cursor, compatible category→format choices, Escape/Back/outside cancel, shared controller; no conversion |
 | **G5** | PNG→JPEG IMPLEMENTED/LINUX-TESTED | Background execution, valid output, no source overwrite; then PDF→DOCX and MarkItDown |
-| G6 | Document/Markdown MVP | PDF→DOCX, DOCX→PDF, MarkItDown (DOCX/PDF/PPTX/XLSX/HTML→MD); capability tests |
+| G6 | Document/Markdown — IMPLEMENTED/LINUX-TESTED (MD needs Python<3.15) | PDF→DOCX, DOCX→PDF, MarkItDown (DOCX/PDF/PPTX/XLSX/HTML→MD); capability tests |
 | G7 | Image/PDF expansion — IMPLEMENTED/LINUX-TESTED | HEIC/JPEG/PNG/WebP, images→PDF, PDF→raster; representative real files |
-| G8 | UI refinement — IN PROGRESS | Errors, progress, output collision policy, notifications, batch (optional) |
+| G8 |240px UI refinement — IMPLEMENTED/OFFSCREEN-TESTED | Errors, progress, output collision policy, notifications, batch (optional) |
 | G9 | Optional expansion | MD→DOCX, PPTX→PDF, XLSX→PDF, CSV↔XLSX; OCR/media deferred |
 
 ## Current focus
-**G4-A implemented 2026-10-25:** validated explicit paths can open a two-stage
-PySide6 radial preview through the same TargetResolution boundary as future
-trusted Mouse3. An injected preview registry supplies compatible choices; format
-selection shows a dry-run confirmation and changes no files. GUI-mode Send to
-has a separate owned shortcut, with stage/install/remove commands.
 
-Basic headless direct CLI and Explorer Send to single-file delivery are
-WINDOWS-VERIFIED from user evidence (build26200/Python3.15.0, AGENTS.md). This
-narrow result does not verify GUI overlay/focus/DPI, Unicode/malformed paths,
-multi-selection or removal. These remain independently queued in STATUS.md.
-Do not repeat the completed basic diagnostic without a regression.
+Authorized overnight G5→G8 implementation is complete and Linux-tested:
+PNG/JPEG/WebP/HEIC, images/PDF pages, PDF→editable DOCX, local MarkItDown extraction,
+LibreOffice DOCX→PDF, and240px configurable transparent radial UI with real worker
+progress/results/errors. Missing codecs/engines stay hidden. All source/diagnostic
+infrastructure is preserved. Separate milestone commits are recorded in STATUS.md.
 
-**Immediate G4 follow-up:** supplied direct GUI command validates the path but
-failed screen matching because Qt reports a friendly name rather than the Win32
-device ID. Unique monitor geometry/DPR association is implemented for the next
-Windows retry; no native GUI success claimed.
+User reports basic G2-F and G4 launch/render work on Windows11. New converters,
+worker cancellation,240px compositing, detailed focus/DPI and integration still
+require target acceptance. MarkItDown0.1.9 is unsupported onPython3.15; use3.14 for
+those pairs. Word COM/OCR/media remain unimplemented optional work, not blockers.
 
-**Following milestone: G5 PNG→JPEG conversion engine**, then PDF→DOCX and MarkItDown integration.
-G4 native acceptance stays queued; Linux offscreen tests do not establish Windows
-behavior. Mouse3 stays desired, preserved and experimental; no further mouse
-research is part of this milestone.
+Next work is native acceptance and narrowly evidenced fixes, not another engine
+expansion. CONVERTERS.md and SEND_TO.md contain exact commands; NEXT_TASK.md has
+the resume handoff. No Windows success is inferred from Linux tests.
 
 ## Definition of G2 success
 - Middle-click on a **different unselected file** returns the hovered file, not the previous selection.
