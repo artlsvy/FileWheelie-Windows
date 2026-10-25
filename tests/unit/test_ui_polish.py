@@ -59,7 +59,7 @@ class UiPolishTests(unittest.TestCase):
         self.assertEqual(self.popup.state.stage, "confirmation")
 
     def test_default_and_configurable_diameter(self):
-        self.assertEqual((self.popup.width(), self.popup.height()), (240, 240))
+        self.assertEqual((self.popup.width(), self.popup.height()), (220, 220))
         for diameter in (220, 260, 324):
             popup = RadialPopup(diameter=diameter)
             self.assertEqual(popup.width(), diameter)
@@ -83,7 +83,8 @@ class UiPolishTests(unittest.TestCase):
             change()
             self.app.processEvents()
             image = self.popup.grab().toImage()
-            for x, y in ((0, 0), (239, 0), (0, 239), (239, 239), (4, 4)):
+            edge = self.popup.width() - 1
+            for x, y in ((0, 0), (edge, 0), (0, edge), (edge, edge), (4, 4)):
                 self.assertEqual(image.pixelColor(x, y).alpha(), 0)
         self.assertTrue(self.popup.testAttribute(Qt.WidgetAttribute.WA_TranslucentBackground))
         self.assertFalse(self.popup.autoFillBackground())
@@ -156,4 +157,39 @@ class UiPolishTests(unittest.TestCase):
             time.sleep(0.002)
         self.assertIsNone(self.popup.job)
         self.assertEqual(outcomes, ["conversion_cancelled"])
+        self.assertFalse(self.popup.isVisible())
+
+
+    def test_category_center_is_escape_and_formats_center_is_back(self):
+        QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(162, 162))
+        self.assertFalse(self.popup.isVisible())
+        self.popup.present(target())
+        self.popup._choose(0)
+        QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(162, 162))
+        self.assertEqual(self.popup.state.stage, "categories")
+        self.assertTrue(self.popup.isVisible())
+
+    def test_conversion_result_and_preview_share_circular_alpha_and_button_hits(self):
+        for stage in ("confirmation", "converting", "result"):
+            with self.subTest(stage=stage):
+                self.popup.present(target())
+                self.choose_preview()
+                self.popup.state.stage = stage
+                self.popup.status_title = "Converting" if stage == "converting" else "Converted"
+                self.popup.status_message = "A lengthy explanatory message kept inside the circle"
+                self.popup.progress_fraction = .5
+                image = self.popup.grab().toImage()
+                # This point was inside the former rounded rectangular status card.
+                transparent = self.point(24, 60)
+                self.assertEqual(image.pixelColor(transparent).alpha(), 0)
+                self.assertGreater(image.pixelColor(self.point(162, 22)).alpha(), 0)
+                self.assertEqual(self.popup._hit(self.point(162, 265)), -2)
+                self.assertEqual(self.popup._hit(self.point(60, 265)), -1)
+                QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(162, 265))
+                self.assertFalse(self.popup.isVisible())
+
+    def test_circle_outside_point_cancels_status_instead_of_dead_rectangular_hit(self):
+        self.choose_preview()
+        self.popup.state.stage = "converting"
+        QTest.mouseClick(self.popup, Qt.MouseButton.LeftButton, pos=self.point(24, 60))
         self.assertFalse(self.popup.isVisible())

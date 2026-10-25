@@ -16,21 +16,23 @@ States: `NOT STARTED` · `IMPLEMENTED/UNVERIFIED` · `MOCK-TESTED` · `WINDOWS-V
 | G8 |240px UI refinement — IMPLEMENTED/OFFSCREEN-TESTED | Errors, progress, output collision policy, notifications, batch (optional) |
 | G9-A | Rendering + conversion diagnosis — WINDOWS-VERIFIED (user report) | Single separator strokes; engine/operation/traceback logs |
 | G9-B | Unified Python3.14 — WINDOWS-VERIFIED (user report) | One supported runtime/all current converters |
-| G10 | Opt-in Mouse3 candidate confirmation/tray — IMPLEMENTED/LINUX-TESTED | Never promote candidates without explicit confirmation |
+| G10 | Large-folder Mouse3 — WINDOWS-VERIFIED by user report; direct activation polish underway | Keep experimental provenance; optional confirmation per D-016 |
 | G11 | Reproducible Windows onedir packaging — IMPLEMENTED/STATIC-TESTED | Build scripts/spec; native build/acceptance pending |
 | G12 | Portable LibreOffice integration — IMPLEMENTED/LINUX-TESTED; Windows bundle pending | Full bundle preferred; isolated profile/process deadline |
 
 ## Current focus
 
-G5–G8 converters/UI remain implemented and Linux-tested. The user has now tested
-G9-A/B successfully on Windows. G10 tray/candidate consent, G11 Windows onedir
-recipe and G12 portable LibreOffice integration are implemented and checked as
-far as Kubuntu permits. Final Linux suite: 312 tests and 241 subtests pass.
+The user reports successful Windows operation of G9-A/B and the G10 large-folder
+Mouse3 fix. D-016 now authorizes direct experimental wheel opening without the
+repeated file-confirmation dialog. Controller validation, freshness, ambiguous
+file rejection and experimental source provenance remain; optional confirmation
+can be restored in the tray. The listener stays opt-in and Send to stays usable.
 
-Next is Windows acceptance of the tray workflow, packaged build and complete
-portable LibreOffice tree. These are not certified by Linux mocks/offscreen
-checks. Send to stays available, and experimental Mouse3 is off by default.
-See NEXT_TASK.md for exact steps. No unrelated conversion expansion is queued.
+Compact UI polish is implemented: 220px wheel, larger labels, small Esc/Back
+center, forest/ivory/brass themes and circular progress/results. Linux checks:
+341 tests and 322 subtests pass; new direct-route/native visuals await Windows
+acceptance. G11/G12 source build/bundle seams remain implemented, with native
+packaging/portable-office checks queued separately. No push was performed.
 
 ## Definition of G2 success
 - Middle-click on a **different unselected file** returns the hovered file, not the previous selection.

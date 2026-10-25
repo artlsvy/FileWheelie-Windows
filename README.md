@@ -37,3 +37,9 @@ UI consumes the same validated controller target as future trusted Mouse3.
 For Kubuntu development use the optional extras and pytest commands in
 [CONVERTERS.md](docs/CONVERTERS.md). Project checkpoints live in
 [ROADMAP](docs/ROADMAP.md) and [NEXT_TASK](docs/NEXT_TASK.md).
+
+
+Current personal workflow (D-016): opt-in experimental Mouse3 opens the wheel
+directly after evidence/path checks. The optional tray checkbox restores per-file
+confirmation. Latest UI uses a 220px forest/ivory/brass wheel with a small Esc/Back
+center and circular conversion feedback. See docs/NEXT_TASK.md for Windows checks.

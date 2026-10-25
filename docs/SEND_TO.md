@@ -181,8 +181,8 @@ one current-user owner. Start the optional tray with:
 .\.venv-filewheel\Scripts\python.exe -m filewheel --tray
 ```
 
-Mouse3 is off by default. Enable its experimental confirmation flow through the
-tray checkbox; Send to requires no Mouse3 listener. The wheel uses the cursor at
+Mouse3 is off by default. Enable experimental Mouse3 through the tray checkbox;
+D-016 makes per-file confirmation an optional second checkbox, off by default; Send to requires no Mouse3 listener. The wheel uses the cursor at
 launch time, not the location of the file before the context-menu interaction.
 
 For an owned current-development shortcut use `python -m filewheel --sendto

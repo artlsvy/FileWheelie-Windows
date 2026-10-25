@@ -191,3 +191,22 @@ IExecuteCommand::SetPosition could supply the original context-menu point, per
 [Microsoft's API contract](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-iexecutecommand-setposition).
 It is not implemented; Send to uses the launch-time cursor without inventing
 an original file position.
+
+
+## D-016 — Direct personal Mouse3 activation and compact palette
+
+After reporting successful Windows large-folder Mouse3 tests, the user explicitly
+requests removing per-file confirmation. This supersedes D-015's requirement for
+that dialog on every invocation. Direct activation is allowed only through the
+existing experimental evidence gate, with fresh event/path checks and provenance
+experimental_candidate. It does not turn provisional UIA/Shell correlation into
+trusted hover identity. The listener stays opt-in; per-file confirmation remains
+a tray preference, off by default. Send to retains its explicit-path semantics.
+
+Use a 220 px wheel with a small Esc/Back center, larger segment labels and circular
+progress/result surfaces. Forest green, ivory and brass express the requested
+old-money style; semantic color roles and contrast come from
+[Material color roles](https://m3.material.io/styles/color/the-color-system) and
+[W3C minimum text contrast](https://www.w3.org/WAI/WCAG21/Understanding/contrast-minimum).
+Target at least 4.5:1 for text and 3:1 for meaningful controls; measured token
+contrast is portable evidence, not native Windows compositor acceptance.

@@ -1,7 +1,7 @@
 """Opt-in passive Mouse3 runtime, with COM/UIA confined to its MTA worker.
 
 No path becomes a trusted hover result. The worker may offer a copied untrusted
-candidate for explicit confirmation; the unchanged Explorer resolver returns None.
+candidate for source-aware UI routing; the unchanged Explorer resolver returns None.
 """
 
 import sys

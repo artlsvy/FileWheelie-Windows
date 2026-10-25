@@ -868,3 +868,43 @@ only; the popup, Send to, conversion engines and resident lifecycle are unchange
   found no remaining material blockers; it independently passed 89 tests and
   151 subtests. Review's strict native-count schema finding was fixed and tested.
   No Windows-native large-directory run or push was performed.
+
+
+## User Windows acceptance and requested direct Mouse3/UI polish
+
+The user reports running the updated .venv-filewheel build and successfully
+activating Mouse3 in a large folder. Record the large-folder route as
+WINDOWS-VERIFIED by user report; no exact item count, index or latency was
+supplied, so no numeric benchmark is inferred. They now authorize removing the
+repeated file-confirmation popup for personal use.
+
+Direct Mouse3 activation is now the default once the opt-in listener is enabled.
+It consumes the same current one-shot evidence token, requires the original event
+to remain within 500 ms, and revalidates the filesystem path through the shared
+controller before showing the wheel. Provenance is experimental_candidate,
+never explorer_hover or user_confirmed_candidate. Conflicting/ambiguous evidence
+still rejects; trusted resolver behavior and Send to are unchanged. Choosing a
+format remains necessary to start conversion. A tray checkbox can restore per-file
+confirmation for the current session; that route retains its existing 30 s TTL.
+
+The squarish conversion view was an intentionally painted rounded rectangle,
+not an unexpected desktop frame. UI polish replaces that panel with circular
+progress/results, reduces default diameter to 220 logical pixels, enlarges labels
+and gives the smaller center only Esc/Back. Full source/output/error details stay
+in tooltips. Forest/ivory/brass light/dark roles follow the user's old-money
+preference, with contrast checks against W3C text/UI guidance; exact colors are
+a design choice, not a claim of a universally best palette.
+
+- Validation for this change: **341 tests and 322 subtests passed** using
+  `PYTHONPATH=src .venv-ui/bin/python -m pytest -q`; scoped Ruff, compileall and
+  git diff --check pass. New tests cover direct one-shot provenance, stale queued
+  events, disappeared files, cancellation/supersession, optional consent, smaller
+  paint/hit geometry, circular stage alpha and light/dark contrast roles.
+- Reviewed offscreen light/dark category/format/progress/result renders. Measured
+  text contrast includes light body 10.93:1, muted 5.71:1 and dark body 12.53:1,
+  muted 8.64:1; semantic outline pairs exceed 3:1. These measurements do not certify
+  the Windows compositor or all font/DPI combinations. Focused read-only review
+  found no material blockers and independently passed 91 tests / 40 subtests.
+- New Windows direct activation and 220px/circular/light-dark visuals remain
+  WINDOWS_VALIDATION_REQUIRED. Prior user-reported large-folder success is
+  recorded separately above. No push was performed.

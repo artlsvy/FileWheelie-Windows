@@ -13,6 +13,7 @@ from filewheel.core.models import TargetResolution
 from filewheel.ui.desktop_errors import DesktopInitializationError
 from filewheel.ui.placement import Rect, popup_position
 from filewheel.ui.radial import DEFAULT_PREVIEW_REGISTRY, RadialState
+from filewheel.ui.theme import DARK, LIGHT
 
 
 def logical_point(point, screens):
@@ -91,9 +92,9 @@ class RadialPopup(QWidget):
 
     selected = Signal(object)
     finished = Signal()
-    diameter = 240
+    diameter = 220
     reference_diameter = 324
-    center_radius = 67
+    center_radius = 30
     outer_radius = 148
 
     def __init__(
@@ -103,7 +104,7 @@ class RadialPopup(QWidget):
         point_mapper=logical_point,
         manager=None,
         source_mapper=lambda path: Path(str(path)),
-        diameter=240,
+        diameter=220,
     ):
         if type(diameter) is not int or not 220 <= diameter <= 324:
             raise ValueError("Wheel diameter must be an integer between 220 and 324")
@@ -267,12 +268,8 @@ class RadialPopup(QWidget):
 
     def _hit(self, point):
         point = self._reference_point(point)
-        if self.state.stage == "converting":
-            return -1
-        if self.state.stage == "result":
-            return -2 if QRectF(54, 251, 216, 34).contains(point) else -1
-        if self.state.stage == "confirmation":
-            return -2 if QRectF(54, 251, 216, 34).contains(point) else -1
+        if self.state.stage in ("converting", "result", "confirmation"):
+            return -2 if self._action_rect().contains(point) else -1
         if self._list_mode():
             if QRectF(34, 34, 256, 32).contains(point):
                 return -2
@@ -308,25 +305,16 @@ class RadialPopup(QWidget):
     def mousePressEvent(self, event):
         hit = self._hit(event.position())
         point = self._reference_point(event.position())
-        if (
-            (
-                self.state.stage in ("confirmation", "converting", "result")
-                and not QRectF(22, 35, 280, 262).contains(point)
-            )
-            or self._list_mode()
-            and not QRectF(22, 22, 280, 280).contains(point)
-            or not QRectF(0, 0, 324, 324).contains(point)
-            or (
-                not self._list_mode()
-                and self.state.stage not in ("confirmation", "converting", "result")
-                and math.hypot(point.x() - 162, point.y() - 162) > self.outer_radius
-            )
-        ):
+        if self._list_mode():
+            outside = not QRectF(22, 22, 280, 280).contains(point)
+        else:
+            outside = math.hypot(point.x() - 162, point.y() - 162) > self.outer_radius
+        if outside:
             self.dismiss()
         elif event.button() != Qt.MouseButton.LeftButton:
             return
         elif hit == -2:
-            if self.state.stage in ("confirmation", "result"):
+            if self.state.stage in ("confirmation", "converting", "result", "categories"):
                 self.dismiss()
             else:
                 self.state.back()
@@ -466,19 +454,24 @@ class RadialPopup(QWidget):
         if not moving:
             self._animation.stop()
 
+    def _theme(self):
+        return DARK if self.palette().window().color().lightnessF() < 0.5 else LIGHT
+
     def _colors(self):
-        dark = self.palette().window().color().lightnessF() < 0.5
-        return (
-            (QColor("#17212e"), QColor("#eff5fc"), QColor("#a9b9cd"), QColor("#33465e"))
-            if dark
-            else (QColor("#f7f9fc"), QColor("#17283d"), QColor("#56687d"), QColor("#d5deea"))
-        )
+        theme = self._theme()
+        return tuple(QColor(value) for value in
+                     (theme.surface, theme.text, theme.muted, theme.outline))
+
+    @staticmethod
+    def _action_rect():
+        return QRectF(104, 248, 116, 34)
 
     def _text(self, painter, rect, text, color, size=10, bold=False, wrap=False):
         painter.setPen(color)
         font = QFont("Segoe UI")
-        # Scale geometry while keeping small labels at least 8 logical points.
-        font.setPointSizeF(max(8.0, size * self._scale) / self._scale)
+        # Typography stays readable when wheel geometry shrinks. The painter
+        # applies _scale, so divide once to retain the requested logical size.
+        font.setPointSizeF(max(9.0, size) / self._scale)
         font.setBold(bold)
         painter.setFont(font)
         flags = Qt.AlignmentFlag.AlignCenter
@@ -511,62 +504,46 @@ class RadialPopup(QWidget):
             )
         painter.setBrush(base)
         painter.setPen(QPen(border, 1))
-        if self.state.stage in ("converting", "result"):
-            painter.drawRoundedRect(QRectF(22, 35, 280, 262), 24, 24)
-            title_color = (
-                QColor("#c8464b")
-                if self.conversion_error is not None
-                else QColor("#3982da")
-                if self.job is not None
-                else foreground
-            )
-            self._text(painter, QRectF(42, 52, 240, 30), self.status_title, title_color, 13, True)
-            self._text(
-                painter, QRectF(42, 94, 240, 38), self.state.target.path.name, foreground, 10, True
-            )
-            self._text(painter, QRectF(42, 138, 240, 65), self.status_message, muted, 10, wrap=True)
-            if self.job is not None:
-                painter.setPen(Qt.PenStyle.NoPen)
-                painter.setBrush(border)
-                painter.drawRoundedRect(QRectF(54, 220, 216, 6), 3, 3)
-                painter.setBrush(QColor("#3982da"))
-                painter.drawRoundedRect(QRectF(54, 220, 216 * self.progress_fraction, 6), 3, 3)
-            warnings = self.conversion_result.warnings if self.conversion_result else ()
-            if warnings:
-                self._text(painter, QRectF(42, 205, 240, 38), warnings[0], muted, 8, wrap=True)
-            self._text(
-                painter,
-                QRectF(54, 251, 216, 34),
-                "Esc to cancel" if self.job is not None else "Done",
-                foreground,
-                10,
-                True,
-            )
-            return
-        if self.state.stage == "confirmation":
-            painter.drawRoundedRect(QRectF(22, 35, 280, 262), 24, 24)
-            self._text(painter, QRectF(42, 52, 240, 25), "Dry-run preview", foreground, 13, True)
-            self._text(painter, QRectF(42, 82, 240, 24), "No files changed", muted, 9)
-            selection = self.state.selection
-            self._text(
-                painter, QRectF(42, 113, 240, 28), selection.input_path.name, foreground, 11, True
-            )
-            self._text(
-                painter,
-                QRectF(42, 146, 240, 28),
-                f"{selection.original_format}  →  {selection.output_extension[1:].upper()}",
-                QColor("#3982da"),
-                13,
-                True,
-            )
-            self._text(painter, QRectF(42, 183, 240, 20), "Intended output", muted, 9)
-            self._text(
-                painter, QRectF(42, 207, 240, 30), selection.intended_path.name, foreground, 10
-            )
-            painter.setBrush(QColor("#236ec6"))
+        theme = self._theme()
+        if self.state.stage in ("converting", "result", "confirmation"):
+            # All status stages retain the wheel's silhouette. The old rounded
+            # rectangular card made conversion appear to open a square prompt.
+            outer = QRectF(14, 14, 296, 296)
+            painter.drawEllipse(outer)
+            circle = QPainterPath()
+            circle.addEllipse(outer)
+            painter.setClipPath(circle)
+            if self.state.stage == "confirmation":
+                selection = self.state.selection
+                title = "Preview"
+                filename = selection.input_path.name
+                message = f"{selection.original_format} → {selection.output_extension[1:].upper()}"
+                detail = selection.intended_path.name
+            else:
+                title = self.status_title
+                filename = self.state.target.path.name
+                message = self.status_message
+                warnings = self.conversion_result.warnings if self.conversion_result else ()
+                detail = warnings[0] if warnings else ""
+            title_color = QColor(theme.error if self.conversion_error is not None else theme.accent)
+            self._text(painter, QRectF(60, 62, 204, 30), title, title_color, 12, True)
+            self._text(painter, QRectF(54, 103, 216, 29), filename, foreground, 10, True)
+            self._text(painter, QRectF(54, 145, 216, 58), message, muted, 10, wrap=True)
+            self._text(painter, QRectF(64, 210, 196, 25), detail, muted, 9)
+            if self.state.stage == "converting":
+                track = QRectF(26, 26, 272, 272)
+                painter.setBrush(Qt.BrushStyle.NoBrush)
+                painter.setPen(QPen(border, 4))
+                painter.drawEllipse(track)
+                progress_pen = QPen(QColor(theme.accent), 4)
+                progress_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+                painter.setPen(progress_pen)
+                painter.drawArc(track, 90 * 16, round(-360 * 16 * self.progress_fraction))
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawRoundedRect(QRectF(54, 251, 216, 34), 12, 12)
-            self._text(painter, QRectF(54, 251, 216, 34), "Done", QColor("#ffffff"), 10, True)
+            painter.setBrush(QColor(theme.action))
+            painter.drawRoundedRect(self._action_rect(), 15, 15)
+            action = "Cancel" if self.state.stage == "converting" else "Done"
+            self._text(painter, self._action_rect(), action, QColor(theme.on_action), 10, True)
             return
         if self._list_mode():
             painter.drawRoundedRect(QRectF(22, 22, 280, 280), 24, 24)
@@ -584,11 +561,12 @@ class RadialPopup(QWidget):
                 index = row + self._list_offset
                 rectangle = QRectF(34, 72 + row * 30, 256, 28)
                 if index == self.hovered:
-                    painter.fillRect(rectangle, QColor(57, 130, 218, 55))
+                    painter.fillRect(rectangle, QColor(theme.hover))
                 self._text(painter, rectangle, getattr(option, "label", option), foreground, 10)
             return
         outer = QRectF(14, 14, 296, 296)
-        inner = QRectF(95, 95, 134, 134)
+        inner = QRectF(162 - self.center_radius, 162 - self.center_radius,
+                       self.center_radius * 2, self.center_radius * 2)
         # One continuous base disk; hover paints only its annular sector. Paths
         # have no pen, so neighboring choices never double-stroke a boundary.
         painter.setPen(Qt.PenStyle.NoPen)
@@ -600,12 +578,10 @@ class RadialPopup(QWidget):
             if amount <= 0:
                 continue
             fill = QColor(base)
-            accent = QColor("#287bd6")
-            fill.setRed(round(fill.red() * (1 - amount * 0.25) + accent.red() * amount * 0.25))
-            fill.setGreen(
-                round(fill.green() * (1 - amount * 0.25) + accent.green() * amount * 0.25)
-            )
-            fill.setBlue(round(fill.blue() * (1 - amount * 0.25) + accent.blue() * amount * 0.25))
+            accent = QColor(theme.hover)
+            for channel, setter in (("red", "setRed"), ("green", "setGreen"), ("blue", "setBlue")):
+                getattr(fill, setter)(round(getattr(base, channel)() * (1 - amount)
+                                           + getattr(accent, channel)() * amount))
             painter.setBrush(fill)
             painter.drawPath(
                 _annular_sector(
@@ -622,33 +598,22 @@ class RadialPopup(QWidget):
             painter.drawLine(QPointF(*start), QPointF(*end))
         for index, option in enumerate(self.state.options):
             angle = math.radians(-90 + (index + 0.5) * 360 / count)
-            x, y = 162 + 105 * math.cos(angle), 162 + 105 * math.sin(angle)
+            x, y = 162 + 88 * math.cos(angle), 162 + 88 * math.sin(angle)
             label = option if isinstance(option, str) else option.label
             self._text(
                 painter,
-                QRectF(x - 47, y - 25, 94, 50),
+                QRectF(x - 55, y - 25, 110, 50),
                 label.replace("/", "/\n"),
                 foreground,
-                10,
+                10.5,
                 True,
                 True,
             )
-        self._text(
-            painter,
-            QRectF(105, 113, 114, 20),
-            "CONVERT" if self.manager is not None else "PREVIEW",
-            QColor("#3982da"),
-            8,
-            True,
-        )
-        self._text(
-            painter, QRectF(102, 140, 120, 33), self.state.target.path.name, foreground, 10, True
-        )
-        text = "‹ Back" if self.state.stage == "formats" else "Choose category"
+        self._text(painter, QRectF(125, 147, 74, 30),
+                   "Back" if self.state.stage == "formats" else "Esc", muted, 10, True)
         if not count:
-            text = "No available formats" if self.manager is not None else "No preview options"
-        self._text(painter, QRectF(102, 180, 120, 22), text, muted, 8)
-        self._text(painter, QRectF(102, 201, 120, 15), "Esc to dismiss", muted, 7)
+            self._text(painter, QRectF(62, 214, 200, 38), "No available formats", muted, 10)
+
 
 
 def run_popup(
@@ -656,7 +621,7 @@ def run_popup(
     registry=DEFAULT_PREVIEW_REGISTRY,
     *,
     manager=None,
-    diameter=240,
+    diameter=220,
 ):
     """Run one popup, returning its preview or real conversion outcome on dismissal.
 

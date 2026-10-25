@@ -1,4 +1,4 @@
-"""Long-running tray host; experimental candidates require visible explicit consent."""
+"""Resident tray host with direct or optionally confirmed experimental invocation."""
 from time import monotonic
 
 from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal, Slot
@@ -32,7 +32,7 @@ class _StartMouse(QThread):
 
 class DesktopApplication(QObject):
     def __init__(self, *, tray=False, manager=None, inspector=inspect_file,
-                 runtime_factory=None, point_mapper=None, parent=None):
+                 runtime_factory=None, point_mapper=None, confirm_candidates=False, parent=None):
         super().__init__(parent)
         self.manager = manager or ConversionManager()
         self.controller = InvocationController()
@@ -43,6 +43,7 @@ class DesktopApplication(QObject):
         self.experimental_enabled = False
         self.dialog = None
         self.confirm_button = None
+        self.confirm_candidates = bool(confirm_candidates)
         self.tray_mode = tray
         self.quitting = False
         self.bridge = _Bridge(self)
@@ -55,10 +56,15 @@ class DesktopApplication(QObject):
         self.popup.finished.connect(self._popup_finished)
         self.tray = QSystemTrayIcon(self._icon(), self)
         self.menu = QMenu()
-        self.experiment_action = QAction('Experimental Mouse3 (confirmation required)', self)
+        self.experiment_action = QAction('Experimental Mouse3', self)
         self.experiment_action.setCheckable(True)
         self.experiment_action.toggled.connect(self.set_experiment)
         self.menu.addAction(self.experiment_action)
+        self.confirm_action = QAction('Confirm file before opening', self)
+        self.confirm_action.setCheckable(True)
+        self.confirm_action.setChecked(self.confirm_candidates)
+        self.confirm_action.toggled.connect(self.set_confirmation)
+        self.menu.addAction(self.confirm_action)
         quit_action = self.menu.addAction('Quit Filewheel')
         quit_action.triggered.connect(self.request_quit)
         self.tray.setContextMenu(self.menu)
@@ -86,7 +92,7 @@ class DesktopApplication(QObject):
         pixmap.fill(QColor(0, 0, 0, 0))
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setBrush(QColor('#287bd6')); painter.setPen(QColor('#eff5fc'))
+        painter.setBrush(QColor('#173e32')); painter.setPen(QColor('#f5efdf'))
         painter.drawEllipse(2, 2, 28, 28)
         painter.drawText(pixmap.rect(), 0x84, 'F')
         painter.end()
@@ -194,6 +200,11 @@ class DesktopApplication(QObject):
         record_failure('mouse3', 'runtime', RuntimeError(message))
         self.notify(f'Mouse3 stopped: {message}. Send to remains available.')
 
+    @Slot(bool)
+    def set_confirmation(self, enabled):
+        self.close_confirmation()
+        self.confirm_candidates = bool(enabled)
+
     @Slot(object)
     def offer_candidate(self, candidate):
         if (not self.experimental_enabled or self.runtime is None or self.quitting
@@ -202,6 +213,14 @@ class DesktopApplication(QObject):
             return
         self.close_confirmation(cancel_gate=False)
         self.popup.dismiss()
+        if not self.confirm_candidates:
+            result = self.runtime.gate.activate(candidate.token, self.controller, self.inspector,
+                                                now=monotonic())
+            if result.target is not None:
+                self._present(result.target)
+            else:
+                self.notify(f'Candidate rejected: {result.rejection}')
+            return
         box = QMessageBox()
         box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
         box.setTextFormat(Qt.TextFormat.PlainText)

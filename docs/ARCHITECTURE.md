@@ -92,7 +92,7 @@ with plugins/builtins off and HTTP denied; the unifiedPython3.14 runtime satisfi
 LibreOffice uses a private profile and fixed argv in a bounded process tree;
 DOCX external resources/macros are not loaded. No Word/LLM/cloud service required.
 
-UI geometry/transparency is independent of engines: configurable240px wheel uses
+UI geometry/transparency is independent of engines: configurable 220px wheel uses
 one scaled reference layout for hit testing and paint, with transparent clear and
 no OS rectangular shadow. Linux tests establish code paths, not native compositor
 or Windows engine operation. CONVERTERS.md records runtime instructions/limits.
@@ -113,3 +113,14 @@ _internal. Early freeze_support handles worker spawning. Complete portable
 LibreOffice discovery and external-child environment isolation live in
 libreoffice_bundle.py, outside Qt and the converter. LibreOffice remains optional
 and is used only for DOCX → PDF. See PACKAGING.md and PORTABLE_LIBREOFFICE.md.
+
+
+### Current personal direct-activation route (D-016)
+
+The user has authorized direct Mouse3 wheel opening. CandidateGate.activate
+consumes a current token, requires event age <=500 ms and revalidates the path
+through InvocationController. Its TargetResolution source is explicitly
+experimental_candidate. It never claims proven hover identity. Optional tray
+confirmation still uses confirm() and source user_confirmed_candidate; Send to
+uses shell_explicit. All share the same popup and conversion manager. Source is
+kept distinct even though the validated-path DTO is shared.

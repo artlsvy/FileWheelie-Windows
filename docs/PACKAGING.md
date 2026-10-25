@@ -78,9 +78,11 @@ dist/Filewheel/
 
 Launching without a file or with --tray runs the tray; direct --gui is transient.
 Mouse3 stays **disabled by default**. Enable experimental
-candidate confirmation explicitly with `--tray --experimental-mouse3`; candidates
-never become trusted hover targets. A user confirmation and fresh explicit-path
-validation are required before normal conversion. Send to explicit-path routing
+activation explicitly with `--tray --experimental-mouse3`; candidates never
+become trusted hover targets. D-016 makes per-file confirmation optional through
+the tray menu; the default direct route still requires fresh evidence and
+controller path validation before opening the wheel. Choosing a format starts
+conversion. Send to explicit-path routing
 is independent of the experimental listener. Startup integration is personal and
 owned; move a bundle only after removing its old integrations, then reinstall.
 No integration is silently installed by the build itself.

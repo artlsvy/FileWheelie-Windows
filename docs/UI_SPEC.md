@@ -2,19 +2,23 @@
 
 ## Activation and placement
 
-A validated TargetResolution from InvocationController is required before opening.
-Normal activation is Explorer Send to with one explicit absolute path. Future
-trusted Mouse3 uses the same interface; provisional hover candidates cannot open
-it directly. G10 adds a tray host and a separate candidate-confirmation dialog;
-only explicit confirmation followed by fresh controller validation opens it.
+A controller-validated TargetResolution is required before opening. Send to uses
+one explicit absolute path. Experimental Mouse3 now opens the wheel directly by
+user request after fresh evidence/path checks, with source experimental_candidate;
+it does not claim trusted hover identity. The optional tray checkbox “Confirm
+file before opening” restores the per-file dialog. The listener remains opt-in.
 No selected/focused-file lookup or permanent main window.
 
-Default widget diameter240 logical pixels, internally configurable220–324
-(220–260 preferred;324 preserves legacy fixture geometry). The324-unit layout is
-scaled identically for painting and hit testing; text has a readable minimum8pt.
+Default widget diameter 220 logical pixels, internally configurable 220–324.
+Paint and hit testing share scaled geometry. Segment labels use a larger readable
+minimum; the smaller center contains only Esc at the category level and Back at
+the format level. Clicking Esc dismisses; clicking Back returns to categories.
+Source path remains available in the tooltip rather than crowding the center.
 Frameless/translucent Qt.Popup, explicit transparent source clearing, no system
 background/autofill or native rectangular drop shadow. Painted shadow follows the
-circle. Palette-based light/dark colors and animated hover are retained.
+circle. Light/dark variants use forest green, warm ivory and muted brass, with semantic
+surface/text/outline/accent roles and animated hover. Token text pairs meet 4.5:1
+and meaningful outline/control contrast meets 3:1 in automated calculations.
 
 Native monitor origin/dimensions uniquely match Qt geometry and DPR, independent
 of friendly display names. Cursor conversion is relative to that monitor; edge
@@ -58,14 +62,23 @@ availability. No real conversion is claimed for preview edges or missing engines
 ## Tray host and experimental consent (G10)
 
 `python -m filewheel --tray` keeps a lightweight tray icon and reusable popup.
-The Mouse3 checkbox is off by default. Startup waits off the Qt event loop;
+The Mouse3 checkbox is off by default; per-file confirmation is separately off
+by default per D-016. Startup waits off the Qt event loop;
 disabling immediately invalidates pending consent, then reports stopping until
 owned threads exit. Quit waits for owned listener and conversion cleanup.
 A failed listener returns the tray to off; Send to remains available.
 
-Experimental proposals show the complete path in a separate topmost plain-text
-confirmation with Cancel default and a 30-second deadline. No path validation or
-conversion is triggered by merely showing a proposal. Confirmation consumes the
-current one-shot token, revalidates through the shared controller, then anchors
-the normal popup at the original Mouse3 point. This does not establish trusted
-hover identity. Native focus/tray/hook acceptance remains pending.
+Direct experimental activation consumes the current token immediately and requires
+the original event to remain fresh (<=500 ms), then revalidates the path through
+the shared controller. No conversion starts until the user chooses a format.
+The source stays experimental_candidate. If optional confirmation is enabled,
+the complete proposed path appears in a topmost plain-text dialog with Cancel
+default and a 30-second deadline; approval yields user_confirmed_candidate after
+fresh path validation. Both anchor at the original Mouse3 point. Neither proves
+UIA-to-Shell identity. Native validation of the new direct/UI behavior is pending.
+
+All progress/results and preview confirmations share the wheel's circular
+silhouette, replacing the previous intentionally rounded-rectangle panel.
+A circular progress ring, compact Cancel/Done control and chord-constrained text
+retain transparent corners and consistent hit regions. Escape/outside click still
+cancel/dismiss, and worker ownership remains until cleanup completes.

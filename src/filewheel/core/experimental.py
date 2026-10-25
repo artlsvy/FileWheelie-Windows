@@ -1,7 +1,7 @@
-"""Untrusted Mouse3 candidates require an explicit, one-shot user confirmation.
+"""One-shot routing of untrusted Mouse3 candidates with source-aware validation.
 
-A provisional index correlation is never an Explorer hit-test result. Only a
-user's confirmation can route its displayed path through explicit validation.
+Direct activation is the user's chosen personal workflow; it does not establish
+trusted hover identity. Optional per-file confirmation remains available.
 """
 
 import math
@@ -78,11 +78,11 @@ def candidate_from_record(record: dict, *, now: float) -> ExperimentalCandidate 
 
 
 class CandidateGate:
-    """Hold one untrusted candidate; confirm consumes it before filesystem work.
+    """Consume one candidate before file validation, without attesting identity.
 
-    A newer offer/cancel invalidates a pending confirmation's late inspection.
-    Confirmation revalidates the displayed path through the existing controller;
-    the resulting source explicitly records user choice, never explorer_hover.
+    New offers/cancellation invalidate late inspection. Direct activation requires
+    the original event to remain fresh; optional confirmation has a 30-second TTL.
+    Both routes preserve their explicit source instead of claiming explorer_hover.
     """
 
     def __init__(self, *, ttl: float = 30):
@@ -117,6 +117,13 @@ class CandidateGate:
             )
 
     def confirm(self, token, controller, inspect_file, *, now: float) -> ExplicitInvocationResult:
+        return self._route(token, controller, inspect_file, now=now, confirmed=True)
+
+    def activate(self, token, controller, inspect_file, *, now: float) -> ExplicitInvocationResult:
+        """Personal direct-open route: fresh evidence plus controller validation."""
+        return self._route(token, controller, inspect_file, now=now, confirmed=False)
+
+    def _route(self, token, controller, inspect_file, *, now, confirmed):
         with self._lock:
             candidate = self._candidate
             if candidate is None or not isinstance(token, str) or token != candidate.token:
@@ -127,6 +134,8 @@ class CandidateGate:
             generation = self._generation
             if not _time(now) or not 0 <= now - candidate.captured_at <= self.ttl:
                 return ExplicitInvocationResult(None, "candidate_expired")
+            if not confirmed and not 0 <= now - candidate.event_timestamp <= 0.5:
+                return ExplicitInvocationResult(None, "candidate_expired")
         result = controller.handle_explicit(
             [str(candidate.path)], point=candidate.point, timestamp=now, inspect_file=inspect_file
         )
@@ -136,5 +145,6 @@ class CandidateGate:
             if result.target is None:
                 return result
             return ExplicitInvocationResult(
-                replace(result.target, source="user_confirmed_candidate"), None
+                replace(result.target, source=("user_confirmed_candidate" if confirmed
+                                               else "experimental_candidate")), None
             )

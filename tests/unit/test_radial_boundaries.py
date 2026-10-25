@@ -149,7 +149,9 @@ class RadialBoundaryPaintTests(unittest.TestCase):
                         self.assertFalse(popup.grab().isNull())
                     circles = [geometry for kind, geometry in events if kind == "circle"]
                     separators = [geometry for kind, geometry in events if kind == "separator"]
-                    self.assertEqual(circles, [(14, 14, 296, 296), (95, 95, 134, 134)])
+                    radius = popup.center_radius
+                    self.assertEqual(circles, [(14, 14, 296, 296),
+                                              (162-radius, 162-radius, radius*2, radius*2)])
                     self.assertEqual(len(separators), 0 if count == 1 else count)
                     self.assertEqual(len(set(separators)), len(separators))
                 finally:
@@ -165,8 +167,8 @@ class RadialBoundaryPaintTests(unittest.TestCase):
                     # Scan the top annular region, away from labels/circle edges.
                     dark = [
                         x
-                        for x in range(114, 127)
-                        if image.pixelColor(x, 32).lightnessF() < base - 0.012
+                        for x in range(round(popup.width()/2)-6, round(popup.width()/2)+7)
+                        if image.pixelColor(x, round(44 * popup._scale)).lightnessF() < base - 0.012
                     ]
                     if count == 1:
                         self.assertEqual(dark, [])
@@ -175,7 +177,7 @@ class RadialBoundaryPaintTests(unittest.TestCase):
                         self.assertLessEqual(len(dark), 2)
                         self.assertEqual(dark, list(range(min(dark), max(dark) + 1)))
                     self.assertEqual(image.pixelColor(0, 0).alpha(), 0)
-                    self.assertEqual(image.pixelColor(239, 239).alpha(), 0)
+                    self.assertEqual(image.pixelColor(image.width()-1, image.height()-1).alpha(), 0)
                     scaled_top = QPointF(162 * popup._scale, 20 * popup._scale)
                     self.assertEqual(popup._hit(scaled_top), 0 if count == 1 else -1)
                 finally:

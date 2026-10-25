@@ -49,7 +49,8 @@ class DesktopConsentTests(unittest.TestCase):
             self.inspections.append(path)
             return FileCheck(True, True)
         self.desktop = DesktopApplication(tray=True, runtime_factory=FakeRuntime,
-                                          inspector=inspect, point_mapper=lambda p,s:p)
+                                          inspector=inspect, point_mapper=lambda p,s:p,
+                                          confirm_candidates=True)
 
     def tearDown(self):
         self.desktop.request_quit()
@@ -192,3 +193,35 @@ class DesktopConsentTests(unittest.TestCase):
         self.assertFalse(self.desktop.experimental_enabled)
         self.desktop.quitting = True
         self.assertFalse(self.desktop.ensure_tray())
+
+    def test_direct_open_revalidates_without_dialog_and_records_provisional_source(self):
+        self.desktop.confirm_action.trigger()  # Opt out of per-file confirmation.
+        with patch.object(self.desktop.popup, 'present', return_value=True) as present:
+            candidate = self.offer()
+        self.assertIsNone(self.desktop.dialog)
+        self.assertEqual(len(self.inspections), 1)
+        target = present.call_args.args[0]
+        self.assertEqual(target.source, 'experimental_candidate')
+        self.assertEqual(target.point, candidate.point)
+        self.assertEqual(target.path, candidate.path)
+        with patch.object(self.desktop.popup, 'present') as again:
+            self.desktop.offer_candidate(candidate)
+        again.assert_not_called()  # A consumed token cannot reopen.
+
+    def test_direct_open_missing_file_never_presents(self):
+        self.desktop.set_confirmation(False)
+        self.desktop.inspector = lambda path: FileCheck(False, False)
+        with patch.object(self.desktop.popup, 'present') as present:
+            self.offer()
+        present.assert_not_called()
+        self.assertIsNone(self.desktop.dialog)
+
+    def test_direct_open_is_default_for_new_host(self):
+        host = DesktopApplication(point_mapper=lambda p, s: p)
+        try:
+            self.assertFalse(host.confirm_candidates)
+            self.assertFalse(host.confirm_action.isChecked())
+            self.assertIsNone(host.runtime)
+        finally:
+            host.popup.deleteLater()
+            host.deleteLater()

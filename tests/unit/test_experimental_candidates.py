@@ -164,3 +164,43 @@ class ExperimentalCandidateTests(unittest.TestCase):
     def test_missing_uia_stability_snapshot_is_not_enough_for_ui_offer(self):
         del self.record["snapshot_stable"]
         self.assertIsNone(self.candidate())
+
+    def test_direct_activation_has_own_source_and_consumes_current_token(self):
+        gate = CandidateGate()
+        candidate = gate.offer(self.candidate())
+        inspector = Mock(return_value=FileCheck(True, True))
+        result = gate.activate(candidate.token, InvocationController(), inspector, now=self.now + .1)
+        self.assertEqual(result.target.source, 'experimental_candidate')
+        self.assertEqual(result.target.path, candidate.path)
+        self.assertEqual(result.target.point, candidate.point)
+        self.assertIsNone(gate.activate(candidate.token, InvocationController(), inspector,
+                                        now=self.now + .1).target)
+        inspector.assert_called_once()
+
+    def test_direct_activation_rejects_stale_queued_event_before_inspection(self):
+        for elapsed in (.51, 2, 31):
+            with self.subTest(elapsed=elapsed):
+                gate = CandidateGate()
+                candidate = gate.offer(self.candidate())
+                inspector = Mock(return_value=FileCheck(True, True))
+                result = gate.activate(candidate.token, InvocationController(), inspector,
+                                       now=self.now + elapsed)
+                self.assertEqual(result.rejection, 'candidate_expired')
+                inspector.assert_not_called()
+
+    def test_direct_activation_rejects_missing_file_supersession_and_cancellation(self):
+        for state in ('missing', 'cancelled', 'superseded'):
+            with self.subTest(state=state):
+                gate = CandidateGate()
+                candidate = gate.offer(self.candidate())
+                def inspect(path, state=state, gate=gate):
+                    if state == 'cancelled':
+                        gate.cancel()
+                    elif state == 'superseded':
+                        gate.offer(self.candidate())
+                    return FileCheck(state != 'missing', state != 'missing')
+                result = gate.activate(candidate.token, InvocationController(), inspect,
+                                       now=self.now + .1)
+                self.assertIsNone(result.target)
+                self.assertEqual(result.rejection, 'missing_file' if state == 'missing'
+                                 else 'candidate_superseded')

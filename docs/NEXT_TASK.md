@@ -1,41 +1,37 @@
-# Next task: Windows acceptance of large-folder Mouse3 fix
+# Next task: Windows acceptance of direct Mouse3 and compact circular UI
 
-The confirmed 32-item gate is replaced by bounded targeted Shell lookup. G10's
-confirmation dialog, Send to fallback and trusted resolver are unchanged.
-No conversion/UI/LibreOffice/packaging work is part of this fix.
-Linux validation: 331 tests / 305 subtests, scoped Ruff and compilation pass;
-focused review found no remaining material blockers. Native acceptance is pending.
+The user reports successful large-folder Windows Mouse3 operation and authorizes
+removing the repeated file-confirmation dialog. The direct route opens the wheel
+after the same evidence filters, original-event freshness check and controller
+path revalidation, with source experimental_candidate. Trusted hover remains
+unproven. Optional per-file confirmation remains in the tray menu; Send to is
+unchanged. Do not repeat the old directory-size diagnosis.
 
-## Windows 11 acceptance
+Linux checks: 341 tests / 322 subtests, scoped Ruff, compilation and focused
+review pass. No new Windows run by Codex is claimed.
 
-Quit the old resident Filewheel tray process before launching the updated source:
+## Verify on Windows 11
+
+Quit the old Filewheel tray process, update the checkout, then run:
 
 ```powershell
 .\.venv-filewheel\Scripts\python.exe -m filewheel --tray
 ```
 
-Enable Experimental Mouse3 using the existing tray checkbox. Use a local Explorer
-folder with **at least 500 files** and show file-name extensions. Scroll and
-middle-click an item whose index is **greater than 32** (for example a file near
-the end of a 600-file view). Verify that confirmation shows the exact intended
-absolute path. Cancel must do nothing; confirming must open the existing radial
-converter at the event point. Repeat with a second high-index file and a different
-active tab whose folder has a different size. Ensure activation stays responsive.
-Small folders must retain their existing behavior.
+Enable Experimental Mouse3. Leave “Confirm file before opening” unchecked.
+Middle-click a local file: the wheel should open directly, with no extra dialog.
+Hover to inspect the full path; no conversion happens until choosing a format.
+Check a high-index file in the previously successful large folder. Ambiguous,
+missing, stale or conflicting evidence must still reject. To restore the former
+per-file dialog, check the confirmation option for this session.
 
-Large folders intentionally reject hidden/shortened labels, conflicting evidence,
-and ambiguous names; incomplete listings never justify bypassing duplicate-name
-protection. Test a full-name collision such as photo.png plus photo.png.txt and
-ensure it rejects conservatively. Check background/chrome rejection and the
-unchanged Send to fallback. Do not revisit already-confirmed conversion types.
+The wheel is now 220 logical pixels with a small Esc/Back center, larger labels,
+and forest/ivory/brass light/dark palettes. Check readability on your actual DPI
+settings, correct hover regions, Back, Esc and outside dismissal. Progress and
+results must stay circular without a square panel; verify Cancel, Done and error
+details in tooltips. Source files and existing outputs must remain untouched.
 
-The implementation makes two indexed native GetItem reads and one independent
-Shell automation Item(index) read per large active view. Inactive tabs collect no
-items. Filename ambiguity uses at most three returned Win32 search names, not a
-Python/Shell directory walk. Actual filesystem query latency/wildcard behavior
-still requires Windows acceptance; the existing freshness deadline is retained.
-
-Record Windows results in STATUS.md. If a concrete regression appears, fix only
-that blocker. Existing G11/G12 native packaging validation remains queued from the
-prior milestone, but is outside this G10 directory-size task. Do not push unless
-the user separately authorizes it.
+Native visual/direct-route acceptance remains pending. Large-folder activation
+itself is already user-reported successful. Prior standalone packaging/portable
+LibreOffice native checks remain queued but are outside this UI task. Do not push
+without separate authorization.
