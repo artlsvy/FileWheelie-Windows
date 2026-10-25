@@ -170,3 +170,24 @@ not. The prior match_qt_screen failure was fixed by unique full monitor geometry
 and DPR association instead of comparing Win32 device IDs to Qt friendly names.
 Structured gui_startup_error still reports native geometry/stage on failures.
 No shortcut reinstall is needed solely for that fix. No Mouse3 lookup is used.
+
+
+## Tray and packaged application
+
+The current GUI shortcut uses the shared app entry so repeated launches route to
+one current-user owner. Start the optional tray with:
+
+```powershell
+.\.venv-filewheel\Scripts\python.exe -m filewheel --tray
+```
+
+Mouse3 is off by default. Enable its experimental confirmation flow through the
+tray checkbox; Send to requires no Mouse3 listener. The wheel uses the cursor at
+launch time, not the location of the file before the context-menu interaction.
+
+For an owned current-development shortcut use `python -m filewheel --sendto
+stage` / `--sendto install` / `--sendto remove`. A known older source GUI link may
+require removal with its original interpreter, then reinstall. Foreign targets
+are preserved. Packaged equivalents are `Filewheel.exe --sendto stage`,
+`--sendto install` and `--sendto remove`; see PACKAGING.md. No integration is
+installed automatically by a build or normal launch.

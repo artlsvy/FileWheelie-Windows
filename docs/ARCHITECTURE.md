@@ -96,3 +96,20 @@ UI geometry/transparency is independent of engines: configurable240px wheel uses
 one scaled reference layout for hit testing and paint, with transparent clear and
 no OS rectangular shadow. Linux tests establish code paths, not native compositor
 or Windows engine operation. CONVERTERS.md records runtime instructions/limits.
+
+
+### G10–G12 desktop host and packaging
+
+The normal `filewheel` entry owns one QApplication, tray host, controller and
+conversion manager. Current-user lock/local Qt IPC forwards repeated explicit
+invocations; it accepts no commands to enable experiments. Headless diagnostics
+remain independently importable without Qt/COM. The tray listener transports
+immutable ExperimentalCandidate evidence from existing workers to Qt. Candidate
+consent is separate from trusted TargetResolution; one-shot confirmation and
+fresh path validation create `user_confirmed_candidate`, never `explorer_hover`.
+
+Frozen paths resolve beside Filewheel.exe, while resources remain under
+_internal. Early freeze_support handles worker spawning. Complete portable
+LibreOffice discovery and external-child environment isolation live in
+libreoffice_bundle.py, outside Qt and the converter. LibreOffice remains optional
+and is used only for DOCX → PDF. See PACKAGING.md and PORTABLE_LIBREOFFICE.md.

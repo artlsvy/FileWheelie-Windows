@@ -1,10 +1,12 @@
 # Status and Windows-validation queue
 
 Updated: 2026-10-25
-Current checkpoint: authorized G5/G6-A/B/C/G7/G8 implemented and Linux-tested.
-Real conversion registry and background radial UI are integrated; default240px.
-User-verified Windows scope: basic G2-F invocation and G4 launch/render. New engine,
-worker/compositor/DPI acceptance remains pending. No Mouse3 investigation resumed.
+Current checkpoint: G9–G12 source implementation and available Linux checks
+complete. G9-A/B are WINDOWS-VERIFIED by the user's latest report. G10 tray and
+candidate consent are implemented; Windows hook/focus/startup acceptance remains
+pending. G11 Windows build recipe and G12 portable-office seams are implemented;
+no Windows EXE or self-contained Windows LibreOffice bundle was built here.
+Earlier sections below are historical evidence; the final checkpoint is current.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -778,5 +780,37 @@ shutdown is pending. Disabling invalidates candidate consent immediately, shows
 “stopping”, then restores the off state when listener threads exit. Runtime
 failure clears the active tooltip. Confirmation requests topmost/foreground
 presentation with Cancel as default. An unavailable system tray rejects tray
-startup rather than leaving an invisible owner. Nine Qt consent/lifecycle tests
+startup rather than leaving an invisible owner. Ten Qt consent/lifecycle tests
 pass on Linux; native tray, COM, focus and hook behavior remain pending.
+
+
+## G12 and final Linux checkpoint
+
+- Added full flat/PortableApps LibreOffice structure validation and bundled-first
+  discovery with independent system fallback. Incomplete bundled executables are
+  never reclassified as system engines. The full vendor tree is copied beside
+  Filewheel.exe by the G11 build, with source/output containment guards.
+- Frozen child environment removes PyInstaller library/plugin paths. Windows DLL
+  search is snapshotted, reset only around process creation and restored under a
+  lock; failure after spawning cleans up the owned process. Existing isolated
+  profiles, bounded process-tree lifetime, PDF validation and safe publication
+  remain. Actual LibreOffice failure stdout/stderr is retained as a bounded
+  exception cause in private logs.
+- Real Linux DOCX → PDF through a bundle-shaped wrapper produced readable text
+  and preserved input bytes. This delegates to installed LibreOffice: it is not
+  proof of a self-contained portable Windows tree. See PORTABLE_LIBREOFFICE.md.
+- Final suite: `PYTHONPATH=src .venv-ui/bin/python -m pytest -q` passed **312 tests
+  and 241 subtests**, no failures. The first invocation without PYTHONPATH had
+  three child-process import failures; supplying the source checkout path fixed
+  the test environment. No failed check was silently skipped.
+- Source `python -m filewheel --self-test` passed all engine families, including
+  PDF → DOCX, all five Markdown pairs, image/PDF and real system DOCX → PDF.
+  Scoped Ruff, compileall and git whitespace checks passed.
+- Native acceptance still required: G10 tray enable/disable/Quit, passive hook,
+  COM cleanup, proposed-file confirmation/cancel, DPI/event-point and startup;
+  G11 Windows build/clean-machine native resources/repeated GUI invocation;
+  G12 full portable tree with no installed LibreOffice. No push was performed.
+
+- A later no-file launch now adopts tray mode even when the existing owner began
+  as a transient GUI. It does not enable Mouse3. This route has a Qt regression
+  test; final full-suite count above includes it.

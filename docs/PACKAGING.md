@@ -104,7 +104,8 @@ is copied to `dist\Filewheel\tools\libreoffice` **beside** the executable, outsi
 `_internal`. A source directory inside the rebuilt output is rejected before
 PyInstaller runs. Without this tree, installed LibreOffice detection may still
 supply DOCX→PDF; an unavailable engine must stay hidden/gracefully unavailable.
-See the converter documentation for the final G12 runtime selection rules.
+See [PORTABLE_LIBREOFFICE.md](PORTABLE_LIBREOFFICE.md) for runtime selection,
+licensing, package costs and native acceptance.
 
 ## Frozen resources and diagnostics
 

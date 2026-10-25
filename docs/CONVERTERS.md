@@ -132,3 +132,8 @@ FILEWHEEL_LOG_DIR overrides the directory. Logs rotate2MB with3 backups and cont
 local paths/tracebacks; they are never uploaded. Missing dependencies are distinct
 from encoder/parser failures. PDF→DOCX errors must be diagnosed as pdf2docx errors,
 not assumed to require LibreOffice. Preserve the source and inspect the named log.
+
+
+Portable LibreOffice prefers a complete `tools/libreoffice` tree, then falls
+back to a separate system installation. See [PORTABLE_LIBREOFFICE.md](PORTABLE_LIBREOFFICE.md)
+for validation/build commands and the remaining Windows bundle acceptance.

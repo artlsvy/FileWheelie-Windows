@@ -174,3 +174,20 @@ provisionally implemented until actual target runs; no claim follows from mocks.
 - Which Windows 11 Explorer views provide stable point-to-Shell-item mapping?
 - Native middle-click suppression after overlay opens vs passive processing?
 - Explorer right-click/`Send to` fallback ergonomics and multi-selection behavior?
+
+
+## D-015 — Experimental consent and personal packaging (2026-10-25)
+
+The user authorized G9–G12. Python 3.14 is the single desktop/build runtime.
+G9-A/B Windows acceptance is user-reported. Mouse3 remains disabled by default
+and uses an explicitly untrusted candidate with visible path confirmation and
+fresh controller validation; D-008's identity limitation is unchanged. A tray
+host owns listener/UI lifetimes. Send to remains the explicit-path fallback.
+
+Package as a windowed Windows onedir application, built on Windows, with a
+complete optional portable LibreOffice tree beside the EXE. Do not claim native
+bundle acceptance from Linux structure/environment tests. Native Shell verb
+IExecuteCommand::SetPosition could supply the original context-menu point, per
+[Microsoft's API contract](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-iexecutecommand-setposition).
+It is not implemented; Send to uses the launch-time cursor without inventing
+an original file position.

@@ -22,20 +22,15 @@ States: `NOT STARTED` · `IMPLEMENTED/UNVERIFIED` · `MOCK-TESTED` · `WINDOWS-V
 
 ## Current focus
 
-Authorized overnight G5→G8 implementation is complete and Linux-tested:
-PNG/JPEG/WebP/HEIC, images/PDF pages, PDF→editable DOCX, local MarkItDown extraction,
-LibreOffice DOCX→PDF, and240px configurable transparent radial UI with real worker
-progress/results/errors. Missing codecs/engines stay hidden. All source/diagnostic
-infrastructure is preserved. Separate milestone commits are recorded in STATUS.md.
+G5–G8 converters/UI remain implemented and Linux-tested. The user has now tested
+G9-A/B successfully on Windows. G10 tray/candidate consent, G11 Windows onedir
+recipe and G12 portable LibreOffice integration are implemented and checked as
+far as Kubuntu permits. Final Linux suite: 312 tests and 241 subtests pass.
 
-User reports basic G2-F and G4 launch/render work on Windows11. New converters,
-worker cancellation,240px compositing, detailed focus/DPI and integration still
-require target acceptance. MarkItDown0.1.9 is unsupported onPython3.15; use3.14 for
-those pairs. Word COM/OCR/media remain unimplemented optional work, not blockers.
-
-Next work is native acceptance and narrowly evidenced fixes, not another engine
-expansion. CONVERTERS.md and SEND_TO.md contain exact commands; NEXT_TASK.md has
-the resume handoff. No Windows success is inferred from Linux tests.
+Next is Windows acceptance of the tray workflow, packaged build and complete
+portable LibreOffice tree. These are not certified by Linux mocks/offscreen
+checks. Send to stays available, and experimental Mouse3 is off by default.
+See NEXT_TASK.md for exact steps. No unrelated conversion expansion is queued.
 
 ## Definition of G2 success
 - Middle-click on a **different unselected file** returns the hovered file, not the previous selection.

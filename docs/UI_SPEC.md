@@ -5,7 +5,9 @@
 A validated TargetResolution from InvocationController is required before opening.
 Normal activation is Explorer Send to with one explicit absolute path. Future
 trusted Mouse3 uses the same interface; provisional hover candidates cannot open
-it. No selected/focused-file lookup, tray, IPC or permanent main window.
+it directly. G10 adds a tray host and a separate candidate-confirmation dialog;
+only explicit confirmation followed by fresh controller validation opens it.
+No selected/focused-file lookup or permanent main window.
 
 Default widget diameter240 logical pixels, internally configurable220–324
 (220–260 preferred;324 preserves legacy fixture geometry). The324-unit layout is
@@ -51,3 +53,19 @@ not destroy a running QThread or leave an unowned worker behind.
 Outputs are adjacent to source, numbered on collision, validated before atomic
 publication. See CONVERTERS.md for limits, alpha behavior, OCR/fidelity and engine
 availability. No real conversion is claimed for preview edges or missing engines.
+
+
+## Tray host and experimental consent (G10)
+
+`python -m filewheel --tray` keeps a lightweight tray icon and reusable popup.
+The Mouse3 checkbox is off by default. Startup waits off the Qt event loop;
+disabling immediately invalidates pending consent, then reports stopping until
+owned threads exit. Quit waits for owned listener and conversion cleanup.
+A failed listener returns the tray to off; Send to remains available.
+
+Experimental proposals show the complete path in a separate topmost plain-text
+confirmation with Cancel default and a 30-second deadline. No path validation or
+conversion is triggered by merely showing a proposal. Confirmation consumes the
+current one-shot token, revalidates through the shared controller, then anchors
+the normal popup at the original Mouse3 point. This does not establish trusted
+hover identity. Native focus/tray/hook acceptance remains pending.
