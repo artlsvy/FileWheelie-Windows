@@ -11,6 +11,7 @@ from filewheel.core.controller import InvocationController
 from filewheel.performance import get_recorder
 from filewheel.platforms.windows.explicit_path_diagnostics import inspect_file
 from filewheel.ui.backend import create_popup
+from filewheel.ui.conversion_controller import ConversionController
 
 
 class _Bridge(QObject):
@@ -55,7 +56,8 @@ class DesktopApplication(QObject):
         self.bridge = _Bridge(self)
         self.bridge.candidate.connect(self.offer_candidate)
         self.bridge.error.connect(self.mouse_error)
-        options = {'manager': self.manager}
+        self.conversions = ConversionController(self)
+        options = {'manager': self.manager, 'coordinator': self.conversions}
         if point_mapper is not None:
             options['point_mapper'] = point_mapper
         self.popup = create_popup(self.manager.registry, backend=ui_backend, **options)
@@ -321,7 +323,7 @@ class DesktopApplication(QObject):
         self.experimental_enabled = False
         self.close_confirmation()
         self.controller.cancel()
-        self.popup.dismiss()
+        self.popup.shutdown()
         if self.runtime is not None:
             self.runtime.close(timeout=0)
         self.shutdown_timer.start()

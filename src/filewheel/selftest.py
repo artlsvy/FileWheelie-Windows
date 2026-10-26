@@ -50,8 +50,32 @@ def run(*, include_quick=False):
                     raise RuntimeError('Quick render or transparent-corner self-test failed')
                 results.append({'quick_qml_render': True, 'corner_alpha': 0,
                                 'graphics_api': str(view.rendererInterface().graphicsApi()), 'ok': True})
+                # The progress surface is a separate lazy QML resource. Verify
+                # it renders in frozen/source mode too, without running a job.
+                from filewheel.ui.progress_state import ProgressMode
+                view.session._reduced = True
+                view.session.appearanceChanged.emit()
+                view.state.stage = 'result'
+                view.session._status = 'Converted'
+                view.session.presentation_state.mode = ProgressMode.SUCCEEDED
+                view.session._refresh()
+                view.set_persistent(True)
+                view.collapse_progress()
+                application.processEvents()
+                if view.progress_view is None:
+                    raise RuntimeError('Quick progress surface was unavailable')
+                pill = view.progress_view.grabWindow()
+                dpr = view.progress_view.devicePixelRatio()
+                if (pill.isNull() or pill.width() != round(272*dpr) or pill.height() != round(72*dpr)
+                        or pill.pixelColor(0, 0).alpha() != 0
+                        or pill.pixelColor(round(25*dpr), round(25*dpr)).alpha() == 0):
+                    raise RuntimeError('Quick progress surface render failed')
+                results.append({'quick_progress_render': True, 'ok': True})
             finally:
                 view.dismiss()
+                if view.progress_view is not None:
+                    view.progress_view.setSource('')
+                    view.progress_view.deleteLater()
                 view.setSource('')
                 view.deleteLater()
                 application.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)

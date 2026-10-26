@@ -1376,3 +1376,37 @@ acceptance of this fix. Earlier D-020 Cancel/retry/Quit and D-021 touchpad check
 remain open. GLASS_UI_PHASE1.md gives before/after paths and exact source/EXE
 commands. No native build/test or push was performed here. Deliver Phase 1 and
 wait for the user's review; do not begin any Markdown/format expansion.
+
+
+## Phase 2 authorized — progress UX first (2026-10-26)
+
+The user explicitly accepts Phase 1 lens/hover/leave behavior on Windows and
+approves Phase 2 A–E. The former approval hold is satisfied. Preserve that
+appearance. First implement durable background conversion feedback through a
+compact glass pill; then capability-driven Markdown navigation, local inputs,
+actual Pandoc outputs and packaging/tests. No further routine approval is needed
+between these milestones. Native pill/frozen behavior still requires Windows
+acceptance. No new conversion pair is implemented at this checkpoint.
+
+
+## Phase 2 A — compact observable progress implemented
+
+Application-owned ConversionController retains jobs until QThread.finished;
+no GUI joins. Quick selection keeps approved appearance/leave behavior, while
+conversion leave/outside/focus/native Hide collapses to a separate no-focus
+272×72 glass pill over 210 ms, at the original monitor workarea edge. Clicking
+expands details/explicit Cancel. Native Close/Hide never implicitly cancels;
+tray shutdown explicitly does. Success remains 4.5 s then fades; errors/cancel
+persist with details/log information. Current engine stage fractions are shown
+as indeterminate activity, never invented exact percent. Widget fallback restores
+persistent status. Missing pill QML logs and restores the wheel.
+
+Actual Linux checks: **560 tests / 406 subtests passed**; scoped Ruff, compilation
+and diff checks pass. Legacy cancellation tests now call explicit shutdown and
+assert presenters do not join/delete workers. Focused read-only review completed;
+its lazy-QML fallback gap was fixed and tested. Source Quick self-test renders the
+new progress scene in addition to the wheel/conversion fixtures. Actual Qt
+100/125/150% subprocess render/input checks pass. Visually inspected real rendered
+expanded, transitioning, compact, success and failure images in docs/progress-pill.
+No Windows-native pill/focus/mixed-monitor or frozen run occurred here. Exact
+commands and acceptance: PROGRESS_UX.md. Continue B–E; no further approval hold.

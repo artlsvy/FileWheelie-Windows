@@ -185,3 +185,8 @@ tree away from the development venv and verify launch, Quick UI, actual conversi
 Send to, Mouse3 and Quit. A successful build or Python wheel resource check alone
 is insufficient. The broad QtQml hook may increase payload; measure actual Windows
 folder size before considering any plugin pruning. See GLASS_UI.md.
+
+The QML resource glob also includes ProgressSurface.qml. The explicit Quick
+self-test now requires actual nonblank `quick_progress_render`, so a missing
+lazy progress scene cannot silently pass a wheel-only smoke test. Native onedir
+focus, outside collapse, cancellation and status persistence still need testing.

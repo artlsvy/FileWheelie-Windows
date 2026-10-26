@@ -145,6 +145,17 @@ transparent rectangular corners. Re-entry stops the timer; expiration rechecks
 QCursor through QWindow mapping. Center, Back, sector movement and keyboard remain
 usable. Progress/results remain persistent; no new global hook is installed.
 
-Phase 2 format/navigation work is blocked until explicit subsequent user approval.
-Passing tests, screenshot generation and automated resume do not grant approval.
+The user subsequently approved Phase 1 and authorized Phase 2 progress UX and
+Markdown expansion. The earlier hold is satisfied (see STATUS.md).
 See GLASS_UI_PHASE1.md for real rendered before/after evidence and native checks.
+
+## Phase 2 A — wheel to compact progress
+
+Keep approved selection appearance and 75 ms circle-leave behavior. Running work
+collapses to a separate green/ivory/brass 272×72 logical pill, with 210 ms
+coordinated fade/scale/move toward the original monitor workarea edge. It does
+not request focus. Click expands 272×190 details with explicit Cancel/Hide or
+Details/Reveal/Dismiss. Current stage fractions remain indeterminate, not exact
+percentages. Success remains 4.5 s then fades 180 ms; failures/cancel persist until
+acknowledged. Reduced motion is immediate. Job ownership is independent of native
+Hide/Close and popup geometry. PROGRESS_UX.md includes actual rendered states.

@@ -109,6 +109,7 @@ class RadialPopup(QWidget):
         manager=None,
         source_mapper=lambda path: Path(str(path)),
         diameter=170,
+        coordinator=None,
     ):
         if type(diameter) is not int or not 170 <= diameter <= 324:
             raise ValueError("Wheel diameter must be an integer between 170 and 324")
@@ -125,6 +126,10 @@ class RadialPopup(QWidget):
         self._scale = diameter / self.reference_diameter
         self.state = RadialState(registry)
         self.manager, self.source_mapper = manager, source_mapper
+        from filewheel.ui.conversion_controller import ConversionController
+        self.coordinator = coordinator or ConversionController(QApplication.instance())
+        self.coordinator.progress.connect(self._conversion_progress)
+        self.coordinator.completed.connect(self._conversion_done)
         self.job = None
         self._closing = False
         self.status_title = ""
@@ -241,7 +246,23 @@ class RadialPopup(QWidget):
         return True
 
     def dismiss(self):
-        self.close()
+        if self.job is not None:
+            self._restore_status()
+        else:
+            self.close()
+
+    def shutdown(self):
+        if self.job is not None:
+            self._closing = True
+            self.coordinator.cancel()
+            self.hide()
+        else:
+            self.close()
+
+    def _restore_status(self):
+        if self._persistent_status() and not self._closing:
+            self.show()
+            self.raise_()
 
     def _persistent_status(self):
         return self.state.stage in ("converting", "result")
@@ -278,8 +299,6 @@ class RadialPopup(QWidget):
         if self._changing_window_mode:
             return
         if self.job is not None:
-            self._closing = True
-            self.job.cancelled.set()
             return
         self._animation.stop()
         self._focus_check.stop()
@@ -289,12 +308,19 @@ class RadialPopup(QWidget):
             self.finished.emit()
 
     def hideEvent(self, event):
-        self._finish()
+        if self._persistent_status() and not self._changing_window_mode and not self._resetting and not self._closing:
+            QTimer.singleShot(0, self._restore_status)
+        else:
+            self._finish()
         super().hideEvent(event)
 
     def closeEvent(self, event):
-        self._finish()
-        super().closeEvent(event)
+        if self.job is not None and not self._closing:
+            event.ignore()
+            self._restore_status()
+        else:
+            self._finish()
+            super().closeEvent(event)
 
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
@@ -394,23 +420,15 @@ class RadialPopup(QWidget):
         if selection is not None:
             self.last_selection = selection
             if self.manager is not None:
-                from filewheel.ui.conversion_job import ConversionJob
-
                 self.state.stage = "converting"
                 self.last_selection = replace(selection, action="conversion_started")
                 self.progress_fraction = 0.0
                 self.status_title = "In progress"
                 self.status_message = "Preparing local conversion"
                 self._set_persistent_window(True)
-                self.job = ConversionJob(
-                    self.manager,
-                    self.source_mapper(selection.input_path),
-                    selection.output_extension,
-                    self,
-                )
-                self.job.progress_changed.connect(self._conversion_progress)
-                self.job.outcome.connect(self._conversion_done)
-                self.job.start()
+                self.coordinator.start(self.manager, self.source_mapper(selection.input_path),
+                                       selection.output_extension)
+                self.job = self.coordinator.job
             self.selected.emit(self.last_selection)
 
     def _conversion_progress(self, value, message):
@@ -421,10 +439,7 @@ class RadialPopup(QWidget):
     def _conversion_done(self, result, error):
         from filewheel.converters.base import ConversionCancelled, ConversionError
 
-        job, self.job = self.job, None
-        if job is not None:
-            job.wait()
-            job.deleteLater()
+        self.job = None  # Coordinator emits only after the QThread stopped.
         if error is None and (result is None or not result.outputs):
             error = ConversionError("The conversion produced no output")
         # Record the outcome even when the user dismissed during conversion.

@@ -108,8 +108,10 @@ class UiPolishTests(unittest.TestCase):
             self.popup.job = fake_job
             self.popup._closing = True
             self.popup._conversion_done(None, error)
-            fake_job.wait.assert_called_once()
-            fake_job.deleteLater.assert_called_once()
+            # Presenter receives only a stopped-worker outcome; joining/deletion
+            # belongs to ConversionController, never a GUI callback.
+            fake_job.wait.assert_not_called()
+            fake_job.deleteLater.assert_not_called()
             self.assertEqual(self.popup.last_selection.action, action)
             self.assertEqual(self.popup.last_selection.outputs, ())
             self.assertEqual(self.popup.status_title, title)
@@ -151,7 +153,7 @@ class UiPolishTests(unittest.TestCase):
         self.popup._choose(0)
         self.popup._choose(0)
         self.assertEqual(self.popup.last_selection.action, "conversion_started")
-        self.popup.dismiss()
+        self.popup.shutdown()  # Explicit shutdown cancels; dismiss now preserves work.
         deadline = time.monotonic() + 3
         while self.popup.job is not None and time.monotonic() < deadline:
             self.app.processEvents()

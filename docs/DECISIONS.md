@@ -336,3 +336,21 @@ The user explicitly requires a hard stop after this Phase 1 delivery. Markdown
 navigation/new formats (Phase 2) require approval in a subsequent user message;
 no test, screenshot, automatic continuation or absence of feedback substitutes
 for approval. Follow NEXT_TASK.md's review gate on every resume.
+
+
+## D-024 — Approved wheel; background progress pill; local Markdown tools
+
+The user accepts D-023's appearance/leave behavior and explicitly authorizes
+Phase 2 A–E, satisfying that approval gate. Selection remains transient. Running
+work belongs to an application-level conversion controller, independent of
+surface visibility; outside/focus/leave collapses feedback, never cancels work.
+A small no-focus glass pill uses the opening monitor's logical work area. Only
+explicit Cancel or application shutdown requests worker cancellation. Failures
+remain accessible; success can auto-dismiss after an observable completion state.
+Stage fractions must not be advertised as exact progress percentages.
+
+Then use installed, tested capabilities for To MD / From MD navigation. New
+Markdown paths remain offline, bounded and staged; Pandoc is an actual discovered
+executable, optional rather than a Python wrapper assumption. Do not expose audio,
+OCR, remote services or unsafe recursive archive conversion. Native Windows pill
+and new tool integration require acceptance separate from portable fixtures.

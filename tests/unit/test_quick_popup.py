@@ -416,7 +416,8 @@ def test_leaving_during_conversion_and_result_never_cancels_or_hides(app, target
         assert view.state.stage == 'result'
         move_pointer(view, 18, 18)
         QTest.qWait(110)
-        assert view.isVisible()
+        assert view.progress_view.isVisible()
+        assert not view.job
         assert view.session.statusTitle == 'Converted'
     finally:
         manager.release.set()

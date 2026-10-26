@@ -1,7 +1,8 @@
 # Experimental native glass wheel
 
-For the current geometry/mouse-leave correction and approval gate, see
-[Phase 1 review build](GLASS_UI_PHASE1.md). Phase 2 is not authorized yet.
+The user accepted the [Phase 1 geometry/leave correction](GLASS_UI_PHASE1.md)
+on Windows. Phase 2 progress UX and Markdown expansion are now authorized;
+see STATUS.md and NEXT_TASK.md for the current implementation checkpoint.
 
 The default is still the working **170 px QWidget** wheel. The experimental
 Quick backend uses a **240 logical pixel window / 220 px circular surface**, a

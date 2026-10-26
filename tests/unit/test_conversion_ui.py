@@ -83,7 +83,7 @@ class ConversionUiTests(unittest.TestCase):
                 popup.deleteLater()
                 self.app.processEvents()
 
-    def test_selected_subscriber_dismissal_waits_for_worker_cleanup(self):
+    def test_selected_subscriber_explicit_shutdown_waits_for_worker_cleanup(self):
         with tempfile.TemporaryDirectory() as folder:
             source = Path(folder) / 'cancel.png'
             Image.new('RGB', (20, 20)).save(source)
@@ -93,7 +93,7 @@ class ConversionUiTests(unittest.TestCase):
                                 point_mapper=lambda point, screens: point)
             completions = []
             popup.finished.connect(lambda: completions.append(True))
-            popup.selected.connect(lambda selection: popup.dismiss())
+            popup.selected.connect(lambda selection: popup.shutdown())
             try:
                 popup.present(TargetResolution(PureWindowsPath('C:/cancel.png'), 0,
                                                (300, 300), 1, 'shell_explicit'))

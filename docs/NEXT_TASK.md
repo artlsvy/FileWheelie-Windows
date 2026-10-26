@@ -1,22 +1,22 @@
-# HARD STOP: Phase 1 UI awaits user review
+# Active Phase 2: A progress UX, then B–E Markdown expansion
 
-Phase 1 glass geometry and circular mouse-leave correction is delivered for
-review. **Phase 2 has NOT started. Do not implement, research or restructure
-Markdown/navigation/format support until the user explicitly approves Phase 1
-in a subsequent message.** Passing tests, screenshots, automatic resume and
-silence are not approval. Do not infer approval from an unrelated status request.
+User explicitly approved Phase 1 in the latest message: lens/hover/circular leave
+are Windows-user-verified. The previous approval hold is satisfied. Do not undo
+the approved geometry. No additional milestone approval is required.
 
-Read GLASS_UI_PHASE1.md for before/after images, exact Windows build/source/Quick
-commands and acceptance. The original reference screenshots are /home/lsvy/1.jpg,
-2.jpg,3.jpg; generated captures are docs/ui-phase1/{before,after-100,after-150}.
-The default QWidget fallback and all converters/Mouse3/Send to/tray paths remain.
+Work in order, with coherent local commits and no push:
+A. Presentation-independent job owner + persistent compact glass progress pill,
+   lightweight collapse/edge animation, explicit expand/cancel/details/reveal,
+   success autoexpire and persistent failures; Widget durable fallback.
+B. Capability-driven To MD (direct) / From MD navigation in both renderers.
+C. Useful offline TXT/CSV/JSON/XML/HTM/EPUB -> MD; assess optional XLS/MSG/ZIP
+   safety before exposing any pair.
+D. Actual discovered Pandoc MD -> DOCX/standalone HTML/TXT/RTF/ODT/EPUB/PPTX;
+   MD -> DOCX -> PDF if local tools work, one staged transaction.
+E. Packaging/resources/dependency locks, real fixtures, regression review/docs.
 
-Next action is **wait for user feedback**, then address requested Phase 1 fixes
-if any. Native Windows checks remain: common-pivot/lens appearance, circular
-leave/re-entry/reopen, progress/result persistence, focus/keyboard, light/dark,
-100%/150% mixed DPI, frozen resources/compositing. Linux offscreen checks cannot
-establish those native behaviors. Earlier D-020 Cancel/retry/Quit and D-021
-Precision Touchpad acceptance remain open; do not silently mark them verified.
-
-If the user explicitly approves Phase 1, consult their Phase 2 specification
-before planning any Markdown/Pandoc/format changes. No push is authorized.
+Milestone A is implemented and checked: 560 tests/406 subtests, real QML pill
+proof and 100/125/150% checks; see PROGRESS_UX.md. Next is B capability-driven
+Markdown navigation, then C–E. Read working tree on resume to preserve edits. Do not claim native overlay/frozen behavior from Linux tests.
+Preserve controller, Mouse3/touchpad consent, Send to, cancellation/publication
+safety and the QWidget fallback. Existing D-020/D-021 acceptance remains pending.

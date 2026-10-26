@@ -8,6 +8,12 @@ Item {
     width: 240
     height: 240
     focus: true
+    property bool collapsing: false
+    scale: collapsing ? 0.35 : 1
+    opacity: collapsing ? 0 : 1
+    transformOrigin: Item.Center
+    Behavior on scale { enabled: !wheel.reducedMotion && !wheel.lowEffects; NumberAnimation { duration: 210; easing.type: Easing.OutCubic } }
+    Behavior on opacity { enabled: !wheel.reducedMotion && !wheel.lowEffects; NumberAnimation { duration: 210; easing.type: Easing.OutCubic } }
     // MouseArea has its own wheel signal; resolve the context bridge here.
     readonly property var session: wheel
 
@@ -266,7 +272,7 @@ Item {
     Text {
         visible: wheel.stage === "converting"
         x: 65; y: 164; width: 110; height: 30
-        text: Math.round(Math.max(0, Math.min(1, wheel.progress)) * 100) + "%"
+        text: wheel.progressKnown ? Math.round(Math.max(0, Math.min(1, wheel.progress)) * 100) + "%" : "Working"
         color: root.foreground
         font.family: "Segoe UI"
         font.pixelSize: 16

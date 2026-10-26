@@ -123,3 +123,7 @@ Real before/after captures and portable 100%/150% checks accompany the review
 build (GLASS_UI_PHASE1.md). Native Windows acceptance is pending. **STOP for user
 review: Phase 2 Markdown navigation/format expansion has NOT started and must
 not begin without explicit approval in a subsequent user message.**
+
+Phase 2 A: application-owned conversion lifetime and compact glass progress UX
+implemented; source/portable checks and native Windows handoff in PROGRESS_UX.md.
+Phase 1 was explicitly accepted. Continue B–E without another approval hold.

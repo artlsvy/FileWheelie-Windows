@@ -227,3 +227,15 @@ Local measurements, limitations, renderer comparisons and primary Qt references:
 PERFORMANCE_ARCHITECTURE.md. Native procedures and fallback: GLASS_UI.md. Project
 material/motion guidance: .agents/skills/filewheel-glass/SKILL.md. Quick remains
 experimental until real Windows DPI/focus/graphics/frozen acceptance passes.
+
+### Phase 2 A — job ownership and progress presentation
+
+DesktopApplication owns ConversionController, which owns ConversionJob until
+QThread.finished and emits completion without a GUI-thread join. Renderers share
+that controller; standalone views retain an application-owned coordinator.
+Presentation mode (selecting/expanded/compact/succeeded/failed/cancelled) neither
+owns nor cancels work. Native Hide/Close/focus/leave drives collapse or restoration;
+explicit Cancel and shutdown are separate operations. Quick uses a no-focus Tool
+pill with original-monitor logical workarea, guarded transitions and lazy scene
+load fallback. QWidget restores durable status. The source/frozen smoke explicitly
+loads ProgressSurface.qml in addition to GlassWheel.qml. See PROGRESS_UX.md.

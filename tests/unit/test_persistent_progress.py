@@ -164,10 +164,9 @@ class PersistentProgressTests(unittest.TestCase):
         self.assertIn('long source filename.png', self.popup.toolTip())
         self.assertEqual(self.popup.last_selection.action, 'conversion_failed')
 
-    def test_programmatic_dismiss_still_cancels_and_finishes_exactly_once(self):
+    def test_explicit_shutdown_cancels_and_finishes_exactly_once(self):
         self.start()
-        self.popup.dismiss()
-        self.assertFalse(self.popup.isVisible())
+        self.popup.shutdown()
         self.wait(lambda: self.popup.job is None)
         self.assertEqual(self.finished, [True])
         self.assertEqual(self.popup.last_selection.action, 'conversion_cancelled')
