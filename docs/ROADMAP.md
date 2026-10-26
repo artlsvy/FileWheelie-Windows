@@ -127,3 +127,6 @@ not begin without explicit approval in a subsequent user message.**
 Phase 2 A: application-owned conversion lifetime and compact glass progress UX
 implemented; source/portable checks and native Windows handoff in PROGRESS_UX.md.
 Phase 1 was explicitly accepted. Continue B–E without another approval hold.
+
+Phase 2 B: installed-capability To MD direct / From MD format navigation shared
+by both renderers is checked. Continue C offline inputs, D Pandoc, E packaging.

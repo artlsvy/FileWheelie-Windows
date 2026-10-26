@@ -16,7 +16,7 @@ D. Actual discovered Pandoc MD -> DOCX/standalone HTML/TXT/RTF/ODT/EPUB/PPTX;
 E. Packaging/resources/dependency locks, real fixtures, regression review/docs.
 
 Milestone A is implemented and checked: 560 tests/406 subtests, real QML pill
-proof and 100/125/150% checks; see PROGRESS_UX.md. Next is B capability-driven
-Markdown navigation, then C–E. Read working tree on resume to preserve edits. Do not claim native overlay/frozen behavior from Linux tests.
+proof and 100/125/150% checks; see PROGRESS_UX.md. B navigation is also implemented and checked (564 tests/406 subtests).
+Next is C bounded offline Markdown inputs, then D–E. Read working tree on resume to preserve edits. Do not claim native overlay/frozen behavior from Linux tests.
 Preserve controller, Mouse3/touchpad consent, Send to, cancellation/publication
 safety and the QWidget fallback. Existing D-020/D-021 acceptance remains pending.

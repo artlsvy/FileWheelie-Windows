@@ -159,3 +159,14 @@ Details/Reveal/Dismiss. Current stage fractions remain indeterminate, not exact
 percentages. Success remains 4.5 s then fades 180 ms; failures/cancel persist until
 acknowledged. Reduced motion is immediate. Job ownership is independent of native
 Hide/Close and popup geometry. PROGRESS_UX.md includes actual rendered states.
+
+## Phase 2 B — Markdown destinations
+
+Navigation is derived from the supplied capability list through core/navigation.
+For non-Markdown input, every actual .md destination is grouped under To MD;
+choosing its sole format returns the normal selection immediately, with no
+redundant format wheel. The existing renderer/controller job path then starts
+the same progress workflow. Image and Document categories remain distinct.
+Markdown input groups genuinely offered outputs under From MD and retains the
+second format step and Back. No installed capability means no category. Preview
+fixtures use the same navigation code but do not attest conversion engines.

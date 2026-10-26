@@ -239,3 +239,11 @@ explicit Cancel and shutdown are separate operations. Quick uses a no-focus Tool
 pill with original-monitor logical workarea, guarded transitions and lazy scene
 load fallback. QWidget restores durable status. The source/frozen smoke explicitly
 loads ProgressSurface.qml in addition to GlassWheel.qml. See PROGRESS_UX.md.
+
+Shared core/navigation projects stored semantic capabilities into To MD/From MD
+UI destinations without inventing pairs. Both the installed Registry and the
+explicit preview fixture registry use it. RadialState performs the sole To MD
+choice atomically and returns the existing selection DTO; both renderers consume
+it unchanged, including shared controller/progress ownership. From MD retains
+format selection. Actual capability.category/engine_id remain available for
+engine selection and semantic classification.

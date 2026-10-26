@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from pathlib import PurePath
 
 from filewheel.converters.base import Capability, ConversionError, DependencyUnavailable, Engine
+from filewheel.core import navigation
 
 CATEGORIES = ("Image", "Document", "Markdown/Text", "Audio", "Video")
 
@@ -32,11 +33,10 @@ class Registry:
         self.capabilities = tuple(capabilities)
 
     def categories(self, path: PurePath) -> tuple[str, ...]:
-        return tuple(category for category in CATEGORIES if self.formats(path, category))
+        return navigation.categories(self.capabilities, path)
 
     def formats(self, path: PurePath, category: str) -> tuple[Capability, ...]:
-        return tuple(c for c in self.capabilities
-                     if c.input_extension.lower() == path.suffix.lower() and c.category == category)
+        return navigation.formats(self.capabilities, path, category)
 
     def find(self, source_extension: str, output_extension: str) -> Capability:
         for capability in self.capabilities:

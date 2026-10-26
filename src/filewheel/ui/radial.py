@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
 
+from filewheel.core import navigation
 from filewheel.core.models import TargetResolution
 
 CATEGORIES = ("Image", "Document", "Markdown/Text", "Audio", "Video")
@@ -39,11 +40,10 @@ class CapabilityRegistry:
             raise ValueError("duplicate preview capability")
 
     def categories(self, path: PureWindowsPath) -> tuple[str, ...]:
-        return tuple(category for category in CATEGORIES if self.formats(path, category))
+        return navigation.categories(self.capabilities, path)
 
     def formats(self, path: PureWindowsPath, category: str) -> tuple[PreviewCapability, ...]:
-        return tuple(c for c in self.capabilities
-                     if c.input_extension.lower() == path.suffix.lower() and c.category == category)
+        return navigation.formats(self.capabilities, path, category)
 
 
 def _defaults():
@@ -123,6 +123,8 @@ class RadialState:
         if self.stage == "categories":
             self.category = option
             self.stage = "formats"
+            if option == "To MD" and len(self.options) == 1:
+                return self.choose(0)
         elif self.stage == "formats":
             self.selection = DryRunSelection(self.target.path, self.category,
                                             option.output_extension,

@@ -1410,3 +1410,15 @@ new progress scene in addition to the wheel/conversion fixtures. Actual Qt
 expanded, transitioning, compact, success and failure images in docs/progress-pill.
 No Windows-native pill/focus/mixed-monitor or frozen run occurred here. Exact
 commands and acceptance: PROGRESS_UX.md. Continue B–E; no further approval hold.
+
+
+## Phase 2 B — capability-derived Markdown navigation
+
+Both renderers now share installed/preview capability projection into To MD and
+From MD. Sole To MD is one click into the existing shared conversion/progress
+path; From MD keeps a real format step and Back. No unavailable engine/pair is
+invented, no engine semantic classification changed, and no lens/hit geometry
+changed. Tests exercise actual shared jobs in Quick and Widget, busy rejection,
+progress collapse and pure category/output mappings. Full Linux suite **564 tests
+/ 406 subtests passed**; scoped Ruff, compilation and whitespace checks pass.
+Next: C bounded offline Markdown inputs; no new format is claimed by B alone.

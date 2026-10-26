@@ -24,16 +24,25 @@ class RadialStateTests(unittest.TestCase):
         self.assertEqual(state.stage, "confirmation")
         self.assertIsNone(state.choose(0))
 
-    def test_docx_markdown_and_center_back(self):
+    def test_docx_to_markdown_is_a_direct_destination(self):
         state = RadialState()
         state.open(target("Résumé notes.DOCX"))
-        state.choose(state.options.index("Markdown/Text"))
-        self.assertEqual(state.options[0].output_extension, ".md")
-        self.assertTrue(state.back())
-        self.assertEqual(state.stage, "categories")
+        selection = state.choose(state.options.index("To MD"))
+        self.assertEqual(state.stage, "confirmation")
+        self.assertEqual(selection.output_extension, ".md")
+        self.assertEqual(selection.intended_path.name, "Résumé notes.md")
         self.assertFalse(state.back())
-        state.choose(state.options.index("Markdown/Text"))
-        self.assertEqual(state.choose(0).intended_path.name, "Résumé notes.md")
+
+    def test_markdown_from_category_keeps_back_and_format_step(self):
+        state = RadialState()
+        state.open(target("notes.md"))
+        self.assertEqual(state.options, ("From MD",))
+        self.assertIsNone(state.choose(0))
+        self.assertEqual(state.stage, "formats")
+        self.assertTrue(state.back())
+        self.assertEqual(state.options, ("From MD",))
+        state.choose(0)
+        self.assertEqual(state.choose(0).output_extension, ".docx")
 
     def test_unknown_input_has_no_options(self):
         state = RadialState()
