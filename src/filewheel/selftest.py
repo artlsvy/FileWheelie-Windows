@@ -7,7 +7,7 @@ from filewheel.converters import ConversionManager
 from filewheel.converters.debugging import debug_log_path, record_failure
 
 
-def run():
+def run(*, include_quick=False):
     results = []
     try:
         import pymupdf
@@ -23,6 +23,37 @@ def run():
             import comtypes.client
             results.append({"comtypes": comtypes.__version__, "ok": True})
         manager = ConversionManager()
+        if include_quick:
+            # Explicit opt-in: exercise actual QML/plugin loading and rendering,
+            # not just Python imports. No user file or conversion is involved.
+            from pathlib import PureWindowsPath
+            from time import monotonic
+
+            from filewheel.core.models import TargetResolution
+            from filewheel.ui.quick_popup import GlassPopup
+            application = QtWidgets.QApplication.instance() or QtWidgets.QApplication(['Quick self-test'])
+            application.setQuitOnLastWindowClosed(False)
+            view = GlassPopup(manager.registry, point_mapper=lambda p, screens: p)
+            try:
+                center = application.primaryScreen().availableGeometry().center()
+                view.present(TargetResolution(PureWindowsPath('C:/preview/self-test.png'), 0,
+                                              (center.x(), center.y()), monotonic(), source='shell_explicit'))
+                application.processEvents()
+                view.session.choose(0)
+                view.session.hoverAt(195, 120)
+                application.processEvents()
+                image = view.grabWindow()
+                if (image.isNull() or image.width() != 240 or image.height() != 240
+                        or image.pixelColor(0, 0).alpha() != 0
+                        or image.pixelColor(120, 120).alpha() == 0):
+                    raise RuntimeError('Quick render or transparent-corner self-test failed')
+                results.append({'quick_qml_render': True, 'corner_alpha': 0,
+                                'graphics_api': str(view.rendererInterface().graphicsApi()), 'ok': True})
+            finally:
+                view.dismiss()
+                view.setSource('')
+                view.deleteLater()
+                application.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
         office = manager.registry.engines.get('libreoffice')
         if office is not None and hasattr(office, 'location'):
             location = office.location()

@@ -1,0 +1,72 @@
+{
+  "python": "3.14.4",
+  "platform": "linux",
+  "results": [
+    {
+      "engine": "pillow",
+      "input_extension": ".png",
+      "output_extension": ".jpg",
+      "samples": 3,
+      "status": "ok",
+      "source_unchanged": true,
+      "direct_transaction_ms": [
+        54.82761799976288,
+        51.400565998847014,
+        51.607874000183074
+      ],
+      "isolated_transaction_ms": [
+        132.57561199861811,
+        130.24872800087905,
+        130.00998200004688
+      ],
+      "direct_median_ms": 51.607874000183074,
+      "isolated_median_ms": 130.24872800087905
+    },
+    {
+      "engine": "pymupdf-images",
+      "input_extension": ".pdf",
+      "output_extension": ".png",
+      "samples": 3,
+      "status": "ok",
+      "source_unchanged": true,
+      "direct_transaction_ms": [
+        126.0592689995974,
+        124.13131200082717,
+        123.72622399925604
+      ],
+      "isolated_transaction_ms": [
+        287.44461799942655,
+        296.35751499881735,
+        284.5897770002921
+      ],
+      "direct_median_ms": 124.13131200082717,
+      "isolated_median_ms": 287.44461799942655
+    },
+    {
+      "engine": "markitdown",
+      "input_extension": ".docx",
+      "output_extension": ".md",
+      "samples": 3,
+      "status": "ok",
+      "source_unchanged": true,
+      "direct_transaction_ms": [
+        743.7262780003948,
+        239.4747920006921,
+        191.39769499997783
+      ],
+      "isolated_transaction_ms": [
+        897.0329399999173,
+        889.2741729996487,
+        926.258866000353
+      ],
+      "direct_median_ms": 239.4747920006921,
+      "isolated_median_ms": 897.0329399999173
+    }
+  ],
+  "limits": [
+    "Generated simple fixtures only; libraries used to create them are imported in parent",
+    "Direct measures encode/validate/publish; isolated also includes fresh interpreter/import overhead",
+    "Production GUI always uses isolated workers, never this direct benchmark path",
+    "No Windows or complex/scanned PDF performance is established"
+  ]
+}

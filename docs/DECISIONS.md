@@ -298,3 +298,24 @@ and eligible synthetic input over Explorer still requires explicit consent.
 Native laptop acceptance is required before declaring the fix verified.
 
 Reference: [Microsoft MSLLHOOKSTRUCT flags](https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct).
+
+## D-022 — Measure first; optional Quick glass, retain Python/Widget
+
+Local measurements show warm Widget CPU/event dispatch around 1–1.5 ms p95, while
+fresh-process imports/first paint are much larger. Windows Explorer and native
+launch/GPU stages remain pending. This does not justify a C++/Rust rewrite.
+Retain the Python controller/adapters and isolated converter workers.
+
+The separate Quick prototype delivers a fluid retained-shape lens, with measured
+startup/RSS overhead and software frame tails. Offer it only via explicit
+startup selection; keep Widget default and available as fallback until Windows
+acceptance. No full desktop refraction, capture, browser runtime or shader is
+justified. The controller trust boundary, touchpad consent and file transaction
+must remain unchanged. Use a small native-only project design skill.
+
+Timing remains opt-in, local, bounded and filename-free. Associate Quick input
+with its synchronized scene before crediting a swap; an arbitrary next swap may
+represent older input. Do not equate preparation/queued frames with physical
+presentation, or claim 60 FPS from graphics backend selection alone.
+
+See PERFORMANCE_ARCHITECTURE.md and GLASS_UI.md for evidence and primary sources.

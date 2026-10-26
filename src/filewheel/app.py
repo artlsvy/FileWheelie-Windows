@@ -10,6 +10,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description='Filewheel local converter')
     parser.add_argument('--tray', action='store_true')
     parser.add_argument('--gui', action='store_true')
+    parser.add_argument('--ui-backend', choices=('widgets', 'quick'),
+                        help='startup-only renderer; widgets remains default')
     parser.add_argument('--experimental-mouse3', action='store_true')
     parser.add_argument('--startup', choices=('install', 'remove'))
     parser.add_argument('--sendto', choices=('stage', 'install', 'remove'))
@@ -29,7 +31,7 @@ def main(argv=None):
             return sendto_main([args.sendto, '--mode', 'gui', '--project-root', str(application_root())])
         if args.self_test:
             from filewheel.selftest import run
-            return run()
+            return run(include_quick=args.ui_backend == 'quick')
         from filewheel.platforms.windows.native import require_windows
         require_windows()
         if args.diagnostic:
@@ -64,7 +66,7 @@ def main(argv=None):
         if tray_mode and not QSystemTrayIcon.isSystemTrayAvailable():
             broker.close()
             raise RuntimeError('System tray is unavailable; use an explicit file invocation.')
-        desktop = host = DesktopApplication(tray=tray_mode)
+        desktop = host = DesktopApplication(tray=tray_mode, ui_backend=args.ui_backend)
         application._filewheel_desktop = desktop
         application.aboutToQuit.connect(broker.close)
         application._filewheel_broker = broker

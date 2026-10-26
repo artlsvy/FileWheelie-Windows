@@ -10,7 +10,7 @@ from filewheel.converters.debugging import record_failure
 from filewheel.core.controller import InvocationController
 from filewheel.performance import get_recorder
 from filewheel.platforms.windows.explicit_path_diagnostics import inspect_file
-from filewheel.ui.popup import RadialPopup
+from filewheel.ui.backend import create_popup
 
 
 class _Bridge(QObject):
@@ -33,7 +33,7 @@ class _StartMouse(QThread):
 
 class DesktopApplication(QObject):
     def __init__(self, *, tray=False, manager=None, inspector=inspect_file,
-                 runtime_factory=None, point_mapper=None, confirm_candidates=False, parent=None):
+                 runtime_factory=None, point_mapper=None, confirm_candidates=False, ui_backend=None, parent=None):
         super().__init__(parent)
         timing = get_recorder()
         started = monotonic() if timing.enabled else None
@@ -58,7 +58,7 @@ class DesktopApplication(QObject):
         options = {'manager': self.manager}
         if point_mapper is not None:
             options['point_mapper'] = point_mapper
-        self.popup = RadialPopup(self.manager.registry, **options)
+        self.popup = create_popup(self.manager.registry, backend=ui_backend, **options)
         self.popup.finished.connect(self._popup_finished)
         self.tray = QSystemTrayIcon(self._icon(), self)
         self.menu = QMenu()

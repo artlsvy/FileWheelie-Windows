@@ -106,3 +106,12 @@ candidate gate; physical Mouse3/Send to are unchanged. Linux/offscreen suite:
 478 tests /406 subtests passed; scoped Ruff and compilation pass, focused review
 found no material issues. Laptop three-finger tap and physical Mouse3 native
 acceptance is next; this fix is not yet Windows-verified (NEXT_TASK.md).
+
+2026-10-26 measured glass UI task: baseline instrumentation/architecture report,
+separate Quick prototype, moving annular lens and explicit optional host backend
+are implemented. Python/Widget remains the default; no native-language migration
+or converter rewrite. Source QML render/conversion smoke and portable packaging
+seams are tested; Windows GPU/DPI/focus/frozen Quick acceptance remains pending.
+Reusable native design skill lives at .agents/skills/filewheel-glass/SKILL.md.
+Use GLASS_UI.md for the next native check and PERFORMANCE_ARCHITECTURE.md for
+actual measurements and their boundaries. Existing D-020/D-021 queues remain.

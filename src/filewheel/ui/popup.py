@@ -597,6 +597,7 @@ class RadialPopup(QWidget):
             self._paint(event)
         finally:
             end = monotonic()
+            self._timings.record_launch("launch_to_paint", end)
             self._timings.record("paint_cpu", (thread_time() - cpu) * 1000)
             self._timings.record("paint_wall", (end - start) * 1000)
             for stage, began in pending.items():

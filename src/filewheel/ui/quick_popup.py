@@ -2,7 +2,9 @@
 import math
 import os
 from dataclasses import replace
+from html import escape
 from pathlib import Path
+from threading import Lock
 from time import monotonic
 
 from PySide6.QtCore import Property, QEvent, QObject, QPoint, Qt, QTimer, QUrl, Signal, Slot
@@ -247,7 +249,7 @@ class GlassPopup(QQuickView):
     finished = Signal()
 
     def __init__(self, registry=DEFAULT_PREVIEW_REGISTRY, *, point_mapper=logical_point,
-                 manager=None, source_mapper=lambda path: Path(str(path))):
+                 manager=None, source_mapper=lambda path: Path(str(path)), _scene_file=None):
         QQuickWindow.setDefaultAlphaBuffer(True)
         super().__init__()
         self.point_mapper = point_mapper
@@ -255,6 +257,9 @@ class GlassPopup(QQuickView):
         self._finished = True
         self._timings = get_recorder()
         self._pending = {}
+        self._frame_pending = {}
+        self._render_pending = {}
+        self._frame_lock = Lock()
         self.frame_count = 0
         self.session = GlassSession(self, registry, manager, source_mapper)
         self.setColor(QColor('transparent'))
@@ -262,18 +267,24 @@ class GlassPopup(QQuickView):
         self.setWidth(SIZE)
         self.setHeight(SIZE)
         self.rootContext().setContextProperty('wheel', self.session)
-        self.setSource(QUrl.fromLocalFile(str(Path(__file__).with_name('qml') / 'GlassWheel.qml')))
+        scene = Path(_scene_file) if _scene_file is not None else Path(__file__).with_name('qml') / 'GlassWheel.qml'
+        self.setSource(QUrl.fromLocalFile(str(scene)))
         if self.status() == QQuickView.Status.Error:
-            raise RuntimeError('Quick scene failed to load: ' + '; '.join(e.toString() for e in self.errors()))
+            details = '; '.join(e.toString() for e in self.errors())
+            self.setSource(QUrl())
+            self.deleteLater()
+            raise RuntimeError('Quick scene failed to load: ' + details)
         if self._timings.enabled:
             self.afterAnimating.connect(self._frame_tick)
+            self.afterSynchronizing.connect(self._capture_frame_requests, Qt.ConnectionType.DirectConnection)
+            self.frameSwapped.connect(self._record_queued_frame, Qt.ConnectionType.DirectConnection)
         self.focus_timer = QTimer(self)
         self.focus_timer.setSingleShot(True)
         self.focus_timer.timeout.connect(self._dismiss_if_inactive)
         self.tooltip_timer = QTimer(self)
         self.tooltip_timer.setSingleShot(True)
         self.tooltip_timer.setInterval(450)
-        self.tooltip_timer.timeout.connect(lambda: QToolTip.showText(QCursor.pos(), self.session.detail))
+        self.tooltip_timer.timeout.connect(lambda: QToolTip.showText(QCursor.pos(), '<pre>' + escape(self.session.detail) + '</pre>'))
 
     @property
     def state(self):
@@ -293,11 +304,34 @@ class GlassPopup(QQuickView):
 
     def mark_pending(self, stage):
         if self._timings.enabled:
-            self._pending[stage] = monotonic()
+            now = monotonic()
+            self._pending[stage] = now
+            with self._frame_lock:
+                self._frame_pending[stage] = now
+
+    def _capture_frame_requests(self):
+        # Render thread while GUI is blocked: only requests represented by this
+        # synchronized scene may be credited to its subsequent swap. Later GUI
+        # input remains pending for the next frame, never the already-rendering one.
+        with self._frame_lock:
+            self._render_pending, self._frame_pending = self._frame_pending, {}
+
+    def _record_queued_frame(self):
+        # Opt-in render-thread observer only: no Qt GUI calls, controller state
+        # or IO. This measures queued presentation, not physical display time.
+        now = monotonic()
+        with self._frame_lock:
+            pending, self._render_pending = self._render_pending, {}
+        names = {'present_to_paint': 'quick_present_to_frame',
+                 'move_to_paint': 'quick_move_to_frame',
+                 'choose_to_paint': 'quick_choose_to_frame'}
+        for stage, started in pending.items():
+            self._timings.record(names[stage], (now - started) * 1000)
+        self._timings.record_launch('launch_to_quick_frame', now)
 
     def _frame_tick(self):
         # afterAnimating is a GUI-thread scenegraph preparation boundary, not a
-        # rendered/displayed frame. Actual frameSwapped timing is benchmark-only.
+        # rendered/displayed frame. Queued frame timing is separately opt-in.
         self.frame_count += 1
         if self._timings.enabled:
             now = monotonic()
@@ -369,17 +403,15 @@ class GlassPopup(QQuickView):
             self._finish()
 
     def _finish(self):
-        if self.job:
+        if self.job or self._finished:
             return
+        self._finished = True  # Native hide/close can reenter during hide().
         self.focus_timer.stop()
         self.tooltip_timer.stop()
-        was_finished = self._finished
-        self._finished = True
         self.hide()
-        if not was_finished:
-            self.state.dismiss()
-            self.session._refresh()
-            self.finished.emit()
+        self.state.dismiss()
+        self.session._refresh()
+        self.finished.emit()
 
     def _dismiss_if_inactive(self):
         if self.isVisible() and not self.isActive() and not self.persistent:

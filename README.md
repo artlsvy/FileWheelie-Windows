@@ -54,3 +54,9 @@ out of the mouse-hook/UI interpreter. Menu labels follow the ring, surfaces are
 subtly translucent and empty state reads No formats. Windows cursor performance
 still needs acceptance. To enable the existing DOCX → PDF route, follow
 [the LibreOffice setup guide](docs/DOCX_TO_PDF.md).
+
+
+Experimental native glass renderer: [GLASS_UI.md](docs/GLASS_UI.md) documents
+`--ui-backend quick`, reduced effects, Windows acceptance and the Widget fallback.
+The default remains Widget. [PERFORMANCE_ARCHITECTURE.md](docs/PERFORMANCE_ARCHITECTURE.md)
+contains actual local measurements and the recommendation to keep the Python host.

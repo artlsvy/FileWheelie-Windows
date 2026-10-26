@@ -113,3 +113,19 @@ thread limits and reduced child scheduling priority are best effort. Progress
 updates are throttled instead of flooding the UI. Cancellation, persistent status,
 ring and output safety remain; injected fake-manager tests retain an explicit
 in-process seam. No production spawn failure falls back to a converter thread.
+
+## Experimental Quick glass variant (D-022)
+
+The current170px QWidget remains default. An explicit startup selection enables
+the separate240px QQuickView with220px circular translucent material, forest/
+ivory/brass tokens,14px opaque text, continuous illuminated rims and a raised
+annular hover lens. Keyboard selection shares the same highlight. Lens rotation
+uses shortest-arc145ms easing; appearance70ms and label-scale120ms transitions
+never delay selection or alter hit geometry. Reduced-motion/low-effects switches
+are explicit; low effects is opaque and static. No desktop capture/refraction,
+shader dependency or permanent main window is introduced.
+
+The shared controller/registry/worker path, mandatory injected consent, status
+persistence, Cancel/Back/Escape and outside/focus selection dismissal are retained.
+See GLASS_UI.md for native acceptance and startup fallback; source/offscreen
+visual proof does not establish Windows compositor/driver/focus correctness.

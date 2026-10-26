@@ -45,7 +45,7 @@ def popup(app):
     view = GlassPopup(point_mapper=lambda p, s: p)
     yield view
     view.dismiss()
-    pump(app, lambda: view.job is None)
+    pump(app, lambda view=view: view.job is None)
     view.setSource('')
     view.deleteLater()
     app.processEvents()
@@ -147,7 +147,7 @@ def test_actual_conversion_uses_shared_spawned_manager_and_keeps_input(app, tmp_
         view.session.choose(0)
         assert view.job is not None
         assert not view.present(target)  # Busy requests cannot reset a live job.
-        pump(app, lambda: view.job is None)
+        pump(app, lambda view=view: view.job is None)
         assert view.state.stage == 'result'
         assert view.last_selection.action == 'converted'
         with Image.open(view.last_selection.outputs[0]) as output:
@@ -158,7 +158,7 @@ def test_actual_conversion_uses_shared_spawned_manager_and_keeps_input(app, tmp_
         assert view.isVisible()
     finally:
         view.dismiss()
-        pump(app, lambda: view.job is None)
+        pump(app, lambda view=view: view.job is None)
         view.setSource('')
         view.deleteLater()
         app.processEvents()
@@ -238,3 +238,79 @@ def test_rendered_material_contrast_over_black_white_and_opaque_fallback(popup, 
             assert contrast_ratio(foreground, composite) >= 4.5
     assert image.pixelColor(0, 0).alpha() == 0
     assert (image.pixelColor(120, 50).alpha() == 255) is low_effects
+
+
+def test_opt_in_trace_distinguishes_preparation_from_queued_render(app, target, tmp_path):
+    from filewheel.performance import TimingRecorder
+    trace = TimingRecorder(tmp_path / 'quick.json', launch_start=time.monotonic())
+    with patch('filewheel.ui.quick_popup.get_recorder', return_value=trace):
+        view = GlassPopup(point_mapper=lambda p, s: p)
+    try:
+        view.present(target)
+        pump(app, lambda: any(row['stage'] == 'quick_present_to_frame' for row in trace.snapshot()))
+        view.session.hoverAt(195, 120)
+        pump(app, lambda: any(row['stage'] == 'quick_move_to_frame' for row in trace.snapshot()))
+        view.session.choose(0)
+        pump(app, lambda: any(row['stage'] == 'quick_choose_to_frame' for row in trace.snapshot()))
+        stages = [row['stage'] for row in trace.snapshot()]
+        assert stages.count('launch_to_quick_frame') == 1
+        assert 'quick_present_to_sync' in stages
+        assert 'paint_cpu' not in stages  # Never report GUI preparation as GPU CPU timing.
+        assert not (tmp_path / 'quick.json').exists()  # No per-frame disk writes.
+        assert all(row['duration_ms'] >= 0 for row in trace.snapshot())
+    finally:
+        view.dismiss()
+        view.setSource('')
+        view.deleteLater()
+        app.processEvents()
+
+
+def test_swap_does_not_credit_input_arriving_after_scene_synchronization(popup, tmp_path):
+    from filewheel.performance import TimingRecorder
+    popup._timings = TimingRecorder(tmp_path / 'batch.json')
+    # Deterministic threaded-render ordering, without requiring a GPU in CI.
+    popup.mark_pending('present_to_paint')
+    popup._capture_frame_requests()
+    popup.mark_pending('move_to_paint')  # New GUI input while the old frame renders.
+    popup._record_queued_frame()
+    assert [row['stage'] for row in popup._timings.snapshot()] == ['quick_present_to_frame']
+    popup._capture_frame_requests()
+    popup._record_queued_frame()
+    assert [row['stage'] for row in popup._timings.snapshot()] == [
+        'quick_present_to_frame', 'quick_move_to_frame']
+
+
+def test_quick_conversion_cancel_persistence_and_error_feedback(app, target):
+    from test_persistent_progress import BlockingManager
+    for fails in (False, True):
+        manager = BlockingManager(fail=fails)
+        view = GlassPopup(manager.registry, manager=manager, point_mapper=lambda p, s: p)
+        try:
+            view.present(target)
+            view.session.choose(0)
+            view.session.choose(0)
+            pump(app, manager.started.is_set)
+            app.sendEvent(view, QFocusEvent(QEvent.Type.FocusOut))
+            view.session.activateAt(0, 0)
+            app.processEvents()
+            assert view.isVisible()
+            assert not view.job.cancelled.is_set()
+            if fails:
+                manager.release.set()
+            else:
+                view.session.keyAction(Qt.Key.Key_Escape)
+                assert view.session.statusTitle == 'Stopping'
+                assert view.job.cancelled.is_set()
+            pump(app, lambda view=view: view.job is None)
+            assert view.state.stage == 'result'
+            assert view.session.statusTitle == ('Failed' if fails else 'Cancelled')
+            assert view.last_selection.action == ('conversion_failed' if fails else 'conversion_cancelled')
+            assert view.isVisible()
+            assert view.session.detail
+        finally:
+            manager.release.set()
+            view.dismiss()
+            pump(app, lambda view=view: view.job is None)
+            view.setSource('')
+            view.deleteLater()
+            app.processEvents()

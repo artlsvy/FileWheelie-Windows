@@ -157,3 +157,31 @@ the owned old GUI entry using its original interpreter before installing the new
 one; a different target is preserved, not silently overwritten. Known earlier
 source launcher arguments are accepted for ownership-checked removal only; install
 requires explicitly removing/reinstalling them to update single-instance routing.
+
+## Optional Quick renderer resources
+
+The default renderer remains QWidget. The spec now explicitly includes
+`filewheel/ui/qml/*.qml` (GlassWheel +Lens) and hidden imports PySide6.QtQuick and
+PySide6.QtQml. The pinned PyInstaller6.22.3
+[QtQml hook](https://github.com/pyinstaller/pyinstaller/blob/v6.22.3/PyInstaller/hooks/hook-PySide6.QtQml.py)
+collects the installed Essentials QML imports/plugin tree; QtQuick.Shapes is a
+QML module, not a Python hidden-import name. Matching Windows Essentials6.12
+wheel contents were inspected, but no Windows frozen Quick app was run here.
+Do not add collect_all(PySide6), Addons or a browser to solve resource errors.
+
+After building, inspect at least:
+
+```text
+_internal/filewheel/ui/qml/GlassWheel.qml
+_internal/filewheel/ui/qml/Lens.qml
+_internal/PySide6/qml/QtQuick/Shapes/qmldir +qmlshapesplugin.dll
+_internal/PySide6/qml/QtQml/Models/qmldir +modelsplugin.dll
+_internal/PySide6/qml/QtQml/WorkerScript/qmldir +workerscriptplugin.dll
+```
+
+Then run `Filewheel.exe --self-test --ui-backend quick` and check self-test.json
+for a real nonblank render, alpha0 corners and graphics API. Move the full onedir
+tree away from the development venv and verify launch, Quick UI, actual conversion,
+Send to, Mouse3 and Quit. A successful build or Python wheel resource check alone
+is insufficient. The broad QtQml hook may increase payload; measure actual Windows
+folder size before considering any plugin pruning. See GLASS_UI.md.

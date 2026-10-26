@@ -75,7 +75,7 @@ be counted as resolver/UI latency.
 | Explorer integration | Working Python COM/UIA adapter and tests | Reuses it unchanged | Port/rebind COM apartments, lifetimes, flags and evidence protocol, with new Windows risks |
 | Conversion compatibility | Current Python engines | Identical manager/jobs/engines | Keep Python workers; needs a separate host-worker protocol and embedding/distribution plan |
 | Packaging | Working onedir recipe | Must include QML files/import plugins and QtQuick DLLs | Compiler/toolchain plus Qt host, Python runtime and converter dependencies still shipped |
-| Size | Dominated by Python/converter/Qt stack; actual installed folder should be measured on Windows | Some additional Quick/QML plugins; not an Electron/WebView runtime | Cannot simply drop Python/PySide if existing workers still import package modules |
+| Size | Dominated by Python/converter/Qt stack; actual installed folder should be measured on Windows | Some additional Quick/QML plugins; not an Electron/WebView runtime | Python converter runtime and Qt host DLLs remain; dropping PySide bindings requires adapting the pure-worker bootstrap |
 | Reuse/maintenance | Lowest risk, all existing lifecycle tests | Moderate new UI adapter, shared state/controller/worker, reversible selection | Highest migration/test burden; code reuse mostly workers and data contracts |
 | Windows 11 | User-reported working; detailed acceptance queues remain | D3D11/RHI default documented; native graphics/focus/DPI acceptance required | Supported by Qt, but entirely new host acceptance required |
 
@@ -150,12 +150,12 @@ perform application logic or mutate Qt GUI objects; benchmark observation must
 remain minimal/opt-in. GUI-thread afterAnimating is an earlier preparation
 boundary and must be labelled separately.
 
-Prototype results, visuals, native instructions and backend selection will be
-recorded below when implemented. The original renderer remains available.
+Prototype results and comparisons follow below; native instructions are in
+GLASS_UI.md. The original renderer remains available.
 
 ## Prototype and moving lens comparison
 
-The Quick prototype is a separate240px QQuickView/scene, using the existing
+The Quick prototype is a separate 240 px QQuickView/scene, using the existing
 RadialState and production ConversionJob. Real PNG → JPEG fixture conversion,
 keyboard navigation, Back/Escape, actual QML pointer dispatch, transient native
 hide and persistent result behavior pass on the software scenegraph. A QML
@@ -163,7 +163,7 @@ MouseArea's `wheel` signal shadowed the original context name; actual pointer
 coverage caught it, and the scene now resolves its session at the root.
 
 The raised capsule lens is retained geometry, r46..106, rotated along the shorter
-arc. Its145ms OutCubic motion,70ms appearance and120ms label emphasis animate
+arc. Its 145 ms OutCubic motion, 70 ms appearance and 120 ms label emphasis animate
 transforms/opacity rather than rebuilding paths or hit regions. The base/rim
 remains continuous, without adjacent doubled sector outlines. Reduced-motion
 and low-effects modes disable transitions; low-effects material is opaque.
@@ -180,36 +180,106 @@ material/text contrast >=4.5:1 over black and white in both themes/effect modes.
 It does not establish every real Windows backdrop, font or display condition.
 Regenerate with `scripts/render_glass_preview.py --output-dir docs/performance`.
 
-The following serial local runs use240px for **both** renderers,100 warm
-operations each, then a1.2s spawned CPU fixture while hover transitions continue.
+The final serial local runs use 240 px for **both** renderers, 100 warm
+operations each, then a 1.2 s spawned CPU fixture while hover transitions continue.
 [Widget report](performance/widgets240-comparison-linux.json),
-[Quick report](performance/quick-comparison-linux.json). The170px baseline above
+[Quick report](performance/quick-comparison-linux.json). The 170 px baseline above
 is retained separately. No Windows Explorer, real hardware input or GPU display
 was measured. Quick reports `GraphicsApi.Software`, not hardware acceleration.
 
-| Local observation | QWidget240 | Quick240 + lens |
+| Local observation | QWidget 240 | Quick 240 + lens |
 |---|---:|---:|
-| Fresh process to first render boundary | 138.39ms | 167.15ms |
-| UI imports | 84.45ms | 98.41ms |
-| Peak process RSS incl. fixture supervision | 65.75MiB | 92.81MiB |
-| Warm activation p95 | 1.279ms | 1.371ms |
-| Hover update boundary p95 | 1.285ms | 5.280ms |
-| Category change boundary p95 | 1.119ms | 6.763ms |
-| 5ms GUI heartbeat p95/max under spawned work | 5.746/6.742ms | 5.691/6.290ms |
-| Active lens frameSwapped intervals | not sampled | p50 15.973/p95 17.733/max21.905ms;67 frames |
+| Fresh process to first render boundary | 141.79 ms | 174.05 ms |
+| UI imports | 86.40 ms | 103.37 ms |
+| Peak process RSS incl. fixture supervision | 70.96 MiB | 100.45 MiB |
+| Warm activation p95 | 1.499 ms | 1.486 ms |
+| Hover update boundary p95 | 1.446 ms | 4.937 ms |
+| Category change boundary p95 | 1.255 ms | 6.462 ms |
+| 5 ms GUI heartbeat p95/max under spawned work | 5.739/5.977 ms | 5.623/5.797 ms |
+| Active lens frameSwapped intervals | not sampled | p50 16.068 / p95 17.768 / max 19.393 ms; 76 frames |
+| Hover during spawned work p95 (11 pulses) | 2.478 ms paint | 6.125 ms queued frame |
 
 **The boundaries differ:** QWidget samples paint dispatch completion, Quick
 samples `frameSwapped` (queued presentation). Quick's earlier GUI preparation
 stages are separately named `quick_*_to_sync`; those are not render completion.
 Do not interpret the table as proof that one renderer displays input N times
-faster. The software lens has roughly16ms median frame cadence, with outliers
-above16.67ms; it is **not** a verified locked60FPS result or Windows GPU result.
-Samples begin at the first110ms hover pulse;145ms transitions overlap later
+faster. The software lens has roughly 16 ms median frame cadence, with outliers
+above 16.67 ms; it is **not** a verified locked 60 FPS result or Windows GPU result.
+Samples begin at the first 110 ms hover pulse; 145 ms transitions overlap later
 pulses to exercise active motion without counting the pre-input idle gap.
 
-Quick adds approximately29ms fresh-process time and27MiB peak RSS in this local
+Quick adds approximately 32 ms fresh-process time and 29.5 MiB peak RSS in this local
 comparison. Its benefit is richer retained motion/material, not an established
 latency reduction. This is reasonable for an **explicit experimental opt-in**,
 not a default replacement. Keep QWidget available and default until Windows
 performance, focus, DPI and frozen bundle acceptance pass. C++ migration remains
 unjustified by the evidence gathered so far.
+
+
+## Final measurement checks and actual converter fixtures
+
+The final comparison includes source digests, Qt version, requested/actual
+graphics backend and CPU architecture/count in its raw reports. All runs were
+serial. Review found and fixed a potential native threaded-render timing race:
+a swap could credit input received after its scene synchronized. The probe and
+benchmark now bind requests at afterSynchronizing to that scene's subsequent
+frameSwapped. A deterministic regression test covers this ordering; native GPU
+execution is still pending. No GUI work or disk IO occurs in these opt-in render
+observers, and no Python frame callbacks are connected when tracing is off.
+
+The continuous-motion fixture also continues from the last warm pointer position,
+so its first pulse actually changes position. Earlier exploratory runs repeated
+that position and counted an idle gap as a long frame interval. No outliers were
+filtered to produce the final report. This reinforces why frame cadence requires
+clear activity/boundary definitions rather than assuming GPU=60FPS.
+
+A separate [real-engine fixture report](performance/conversion-fixtures-linux.json)
+uses generated inputs and the unchanged manager, validation, collision handling
+and fresh process supervisor. Three samples per route; all inputs remain intact
+and stages are cleaned. Reproduce with:
+
+```bash
+.venv-ui/bin/python scripts/benchmark_conversions.py --samples 3 --output /tmp/conversions.json
+```
+
+| Generated fixture | Direct transaction median | Fresh isolated transaction median |
+|---|---:|---:|
+| 1920x1080 RGBA PNG -> JPEG | 51.61 ms | 130.25 ms |
+| Simple three-page PDF -> PNG pages | 124.13 ms | 287.44 ms |
+| Short DOCX -> Markdown | 239.47 ms | 897.03 ms |
+
+Direct transactions include encoding/extraction, validation and publication,
+not a pure engine inner-loop measurement. Fixture-generation libraries were
+already imported in the parent. First direct MarkItDown was 743.73 ms, followed
+by 239.47/191.40 ms; fresh workers remained about 0.9 s. Differences include
+interpreter/engine imports, caches, process/IPC and native-pool policy—not just
+Python instructions. These tiny files cannot rank complex/scanned PDFs or native
+Windows throughput. Production always retains the isolated route; the benchmark
+does not move converters onto the GUI thread.
+
+Locally, startup/imports and real converter/worker initialization are therefore
+more substantial measured costs than warm UI dispatch. Current Windows Explorer
+latency remains unranked until recorded. A C++ UI host would not remove cold
+Python converter imports; optimize only a measured component, preserving worker
+isolation and cancellation safety. A smaller forwarding launcher could be a
+future startup experiment if native Send to measurements justify it, not a
+reason to port the complete application now.
+
+## Experimental integration and native handoff
+
+Quick is selectable via --ui-backend quick or FILEWHEEL_UI_BACKEND; widgets
+remains default and an explicit override. Recoverable import/QML-load failures
+fall back, with failed view cleanup. The optional --self-test --ui-backend quick
+checks actual nonblank rendering and alpha in addition to converter fixtures.
+Project QML resources are in the Python wheel/spec, with the pinned QtQml hook
+responsible for native QML plugin collection. A broad hook can increase payload:
+source resource checks do not measure the final Windows folder or prove it runs.
+
+For real EXE process-to-first-render measurement, scripts/benchmark_launch.py
+supplies a fresh external monotonic origin; it records launch_to_paint or
+launch_to_quick_frame once. Resident traces additionally separate
+resolver_to_candidate, quick_*_to_sync and quick_*_to_frame. Confirmation delay
+is not part of renderer latency. Timing is bounded/default-off and never
+overwrites an existing output. Full Windows commands, UI/focus/DPI acceptance,
+reduced effects and rollback are in [GLASS_UI.md](GLASS_UI.md). No Windows-native
+benchmark, frozen Quick run or touchpad/cancellation acceptance was performed.

@@ -5,8 +5,11 @@ exercise existing UI code; the declared preview registry attests no converter.
 """
 
 import argparse
+import hashlib
 import json
 import os
+import platform
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -59,7 +62,7 @@ def worker(iterations, backend, diameter):
     import_started = monotonic()
     from pathlib import PureWindowsPath
 
-    from PySide6.QtCore import QEvent, QEventLoop, QPointF, Qt, QTimer
+    from PySide6.QtCore import QEvent, QEventLoop, QPointF, Qt, QTimer, qVersion
     from PySide6.QtGui import QMouseEvent
     from PySide6.QtWidgets import QApplication
 
@@ -78,26 +81,39 @@ def worker(iterations, backend, diameter):
     else:
         popup = RadialPopup(point_mapper=lambda point, screens: point, diameter=diameter)
     swap_times = []
+    rendered = {}
+    quick_stages = {'activation': 'quick_present_to_frame', 'hover': 'quick_move_to_frame',
+                    'level': 'quick_choose_to_frame'}
     if backend == 'quick':
-        # Benchmark-only direct callback: clock/list append, no Qt GUI calls or IO.
-        popup.frameSwapped.connect(lambda: swap_times.append(monotonic()), Qt.ConnectionType.DirectConnection)
+        # Benchmark-only direct observer: timestamps/numeric counters, no GUI calls.
+        # The view records each input only after its scene synchronized. Do not
+        # credit an older frame that happens to swap after a new input arrives.
+        def swapped():
+            now = monotonic()
+            swap_times.append(now)
+            for stage in quick_stages.values():
+                version, _ = get_recorder().latest_sample(stage)
+                if version > rendered.get(stage, (0, 0))[0]:
+                    rendered[stage] = (version, now)
+        popup.frameSwapped.connect(swapped, Qt.ConnectionType.DirectConnection)
     graphics_api = str(popup.rendererInterface().graphicsApi()) if backend == 'quick' else 'QWidget raster'
     observed = {'activation': [], 'hover': [], 'level': []}
     target = TargetResolution(PureWindowsPath("C:/benchmark/preview.png"), 0,
                               (200, 200), monotonic(), source="shell_explicit")
 
     def observe(kind, operation):
-        before = len(swap_times)
+        stage = quick_stages.get(kind)
+        before = rendered.get(stage, (0, 0))[0]
         started = monotonic()
         operation()
         if backend == 'quick':
             deadline = monotonic() + .6
-            while len(swap_times) == before and monotonic() < deadline:
+            while rendered.get(stage, (0, 0))[0] == before and monotonic() < deadline:
                 app.processEvents()
                 sleep(.0005)
-            if len(swap_times) == before:
+            if rendered.get(stage, (0, 0))[0] == before:
                 raise RuntimeError('Quick did not queue a rendered frame')
-            observed[kind].append((swap_times[before] - started) * 1000)
+            observed[kind].append((rendered[stage][1] - started) * 1000)
         else:
             app.processEvents()
             app.processEvents()
@@ -127,7 +143,7 @@ def worker(iterations, backend, diameter):
     # Keep the scene active while the real spawned fixture works.
     hover_timer = QTimer()
     hover_timer.setInterval(110)
-    hover_index = [0]
+    hover_index = [iterations - 1]  # First pulse must differ from the last warm pointer position.
     def animate_hover():
         if animation_start[0] is None:
             animation_start[0] = len(swap_times)
@@ -170,6 +186,7 @@ def worker(iterations, backend, diameter):
         if not outcome or outcome[0][1] is not None:
             raise RuntimeError("Benchmark conversion fixture did not complete")
         child_isolated = job.worker_pid is not None and job.worker_pid != os.getpid()
+    during_work_rows = get_recorder().snapshot()[warm_start + len(warm_rows):]
     rows = warm_rows
     animation_swaps = swap_times[animation_start[0]:] if animation_start[0] is not None else []
     intervals = [(b - a) * 1000 for a, b in pairwise(animation_swaps)]
@@ -184,7 +201,23 @@ def worker(iterations, backend, diameter):
     popup.deleteLater()
     app.processEvents()
     ordered = sorted(heartbeat)
+    repository = Path(__file__).resolve().parents[1]
+    revision = None
+    git = shutil.which('git')
+    if git is not None:
+        try:
+            result = subprocess.run([git, '-C', str(repository), 'rev-parse', 'HEAD'],
+                                    capture_output=True, text=True, check=False, timeout=5)
+            revision = result.stdout.strip() if result.returncode == 0 else None
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    paths = ['src/filewheel/ui/popup.py', 'src/filewheel/ui/quick_popup.py',
+             'src/filewheel/ui/qml/GlassWheel.qml', 'src/filewheel/ui/qml/Lens.qml']
     return {
+        "qt_version": qVersion(), "machine": platform.machine(), "logical_cpus": os.cpu_count(),
+        "source_revision": revision,
+        "ui_source_sha256": {path: hashlib.sha256((repository / path).read_bytes()).hexdigest()
+                             for path in paths},
         "backend": backend, "diameter": diameter, "platform": sys.platform,
         "graphics_api": graphics_api,
         "reduced_motion": os.getenv('FILEWHEEL_REDUCED_MOTION') == '1',
@@ -198,6 +231,7 @@ def worker(iterations, backend, diameter):
         "first_paint_at": first_paint_at, "peak_rss_bytes": peak_rss_bytes(),
         "metrics": summarize(rows), "sample_count": len(rows),
         "cold_first_activation_metrics": summarize(cold_rows),
+        "during_work_metrics": summarize(during_work_rows),
         "heartbeat_spawned_conversion": {
             "samples": len(heartbeat), "interval_ms": 5,
             "p95_gap_ms": ordered[max(0, (len(ordered) * 95 + 99) // 100 - 1)]

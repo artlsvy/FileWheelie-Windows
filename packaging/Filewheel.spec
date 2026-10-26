@@ -24,7 +24,13 @@ root = Path(SPECPATH).resolve().parent
 binaries = []
 datas = [(str(root / "src/filewheel/platforms/windows/sendto_shortcut.ps1"),
           "filewheel/platforms/windows")]
+# Python package data is not sufficient for Analysis(entry.py). Preserve the
+# local relative QML path used by GlassPopup, including its Lens component.
+datas += [(str(path), "filewheel/ui/qml") for path in (root / "src/filewheel/ui/qml").glob("*.qml")]
 hiddenimports = collect_submodules("filewheel")
+# QtQml's pinned PyInstaller hook collects the installed Essentials QML plugin
+# tree; QML-only imports such as QtQuick.Shapes are not Python module names.
+hiddenimports += ["PySide6.QtQuick", "PySide6.QtQml"]
 
 # Dynamic imports and model/templates/native codecs are explicit. Standard
 # PyInstaller hooks handle numpy/pandas/lxml and PySide6 Essentials/qwindows.

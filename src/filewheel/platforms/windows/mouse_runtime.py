@@ -69,6 +69,8 @@ class _ReportingResolver:
     def resolve(self, event):
         timings = get_recorder()
         started = monotonic() if timings.enabled else None
+        if started is not None:
+            timings.record("mouse_queue_age", (started - event.timestamp) * 1000)
         try:
             return self.resolver.resolve(event)
         except Exception as error:  # noqa: BLE001 - sanitized worker/native boundary
@@ -99,6 +101,7 @@ class MouseRuntime:
         self._clock = _clock
         self._allow_injected_candidates = allow_injected_candidates is True
         self._current_event = None  # Worker-owned; binds evidence to the original hook event.
+        self._resolution_started = None
         self._events = Queue(maxsize=64)
         self._stop = Event()
         self._ready = Event()
@@ -206,6 +209,8 @@ class MouseRuntime:
             timings = get_recorder()
             if timings.enabled:
                 timings.record("candidate_from_event", (self._clock() - event.timestamp) * 1000)
+                if self._resolution_started is not None:
+                    timings.record("resolver_to_candidate", (monotonic() - self._resolution_started) * 1000)
             self._on_candidate(candidate)
 
     def _run_worker(self):
@@ -239,13 +244,13 @@ class MouseRuntime:
                 # The return stays on the worker and is never sent to the UI.
                 # Existing diagnostic resolver still returns None unconditionally.
                 timings = get_recorder()
-                if timings.enabled:
-                    timings.record("mouse_queue_age", (self._clock() - event.timestamp) * 1000)
+                self._resolution_started = monotonic() if timings.enabled else None
                 self._current_event = event
                 try:
                     controller.handle(event)
                 finally:
                     self._current_event = None
+                    self._resolution_started = None
         except Exception as error:  # noqa: BLE001 - sanitized worker/native boundary
             self._fail("mouse_worker", error)
         finally:

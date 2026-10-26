@@ -162,3 +162,17 @@ class PackagingTests(unittest.TestCase):
             self.assertIn("python", manifest)
             with patch.object(sys, "argv", args), self.assertRaises(FileExistsError):
                 module["main"]()
+
+    def test_quick_scene_and_native_qml_hooks_are_included(self):
+        import tomllib
+        from importlib.resources import files
+        package = files('filewheel.ui').joinpath('qml')
+        self.assertTrue(package.joinpath('GlassWheel.qml').is_file())
+        self.assertTrue(package.joinpath('Lens.qml').is_file())
+        self.assertIn('Lens {', package.joinpath('GlassWheel.qml').read_text())
+        metadata = tomllib.loads((ROOT / 'pyproject.toml').read_text())
+        self.assertIn('qml/*.qml', metadata['tool']['setuptools']['package-data']['filewheel.ui'])
+        spec = (PACKAGING / 'Filewheel.spec').read_text()
+        self.assertIn('"PySide6.QtQuick"', spec)
+        self.assertIn('"PySide6.QtQml"', spec)
+        self.assertIn('"filewheel/ui/qml"', spec)

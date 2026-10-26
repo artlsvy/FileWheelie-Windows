@@ -197,3 +197,33 @@ Confirmation uses the usual token expiry, cancellation and file revalidation
 and returns user_confirmed_candidate provenance. The flags do not prove which
 device or application injected input. No engine, hook suppression or selected-
 file inference is added. Native acceptance remains required.
+
+### Optional measured Quick backend (D-022)
+
+`ui/backend.py` selects QWidget by default, or GlassPopup via startup
+`--ui-backend quick` / FILEWHEEL_UI_BACKEND. Recoverable import/QML-load errors
+log locally and fall back to QWidget; failed Quick views clear their source and
+are scheduled for deletion. Native driver fatal errors require the documented
+Widget restart escape route. The selected owner renderer is not changed by IPC.
+
+GlassPopup is a QQuickView with a small QObject session over the same RadialState,
+TargetResolution and ConversionJob. No QQuickWidget, WebView, Canvas, desktop
+capture or converter rewrite is used. QtQuick Shapes retain a rounded annular
+lens; only transforms/opacity animate, independently of pure hit geometry.
+Selection is a transient popup; conversion/results are persistent topmost tools.
+Native hide is guarded against reentrant finish. Existing controller, injected
+consent, tray and one-owner routing are preserved.
+
+Timing is opt-in, fixed-stage, bounded in memory and flushed exclusively once.
+Default rendering has no Python frame callbacks. With timing enabled, Quick
+captures input batches at afterSynchronizing while the GUI is locked, then credits
+only that batch at frameSwapped. Later input cannot be credited to an older frame.
+Observers only use clocks, numeric records and short locks, never GUI/engine work
+or per-frame IO. afterAnimating preparation, Widget paint and queued presentation
+remain separately named boundaries. The native launch helper supplies a fresh
+external monotonic origin; it never force-stops a conversion/app on timeout.
+
+Local measurements, limitations, renderer comparisons and primary Qt references:
+PERFORMANCE_ARCHITECTURE.md. Native procedures and fallback: GLASS_UI.md. Project
+material/motion guidance: .agents/skills/filewheel-glass/SKILL.md. Quick remains
+experimental until real Windows DPI/focus/graphics/frozen acceptance passes.

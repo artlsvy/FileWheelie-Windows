@@ -1,4 +1,14 @@
 {
+  "qt_version": "6.12.0",
+  "machine": "x86_64",
+  "logical_cpus": 16,
+  "source_revision": "b3709232a1ca2b1935459012670c6b74aebaf755",
+  "ui_source_sha256": {
+    "src/filewheel/ui/popup.py": "01bdeaa11f71fee034e886159ef74a13c8d454131ebee8f8765b80fd5bdd108e",
+    "src/filewheel/ui/quick_popup.py": "8662c6e7d2c56f6fa97b8730ac19e71ea077d8656f43c3f0125bec1c03740e8e",
+    "src/filewheel/ui/qml/GlassWheel.qml": "b819456734c5af7f408ef2f3d897fb8a71eff900583bea275a180923905a444c",
+    "src/filewheel/ui/qml/Lens.qml": "d01f7e516d0c964c5e8a2d79e2a215264a0d09531145774a01b6720ef4e103f5"
+  },
   "backend": "quick",
   "diameter": 240,
   "platform": "linux",
@@ -9,69 +19,107 @@
   "observed_operations": {
     "activation": {
       "count": 100,
-      "p50_ms": 0.9664539998084365,
-      "p95_ms": 1.3707630000681092,
-      "max_ms": 2.0159330001661147
+      "p50_ms": 1.0799609990499448,
+      "p95_ms": 1.4864810000290163,
+      "max_ms": 2.050696999503998
     },
     "hover": {
       "count": 100,
-      "p50_ms": 4.571619000216742,
-      "p95_ms": 5.27954699964539,
-      "max_ms": 5.564541999774519
+      "p50_ms": 4.46968300093431,
+      "p95_ms": 4.937408999467152,
+      "max_ms": 5.080376000478282
     },
     "level": {
       "count": 100,
-      "p50_ms": 6.211496000105399,
-      "p95_ms": 6.762800999695173,
-      "max_ms": 7.120592000319448
+      "p50_ms": 6.092568999520154,
+      "p95_ms": 6.462121000367915,
+      "max_ms": 6.619374998990679
     }
   },
   "animation_frame_intervals": {
-    "count": 66,
-    "p50_ms": 15.97308400005204,
-    "p95_ms": 17.733156999838684,
-    "max_ms": 21.905485999923258
+    "count": 75,
+    "p50_ms": 16.06781400005275,
+    "p95_ms": 17.767765999451512,
+    "max_ms": 19.393347000004724
   },
-  "animation_frame_samples": 67,
+  "animation_frame_samples": 76,
   "qt_platform": "offscreen",
   "python": "3.14.4",
   "iterations": 100,
-  "imports_ms": 98.4066820001317,
-  "peak_rss_bytes": 97316864,
+  "imports_ms": 103.37161899951752,
+  "peak_rss_bytes": 105328640,
   "metrics": {
+    "quick_choose_to_frame": {
+      "count": 100,
+      "p50_ms": 6.0782629989262205,
+      "p95_ms": 6.447694999224041,
+      "max_ms": 6.60431699907349
+    },
     "quick_choose_to_sync": {
       "count": 100,
-      "p50_ms": 5.3372859997580235,
-      "p95_ms": 5.828166999890527,
-      "max_ms": 5.859254999904806
+      "p50_ms": 5.330574000254273,
+      "p95_ms": 5.56173699987994,
+      "max_ms": 5.837302000145428
+    },
+    "quick_move_to_frame": {
+      "count": 100,
+      "p50_ms": 4.318590999901062,
+      "p95_ms": 4.788689999259077,
+      "max_ms": 4.930965998937609
     },
     "quick_move_to_sync": {
       "count": 100,
-      "p50_ms": 3.5548209998523816,
-      "p95_ms": 4.100344000107725,
-      "max_ms": 4.115283000373893
+      "p50_ms": 3.5602609987108735,
+      "p95_ms": 3.6352320003061322,
+      "max_ms": 4.107565999220242
+    },
+    "quick_present_to_frame": {
+      "count": 100,
+      "p50_ms": 0.43753899990406353,
+      "p95_ms": 0.7908799998403993,
+      "max_ms": 1.3813749992550584
     },
     "quick_present_to_sync": {
       "count": 100,
-      "p50_ms": 0.07022199997663847,
-      "p95_ms": 0.09122099982050713,
-      "max_ms": 0.5090450003990554
+      "p50_ms": 0.07465999988198746,
+      "p95_ms": 0.1115180002670968,
+      "max_ms": 0.13820899948768783
     }
   },
-  "sample_count": 300,
+  "sample_count": 600,
   "cold_first_activation_metrics": {
+    "quick_present_to_frame": {
+      "count": 1,
+      "p50_ms": 4.0259329998662,
+      "p95_ms": 4.0259329998662,
+      "max_ms": 4.0259329998662
+    },
     "quick_present_to_sync": {
       "count": 1,
-      "p50_ms": 2.1462780000547355,
-      "p95_ms": 2.1462780000547355,
-      "max_ms": 2.1462780000547355
+      "p50_ms": 2.895847999752732,
+      "p95_ms": 2.895847999752732,
+      "max_ms": 2.895847999752732
+    }
+  },
+  "during_work_metrics": {
+    "quick_move_to_frame": {
+      "count": 11,
+      "p50_ms": 5.610908998278319,
+      "p95_ms": 6.125341000370099,
+      "max_ms": 6.125341000370099
+    },
+    "quick_move_to_sync": {
+      "count": 11,
+      "p50_ms": 5.256485999780125,
+      "p95_ms": 5.405705000157468,
+      "max_ms": 5.405705000157468
     }
   },
   "heartbeat_spawned_conversion": {
-    "samples": 253,
+    "samples": 254,
     "interval_ms": 5,
-    "p95_gap_ms": 5.69087900021259,
-    "max_gap_ms": 6.289572000241606,
+    "p95_gap_ms": 5.623201999696903,
+    "max_gap_ms": 5.796806000944343,
     "child_isolated": true
   },
   "limits": [
@@ -83,5 +131,5 @@
     "Offscreen defaults; use QT_QPA_PLATFORM for a native desktop comparison",
     "CPU fixture uses production ConversionJob; no real document conversion"
   ],
-  "cold_process_to_first_paint_ms": 167.1489680002196
+  "cold_process_to_first_paint_ms": 174.05186900032277
 }

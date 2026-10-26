@@ -1271,3 +1271,54 @@ seams/smoke checks, reusable native design skill and native validation instructi
 
 Phase3 final full Linux/offscreen suite: **500 tests /406 subtests passed**.
 Scoped Ruff and git diff --check passed. No native Windows run or push occurred.
+
+
+## Measured glass UI — final optional integration (2026-10-26)
+
+All four authorized stages are implemented: opt-in timing/architecture evidence,
+separate Quick prototype, moving annular lens, and selectable host integration
+with a reusable native design skill. QWidget remains the default; Quick is an
+explicit startup choice (`--ui-backend quick`), with recoverable load-error
+fallback and a `--ui-backend widgets` restart escape route. Existing one-owner
+tray/Send to routing, conversion jobs, candidate provenance and mandatory injected
+input confirmation remain intact. No converter engine or target policy changed.
+
+Final serial Linux comparison (both 240 px, 100 warm operations, Quick software
+scenegraph): Widget/Quick fresh process to first paint/queued frame
+141.79/174.05 ms; peak RSS 70.96/100.45 MiB; warm activation p95 1.499/1.486 ms.
+Quick active lens frame intervals: median 16.068, p95 17.768, max 19.393 ms,
+76 frames. GUI heartbeat p95 during a spawned CPU fixture: 5.739/5.623 ms for
+Widget/Quick with a 5 ms timer. These are different render completion boundaries,
+not native input/display latency or a locked 60 FPS claim. Real generated engine
+fixtures also measure isolated-process startup costs; see the raw reports and
+PERFORMANCE_ARCHITECTURE.md. Evidence supports retaining Python and evaluating
+Quick for richer visuals, not a whole-application language migration.
+
+Review caught and fixed frame attribution to unsynchronized input, reentrant
+native hide, a blank-frame smoke-test false positive and a benchmark idle-gap
+fixture issue. The final reports use synchronized frame batches and continuing
+pointer movement; no frame outliers were removed. Timing remains bounded,
+default-off and local, without names/points or per-frame writes.
+
+Actual final checks on Kubuntu, Python 3.14.4 / PySide6 6.12.0:
+
+- **514 tests and 406 subtests passed**, including actual QML pointer/keyboard,
+  stable geometry, opacity/contrast, consent/controller integration, real spawned
+  conversion, persistent result/cancellation/error and backend fallback checks.
+- Source `--self-test --ui-backend quick` passed: nonblank transparent-corner
+  software rendering, system LibreOffice discovery and all 11 conversion pairs.
+- Python wheel built successfully and includes both local QML resources.
+  PyInstaller spec includes QtQuick/QtQml hook entry points and local QML data.
+- Scoped Ruff, compilation, skill validation and diff checks passed. Repository-
+  wide Ruff retains 25 pre-existing findings in unchanged files; not a clean
+  whole-repository lint claim. Focused read-only review completed with no
+  remaining material findings after fixes.
+
+**WINDOWS_VALIDATION_REQUIRED:** No Windows EXE was built or run here. Native
+D3D11/laptop frame timing, focus/outside dismissal, mixed-monitor DPI, transparent
+compositing, frozen QML plugins/resources and repeated tray/Send to execution
+remain pending. Quick stays experimental. Existing D-020 large-PDF Cancel/retry/
+Quit and D-021 Precision Touchpad acceptance remain queued, not implicitly passed.
+Follow GLASS_UI.md for exact build, selection, measurement and rollback commands.
+No automatic Windows reduced-motion/high-contrast detection is claimed; explicit
+reduced-motion and low-effects modes are available. No push was performed.
