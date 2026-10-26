@@ -79,3 +79,10 @@ outputs on Windows. A shared false Failed/WinError109 completion status is fixed
 with narrow poll-EOF normalization; actual native status verification is next.
 The correction preserves real error/crash detection and never infers success
 from an existing output (NEXT_TASK.md).
+
+
+2026-10-26 acceptance: user reports the current source app works without new bugs,
+with correct completion status and responsive Windows during conversion. The
+WinError109 checkpoint is closed. Next recommended work is the existing G11
+native standalone build/acceptance, then optional packaged startup and G12 full
+portable LibreOffice verification. No urgent new converter/UI work is queued.

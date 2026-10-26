@@ -1075,3 +1075,20 @@ so the polling error bypassed the already received successful outcome.
   native Windows run by Codex or push was performed.
 
 Primary reference: [CPython 3.14 pipe implementation](https://github.com/python/cpython/blob/3.14/Lib/multiprocessing/connection.py).
+
+
+## 2026-10-26 — User accepts current Windows source build
+
+User reports no new bugs, correct conversions/completion status, responsive
+Windows during conversion, and satisfaction with the current UI. Record the
+poll-time WinError109 correction and normal source-build conversion workflow as
+WINDOWS-VERIFIED by user report. This does not certify every conversion pair,
+all DPI/monitor combinations or frozen packaging. No new runtime code is needed
+for this acceptance checkpoint; last automated suite remains 382 tests and
+398 subtests passed.
+
+Recommended next milestone is native G11 standalone onedir build/acceptance using
+the existing script/spec. Optional G12 full portable LibreOffice acceptance and
+existing startup/Send to integration on the packaged app follow. These remain
+unverified until run on Windows. No new feature implementation or push was
+performed in this planning turn.
