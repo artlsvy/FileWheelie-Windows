@@ -1422,3 +1422,29 @@ changed. Tests exercise actual shared jobs in Quick and Widget, busy rejection,
 progress collapse and pure category/output mappings. Full Linux suite **564 tests
 / 406 subtests passed**; scoped Ruff, compilation and whitespace checks pass.
 Next: C bounded offline Markdown inputs; no new format is claimed by B alone.
+
+
+## Phase 2 C — bounded offline Markdown inputs
+
+Actual registered additions: TXT/CSV/JSON/XML -> MD via useful local parsers;
+HTM/EPUB -> MD via pinned MarkItDown Python API; limited textual ZIP -> MD via a
+nonrecursive reader. Original five pairs remain. No new dependency installation,
+ML, cloud/plugin or unsupported XLS/MSG option. Quotas/limitations are recorded
+in CONVERTERS.md. Archive EOCD/central entries are bounded before allocation;
+preflight and parse share one bounded immutable snapshot. EPUB repacks validated
+members into stage rather than reopening the source.
+
+Focused review found and closed both archive snapshot TOCTOU and cooperative-only
+wall deadline gaps. ZIP/EPUB now have optional per-suffix supervisor deadlines
+before publication, including startup; timeout is failure with backend/operation,
+not cancellation. The final permit is rechecked, and a permitted publisher is
+never killed. Unrelated existing formats get no new timeout. Actual spawned tests
+cover uncooperative encoders, slow permitted publication and user cancellation.
+
+Full Linux suite **601 tests / 406 subtests passed**; scoped Ruff, compilation and
+diff checks pass. Actual fixture contents, Unicode, collisions, corrupt inputs,
+DTD/XXE, ratio/expanded/member/directory quotas, traversal/links/nesting, CRC,
+cancellation and no-network paths are covered. Independent review reports no
+remaining material blockers; existing worker/cancel regressions independently
+pass. No native Windows new-format or frozen run occurred. Next is D Pandoc and
+Markdown output formats, then E packaging/regression validation.

@@ -130,3 +130,6 @@ Phase 1 was explicitly accepted. Continue B–E without another approval hold.
 
 Phase 2 B: installed-capability To MD direct / From MD format navigation shared
 by both renderers is checked. Continue C offline inputs, D Pandoc, E packaging.
+
+Phase 2 C: bounded local structured inputs, HTM/EPUB Python API and text-only ZIP
+are implemented/actual-fixture-tested (601 tests/406 subtests). Continue D/E.

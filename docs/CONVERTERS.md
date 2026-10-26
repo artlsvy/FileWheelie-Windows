@@ -147,3 +147,41 @@ not assumed to require LibreOffice. Preserve the source and inspect the named lo
 Portable LibreOffice prefers a complete `tools/libreoffice` tree, then falls
 back to a separate system installation. See [PORTABLE_LIBREOFFICE.md](PORTABLE_LIBREOFFICE.md)
 for validation/build commands and the remaining Windows bundle acceptance.
+
+## Additional local Markdown inputs (Phase 2 C)
+
+Structured Markdown engine supports TXT, CSV, JSON and XML without loading the
+full extraction pipeline. TXT becomes fenced text; CSV becomes escaped Markdown
+tables; JSON is parsed/pretty-printed in a JSON fence; XML becomes a readable
+hierarchical structure with attributes/text. Inputs accept UTF-8 or BOM-marked
+UTF-16, with binary/control-data rejection. Limits: 8 MiB input, 16 MiB output,
+CSV 20,000 rows/128 columns, JSON/XML depth 64 and 100,000 nodes. DTD/entities are
+rejected through defusedxml, not expanded.
+
+Pinned MarkItDown 0.1.9 also handles HTM through HtmlConverter and EPUB through
+EpubConverter, with built-ins/plugins disabled and network access rejected.
+EPUB is preflighted and repacked from validated immutable member bytes before
+upstream extraction; the source archive is never reopened after validation.
+Its package/spine/XML/resources must be local and consistent. Extraction is
+lossy; no OCR, image vision or audio transcription is offered.
+
+ZIP -> MD is a deliberately limited textual archive conversion: TXT, CSV, JSON,
+XML, MD, HTML and HTM members only. No extraction to arbitrary filesystem paths;
+no nested archives or binary attachments. Unsupported members fail the whole job.
+Limits: 16 MiB compressed snapshot, 32 MiB expanded total, 8 MiB per member,
+128 members (512 for EPUB), 100:1 ratio and 256 KiB central directory. EOCD and
+actual directory records are checked before ZipInfo allocation; parsing/CRC reads
+use the same immutable snapshot. Paths, duplicate/case-colliding names, symlinks,
+encryption, split archives, ZIP64 and unsupported compression are rejected.
+
+ZIP/EPUB production jobs have a 10 s supervisor-enforced pre-publication budget,
+including worker startup, plus owned-tree reaping/cleanup time. It reports a
+failure, not user cancellation. Once output publication is permitted, the worker
+is never killed by that timer. Direct engine tests/calls additionally check
+cooperative deadlines; the production process supervisor is the hard bound.
+Existing PDF/DOCX/other engines have no new archive timeout policy.
+
+Legacy XLS and Outlook MSG remain unimplemented/unexposed: their optional
+xlrd/olefile dependencies and representative fixtures are not part of the locked
+runtime. MarkItDown's unrestricted recursive ZipConverter is not enabled. No new
+ML model, plugin, network service or markitdown[all] dependency is introduced.

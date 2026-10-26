@@ -53,10 +53,13 @@ class Registry:
 
 
 def default_registry() -> Registry:
+    from filewheel.converters.archive_markdown import ArchiveMarkdownEngine
     from filewheel.converters.images import PillowEngine
     from filewheel.converters.markdown import MarkItDownEngine
     from filewheel.converters.office import LibreOfficeEngine
     from filewheel.converters.pdf_docx import PdfDocxEngine
     from filewheel.converters.pdf_images import PdfImagesEngine
+    from filewheel.converters.structured_markdown import StructuredMarkdownEngine
 
-    return Registry((PillowEngine(), PdfDocxEngine(), MarkItDownEngine(), LibreOfficeEngine(), PdfImagesEngine()))
+    return Registry((PillowEngine(), PdfDocxEngine(), MarkItDownEngine(), LibreOfficeEngine(),
+                     PdfImagesEngine(), StructuredMarkdownEngine(), ArchiveMarkdownEngine()))

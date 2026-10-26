@@ -26,6 +26,7 @@ from filewheel.converters.base import (
     check_cancel,
 )
 from filewheel.converters.debugging import record_failure
+from filewheel.converters.registry import Registry
 
 MAX_PACKET_BYTES = 16 * 1024 * 1024
 MAX_OUTPUTS = 10000
@@ -252,6 +253,24 @@ def _stop_owned_worker(process):
         raise ConversionError('Conversion worker could not be stopped; close Filewheel and retry')
 
 
+def _execution_deadline(manager, source, extension):
+    """Optional engine/suffix budget; unrelated legacy conversions are unchanged."""
+    if not isinstance(getattr(manager, 'registry', None), Registry):
+        return None  # Explicit injected process/test seams have no engine budget.
+    capability = next((c for c in manager.registry.capabilities
+                       if c.input_extension.lower() == Path(source).suffix.lower()
+                       and c.output_extension.lower() == extension.lower()), None)
+    if capability is None:
+        return None  # Preserve the normal child-side unsupported-input failure.
+    engine = manager.registry.engines[capability.engine_id]
+    seconds = getattr(engine, 'execution_timeouts', {}).get(Path(source).suffix.lower())
+    if seconds is None:
+        return None
+    if type(seconds) not in (int, float) or not math.isfinite(seconds) or not 0 < seconds <= 600:
+        raise ConversionError('Invalid converter execution timeout')
+    return monotonic() + seconds
+
+
 def run_in_process(manager, source, extension, *, progress, cancel, on_started=None,
                    _context=None, _target=_child, _cancel_grace=2.):
     """Supervise one owned child off the GUI thread, then return after it exits.
@@ -261,6 +280,7 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
     manager can finish or roll back its atomic links. Outcome follows cleanup.
     """
     check_cancel(cancel)
+    execution_deadline = _execution_deadline(manager, source, extension)
     context = multiprocessing.get_context('spawn') if _context is None else _context
     receive, send = context.Pipe(duplex=False)
     child_cancel = context.Event()
@@ -275,9 +295,18 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
     publication_allowed = publish_ready = forced_cancel = False
     stop_failed = False
     stopping_since = None
+    timed_out = False
 
     def stop_if_overdue():
-        nonlocal stopping_since, forced_cancel, stop_failed
+        nonlocal stopping_since, forced_cancel, stop_failed, timed_out, failure
+        if (not publication_allowed and execution_deadline is not None
+                and monotonic() >= execution_deadline and failure is None
+                and not cancel.is_set() and not child_cancel.is_set()):
+            timed_out = True
+            child_cancel.set()
+            # The execution budget already elapsed: no extra uncooperative
+            # encoder grace, but owned-tree reaping/cleanup is still mandatory.
+            stopping_since = monotonic() - _cancel_grace
         if cancel.is_set() or child_cancel.is_set():
             child_cancel.set()
             if stopping_since is None:
@@ -290,7 +319,7 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
                     failure = ConversionError('Could not stop conversion worker; temporary files retained')
                     failure.__cause__ = error
                     raise _supervisor_failure(failure, manager, source, extension, 'stop_worker') from error
-                forced_cancel = True
+                forced_cancel = not timed_out
                 return True
         return False
 
@@ -356,7 +385,11 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
                         if publish_ready:
                             raise ConversionError('Duplicate publication request')
                         publish_ready = True
-                        if not cancel.is_set():
+                        # Decode/dispatch may cross the deadline after polling.
+                        # Recheck immediately before granting publication.
+                        if stop_if_overdue():
+                            break
+                        if not cancel.is_set() and not timed_out:
                             publication_allowed = True
                             publication_permit.set()
                     else:
@@ -369,6 +402,9 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
             elif not process.is_alive():
                 break
         process.join()  # Outcome is emitted only after owned-child cleanup/exit.
+        if timed_out:
+            failure = ConversionError('Archive processing timed out before publication')
+            raise _supervisor_failure(failure, manager, source, extension, 'timeout')
         if failure is not None:
             raise _supervisor_failure(failure, manager, source, extension, 'worker_protocol')
         if forced_cancel:

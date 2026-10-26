@@ -1,17 +1,21 @@
 """Offline MarkItDown Python API for explicitly supported local document types."""
 
 import os
+import posixpath
 import re
 import sys
 from importlib.util import find_spec
 from pathlib import Path
 from threading import Event
+from typing import ClassVar
+from urllib.parse import unquote, urlsplit
 from xml.etree import ElementTree
 from zipfile import BadZipFile, ZipFile
 
 # Must precede any MarkItDown/Magika/ONNX import, including lazy conversions.
 os.environ["ORT_DISABLE_TELEMETRY"] = "1"
 
+from filewheel.converters.archive_safety import ArchiveLimits, read_archive, safe_member_name
 from filewheel.converters.base import (
     Capability,
     ConversionError,
@@ -26,6 +30,8 @@ _DEPENDENCIES = {
     ".pptx": ("pptx",),
     ".xlsx": ("openpyxl", "pandas"),
     ".html": ("bs4",),
+    ".htm": ("bs4",),
+    ".epub": ("bs4", "defusedxml"),
 }
 _OFFICE_DOCUMENTS = {
     ".docx": "word/document.xml",
@@ -51,6 +57,7 @@ class RejectRequestsSession:
 
 class MarkItDownEngine:
     engine_id = "markitdown"
+    execution_timeouts: ClassVar[dict[str, float]] = {".epub": 10.}
 
     def __init__(self, *, max_bytes: int = 50 * 1024 * 1024, max_pages: int = 100):
         if (
@@ -85,6 +92,18 @@ class MarkItDownEngine:
             raise ConversionError("Document exceeds the Markdown extraction size limit")
         progress(0.1, "Checking document")
         warnings = self._check_document(source, cancel)
+        local_source = source
+        if source.suffix.lower() == '.epub':
+            members = self._check_epub(source, cancel)
+            local_source = workdir / 'validated.epub'
+            # Upstream reads only the immutable validated member snapshot, never
+            # an original archive that could change after preflight.
+            with ZipFile(local_source, 'w') as archive:
+                archive.writestr('mimetype', members['mimetype'])
+                for name, data in members.items():
+                    check_cancel(cancel)
+                    if name != 'mimetype':
+                        archive.writestr(name, data)
         check_cancel(cancel)
         # Defense in depth if another dependency imported ONNX before this engine.
         os.environ["ORT_DISABLE_TELEMETRY"] = "1"
@@ -94,6 +113,7 @@ class MarkItDownEngine:
         from markitdown import MarkItDown
         from markitdown.converters import (
             DocxConverter,
+            EpubConverter,
             HtmlConverter,
             PdfConverter,
             PptxConverter,
@@ -106,6 +126,8 @@ class MarkItDownEngine:
             ".pptx": PptxConverter,
             ".xlsx": XlsxConverter,
             ".html": HtmlConverter,
+            ".htm": HtmlConverter,
+            ".epub": EpubConverter,
         }
         session = RejectRequestsSession()
         progress(0.35, "Extracting Markdown locally")
@@ -114,7 +136,7 @@ class MarkItDownEngine:
                 enable_builtins=False, enable_plugins=False, requests_session=session
             )
             converter.register_converter(local_converters[source.suffix.lower()]())
-            result = converter.convert_local(source)
+            result = converter.convert_local(local_source)
             markdown = result.markdown
         except ConversionError:
             raise
@@ -181,7 +203,7 @@ class MarkItDownEngine:
                 warnings.append(
                     "Some PDF pages have no extractable text; scanned content requires OCR."
                 )
-        elif suffix == ".html":
+        elif suffix in (".html", ".htm"):
             # Restrict this engine to actual HTML, not arbitrary renamed binaries
             # or remote URL targets that MarkItDown also supports elsewhere.
             prefix = source.read_bytes()[:65536].decode("utf-8-sig", errors="replace")
@@ -192,6 +214,52 @@ class MarkItDownEngine:
             ):
                 raise ConversionError("The input does not contain recognizable HTML")
         return warnings
+
+    def _check_epub(self, source, cancel):
+        from defusedxml import ElementTree as SafeXML
+        from defusedxml.common import DefusedXmlException
+        members = read_archive(source, limits=ArchiveLimits(members=512), cancel=cancel)
+        if members.get('mimetype', b'').strip() != b'application/epub+zip':
+            raise ConversionError('Input is not an EPUB archive')
+        try:
+            container = SafeXML.fromstring(members['META-INF/container.xml'], forbid_dtd=True)
+            roots = [node for node in container.iter() if node.tag.split('}')[-1] == 'rootfile']
+            if not roots:
+                raise ConversionError('EPUB has no package root')
+            opf = safe_member_name(roots[0].get('full-path', ''))
+            package = SafeXML.fromstring(members[opf], forbid_dtd=True)
+            manifest = {}
+            for node in package.iter():
+                check_cancel(cancel)
+                if node.tag.split('}')[-1] != 'item':
+                    continue
+                identity, href = node.get('id'), node.get('href', '')
+                if not identity or identity in manifest:
+                    raise ConversionError('EPUB manifest has missing or duplicate identifiers')
+                parsed = urlsplit(href)
+                if parsed.scheme or parsed.netloc or parsed.path.startswith('/'):
+                    raise ConversionError('External EPUB resources are unsupported')
+                path = safe_member_name(posixpath.normpath(posixpath.join(posixpath.dirname(opf), unquote(parsed.path))))
+                manifest[identity] = (path, node.get('media-type'))
+            if any(name.lower().endswith(('.zip', '.epub', '.docx', '.pptx', '.xlsx')) for name in members):
+                raise ConversionError('Nested archives inside EPUB are unsupported')
+            spine = [node.get('idref') for node in package.iter() if node.tag.split('}')[-1] == 'itemref']
+            if not spine:
+                raise ConversionError('EPUB has no readable spine')
+            for identity in spine:
+                check_cancel(cancel)
+                path, media = manifest[identity]
+                if path not in members or media not in ('application/xhtml+xml', 'text/html'):
+                    raise ConversionError('EPUB spine contains missing or unsupported content')
+                if media == 'application/xhtml+xml':
+                    # Standard XHTML DOCTYPE is allowed, but entity declarations
+                    # and external entities are rejected before HTML extraction.
+                    SafeXML.fromstring(members[path], forbid_entities=True, forbid_external=True)
+                elif re.search(r'<!\s*ENTITY', members[path].decode('utf-8-sig'), re.IGNORECASE):
+                    raise ConversionError('EPUB content entities are unsupported')
+            return members
+        except (KeyError, SafeXML.ParseError, DefusedXmlException, ValueError) as error:
+            raise ConversionError('EPUB package is corrupt, unsafe or incomplete') from error
 
     def validate(self, output: EngineOutput) -> None:
         try:

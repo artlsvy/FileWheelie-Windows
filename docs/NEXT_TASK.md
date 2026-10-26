@@ -17,6 +17,7 @@ E. Packaging/resources/dependency locks, real fixtures, regression review/docs.
 
 Milestone A is implemented and checked: 560 tests/406 subtests, real QML pill
 proof and 100/125/150% checks; see PROGRESS_UX.md. B navigation is also implemented and checked (564 tests/406 subtests).
-Next is C bounded offline Markdown inputs, then D–E. Read working tree on resume to preserve edits. Do not claim native overlay/frozen behavior from Linux tests.
+C is implemented/checked (601 tests/406 subtests): structured text, HTM/EPUB
+and text-only ZIP with supervisor deadlines. Next is D Pandoc MD outputs, then E. Read working tree on resume to preserve edits. Do not claim native overlay/frozen behavior from Linux tests.
 Preserve controller, Mouse3/touchpad consent, Send to, cancellation/publication
 safety and the QWidget fallback. Existing D-020/D-021 acceptance remains pending.

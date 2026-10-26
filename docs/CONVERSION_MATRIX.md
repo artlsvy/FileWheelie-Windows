@@ -21,3 +21,16 @@ Capability categories: `editable`, `extracted-content`, `rasterized`, `transcode
 | audio/video | common formats | FFmpeg | transcoded | Optional |
 
 Rules: No extension renaming as conversion; file extension is only a hint, verify input file type when feasible. Local/offline only. Do not expose unsupported targets or pretend extraction is visually lossless. Licensing is not a primary architecture driver for private use.
+
+
+Phase 2 C additions (implemented/actual Linux fixtures; Windows acceptance pending):
+
+| Input | Output | Engine | Limits/status |
+|---|---|---|---|
+| TXT, CSV, JSON, XML | MD | structured-markdown | Useful fenced text, escaped tables, structured JSON/XML; bounded, no network |
+| HTM, EPUB | MD | MarkItDown 0.1.9 | Actual Python API; EPUB archive/spine preflight and validated snapshot |
+| ZIP (textual members only) | MD | archive-markdown | No nesting/binaries/extraction; strict quotas and production pre-publication timeout |
+| XLS, MSG | MD | none registered | Optional future work; dependencies/real fixtures not introduced |
+
+See CONVERTERS.md for exact quotas and known lossy behavior. This does not enable
+MarkItDown image OCR, audio transcription, Azure, YouTube or third-party plugins.
