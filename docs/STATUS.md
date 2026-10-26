@@ -1228,3 +1228,22 @@ Touchpad and cancellation native acceptance queues above remain open.
 Phase1 checks: full suite482 tests /406 subtests passed. After tightening timing
 output to exclusive, once-only flush (never overwrite an existing file/link),
 27 focused timing/runtime/UI tests passed; scoped Ruff and diff checks passed.
+
+## Performance phase2 — separate Qt Quick prototype
+
+A runnable GlassPopup uses the existing RadialState, TargetResolution and
+ConversionJob/ConversionManager seam. No default renderer was changed. The
+240px transparent QQuickView renders a220px circular surface with stable logical
+hit regions, keyboard/back/Escape, outside/focus selection dismissal and persistent
+conversion/results. It requests alpha before Quick initialization, reuses native
+monitor mapping/clamping, and ships local QtQuick/Shapes QML (no Controls/browser,
+Canvas, desktop sampling or shader dependency). Source package data includes QML.
+The separate demo is preview-only on Linux, or validates an explicit Windows
+--file through the existing controller before enabling real conversions.
+
+Actual Linux software-scenegraph load/grab produced /tmp/filewheel-glass-phase2.png:
+240x240, corner alpha0; default shape is circular, not rectangular. Ten new
+geometry/QML/navigation/focus/actual spawned PNG-conversion tests pass. Current
+hover is static; the moving lens is deliberately the next separate commit.
+Qt preparation timing is explicitly distinct from actual frame presentation.
+No native Windows focus/DPI/compositor or frozen Quick execution was tested.

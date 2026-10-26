@@ -29,6 +29,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "filewheel.platforms.windows" = ["*.ps1"]
+"filewheel.ui" = ["qml/*.qml"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

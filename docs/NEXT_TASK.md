@@ -15,3 +15,8 @@ Prior native queues remain: Precision Touchpad opt-in mandatory confirmation
 (D-021), and large-PDF Cancel -> retry -> tray Quit (D-020). No Windows native
 results for those newer changes have been reported. Existing Send to/physical
 Mouse3 and earlier UI/normal conversions are user-reported working. Do not push.
+
+Phase2 source prototype is now runnable:
+`QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software PYTHONPATH=src .venv-ui/bin/python -m filewheel.ui.glass_demo --screenshot /tmp/glass.png`.
+Ten actual QML/geometry/worker tests pass. Next: staged moving lens, comparison
+benchmark/visual QA, then opt-in integration and native resource validation.
