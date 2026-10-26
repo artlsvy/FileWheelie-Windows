@@ -1,20 +1,19 @@
-# Next task: Windows EXE cancellation acceptance
+# Next task: native Precision Touchpad acceptance
 
-Current fix (D-020) addresses Cancel hanging during a large PDF library call,
-which also prevented tray Quit. Parent-owned staging plus a publication permit
-allows a stuck pre-publication worker to be stopped after a two-second grace
-period. Saving is never forcibly interrupted. OS termination and cleanup can
-add time beyond that grace; errors are reported rather than pretending cleanup
-finished. Mouse3 targeting, UI appearance, Send to and converter pairs are unchanged.
+D-021 implements an explicit opt-in for injected middle-clicks that are not
+marked lower-integrity. Physical Mouse3 and Send to retain their behavior.
+Every injected candidate requires the exact-path confirmation dialog, regardless
+of the normal physical-candidate confirmation preference. Explorer provenance,
+geometry, active tab, filesystem/path corroboration, freshness and snapshot
+checks remain mandatory. The flag does not identify the injecting device/app.
 
-Linux: 402 tests /406 subtests passed; changed-file Ruff/compilation checks pass.
-Repository-wide Ruff still has 31 findings in unchanged files. Review found no
-material blockers; a detached POSIX Office session has a residual cleanup limit
-if its worker never reaches cooperative cleanup (STATUS.md). Native Windows
-termination, locked-stage cleanup and EXE behavior are not proved by Linux.
+Implemented/Linux-tested, **not yet Windows-verified**. Full suite: 478 tests
+and 406 subtests passed. Changed-file Ruff/compilation/diff checks pass; 25
+pre-existing lint findings remain in unchanged files. Focused review found no
+material issues. No push was performed.
 
-Exit the old Filewheel instance before rebuilding. From the updated Windows
-checkout, use the existing Python 3.14 build recipe:
+After transferring the new commit to the Windows checkout, exit the old app and
+rebuild the EXE (an old EXE does not load new source):
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1
@@ -22,25 +21,33 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-windows.
 & .\dist\Filewheel\Filewheel.exe --tray
 ```
 
-Use the whole rebuilt onedir folder when running from another location.
-Rebuilding is required; an already-built EXE does not load updated source.
+Laptop acceptance:
+1. Keep Windows Settings configured for three-finger tap -> Middle mouse button.
+2. In the tray, turn Experimental Mouse3 off if running. Wait for shutdown, then
+   check Touchpad middle-click (always confirm), and enable Experimental Mouse3.
+   The touchpad setting is session-only and off after a fresh app launch.
+3. Disable Confirm file before opening to test the mandatory injected override.
+   Three-finger tap a regular Explorer file. Verify the dialog shows its exact
+   path before any wheel or conversion appears. Cancel must do nothing; repeat
+   and Use this file must open the correct wheel and normal converter workflow.
+4. Tap blank space, a folder and a browser hyperlink. Filewheel must not propose
+   a target there; normal browser middle-click behavior should remain intact.
+5. Stop Mouse3, uncheck the touchpad option and restart Mouse3. Injected taps
+   should again be ignored. A physical middle button must still work.
+6. Repeat physical Mouse3 with touchpad opt-in on; the physical confirmation
+   preference must be respected. Verify explicit Send to still works.
 
-Acceptance sequence:
-1. Enable Experimental Mouse3; start the original slow large PDF conversion.
-2. Cancel while it is working. Expect Stopping briefly, then Cancelled; keep
-   moving the mouse and verify the desktop remains responsive. Verify the
-   conversion worker/its children exit and no private .filewheel-* stage remains.
-3. Retry exactly the same file from the same open Explorer folder. Verify its
-   output opens, the source is unchanged, and previous outputs remain intact.
-4. Repeat Cancel, immediately choose tray Quit, then relaunch. It should release
-   the existing instance and start normally, without needing Task Manager.
-5. Repeat a normal conversion and an explicit Send to invocation.
+Lower-integrity flags are always rejected; do not enable a lower-integrity
+bypass if the particular laptop gesture remains rejected. Existing standalone
+diagnostics keep their physical-only policy; they do not enable the tray opt-in.
+If necessary, use a narrowly evidenced follow-up to determine the remaining
+rejection; do not weaken candidate identity/provenance safeguards.
 
-If Mouse3 still ignores the file until its folder is reopened, record the actual
-rejection/log and compare with Send to using the same path. That symptom is not
-yet diagnosed; do not weaken file identity checks or guess a selected file.
+Keep the separate previous acceptance queue: cancel the original slow large PDF,
+retry the same file without reopening Explorer, then Cancel -> tray Quit ->
+relaunch. D-020's bounded pre-publication cancellation was Linux-tested; its
+native EXE results have not been reported here.
 
-No extra conversion formats or packaging changes are queued by this bug fix.
-Full clean-machine G11 and optional G12 portable Office acceptance remain pending
-as described in PACKAGING.md and PORTABLE_LIBREOFFICE.md. Do not push without
-separate authorization.
+Full clean-machine packaging/portable Office checks remain in PACKAGING.md and
+PORTABLE_LIBREOFFICE.md. No new formats, broad diagnostics or UI redesign are
+authorized by this change. Do not push without separate authorization.

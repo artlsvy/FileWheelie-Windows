@@ -2,6 +2,7 @@ import os
 import tempfile
 import time
 import unittest
+from dataclasses import replace
 from pathlib import PureWindowsPath
 from unittest.mock import patch
 
@@ -20,7 +21,8 @@ from filewheel.core.explicit_paths import FileCheck
 
 
 class FakeRuntime:
-    def __init__(self, candidate, error):
+    def __init__(self, candidate, error, *, allow_injected_candidates=False):
+        self.allow_injected_candidates = allow_injected_candidates
         self.gate = CandidateGate()
         self.threads_alive = False
         self.running = False
@@ -144,8 +146,8 @@ class DesktopConsentTests(unittest.TestCase):
 
     def test_hook_failure_before_startup_finished_stays_disabled(self):
         class FailedAfterStart(FakeRuntime):
-            def __init__(self, candidate, error):
-                super().__init__(candidate, error)
+            def __init__(self, candidate, error, *, allow_injected_candidates=False):
+                super().__init__(candidate, error, allow_injected_candidates=allow_injected_candidates)
                 self.error = error
             def start(self):
                 self.running = False
@@ -225,3 +227,95 @@ class DesktopConsentTests(unittest.TestCase):
         finally:
             host.popup.deleteLater()
             host.deleteLater()
+
+
+    def offer_injected(self):
+        self.desktop.set_confirmation(False)
+        self.desktop.touchpad_action.trigger()
+        self.enable()
+        now = time.monotonic()
+        candidate = ExperimentalCandidate(PureWindowsPath('C:/file.png'), (500, 300),
+                                          now-.1, now, native_flags=1)
+        self.desktop.runtime.gate.offer(candidate)
+        self.desktop.offer_candidate(candidate)
+        self.app.processEvents()
+        return candidate
+
+    def test_touchpad_is_opt_in_session_setting_and_locked_while_listening(self):
+        self.assertFalse(self.desktop.allow_injected_candidates)
+        self.assertFalse(self.desktop.touchpad_action.isChecked())
+        self.desktop.touchpad_action.trigger()
+        self.assertTrue(self.desktop.allow_injected_candidates)
+        self.enable()
+        self.assertTrue(self.desktop.runtime.allow_injected_candidates)
+        self.assertFalse(self.desktop.touchpad_action.isEnabled())
+        self.desktop.set_touchpad(False)  # Even programmatic changes cannot race a runtime.
+        self.assertTrue(self.desktop.allow_injected_candidates)
+        self.desktop.set_experiment(False)
+        self.assertIsNone(self.desktop.runtime)
+        self.assertTrue(self.desktop.touchpad_action.isEnabled())
+        self.desktop.touchpad_action.trigger()
+        self.assertFalse(self.desktop.allow_injected_candidates)
+
+    def test_injected_candidate_always_confirms_even_when_physical_preference_is_off(self):
+        with patch.object(self.desktop.popup, 'present', return_value=True) as present:
+            candidate = self.offer_injected()
+            present.assert_not_called()
+            self.assertIsNotNone(self.desktop.dialog)
+            self.assertEqual(self.inspections, [])
+            self.assertEqual(self.desktop.dialog.informativeText(), str(candidate.path))
+            self.assertNotEqual(self.desktop.dialog.defaultButton(), self.desktop.confirm_button)
+            QTest.mouseClick(self.desktop.confirm_button, Qt.MouseButton.LeftButton)
+            self.app.processEvents()
+        self.assertEqual(len(self.inspections), 1)
+        target = present.call_args.args[0]
+        self.assertEqual(target.path, candidate.path)
+        self.assertEqual(target.source, 'user_confirmed_candidate')
+        self.assertEqual(target.point, candidate.point)
+
+    def test_cancel_injected_confirmation_never_opens_or_inspects(self):
+        with patch.object(self.desktop.popup, 'present') as present:
+            self.offer_injected()
+            self.desktop.dialog.reject()
+            self.app.processEvents()
+        present.assert_not_called()
+        self.assertEqual(self.inspections, [])
+
+    def test_injected_confirmation_deleted_file_rejects_at_controller(self):
+        with patch.object(self.desktop.popup, 'present') as present:
+            self.offer_injected()
+            self.desktop.inspector = lambda path: FileCheck(False, False)
+            QTest.mouseClick(self.desktop.confirm_button, Qt.MouseButton.LeftButton)
+            self.app.processEvents()
+        present.assert_not_called()
+
+    def test_physical_candidate_keeps_direct_activation_with_touchpad_opt_in(self):
+        self.desktop.set_confirmation(False)
+        self.desktop.touchpad_action.trigger()
+        with patch.object(self.desktop.popup, 'present', return_value=True) as present:
+            candidate = self.offer()
+        self.assertIsNone(self.desktop.dialog)
+        self.assertFalse(candidate.requires_confirmation)
+        self.assertEqual(present.call_args.args[0].source, 'experimental_candidate')
+
+    def test_injected_queued_candidate_cannot_open_on_opt_out_host(self):
+        self.desktop.set_confirmation(False)
+        self.enable()
+        now = time.monotonic()
+        candidate = ExperimentalCandidate(PureWindowsPath('C:/file.png'), (500, 300), now-.1, now,
+                                          native_flags=1)
+        self.desktop.runtime.gate.offer(candidate)
+        with patch.object(self.desktop.popup, 'present') as present:
+            self.desktop.offer_candidate(candidate)
+        self.assertIsNone(self.desktop.dialog)
+        self.assertEqual(self.inspections, [])
+        present.assert_not_called()
+
+    def test_newer_candidate_invalidates_queued_injected_confirmation(self):
+        with patch.object(self.desktop.popup, 'present') as present:
+            candidate = self.offer_injected()
+            self.desktop.runtime.gate.offer(replace(candidate, token='newer-token'))
+            QTest.mouseClick(self.desktop.confirm_button, Qt.MouseButton.LeftButton)
+            self.app.processEvents()
+        present.assert_not_called()
+        self.assertEqual(self.inspections, [])

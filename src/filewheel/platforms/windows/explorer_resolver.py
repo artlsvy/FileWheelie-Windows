@@ -5,7 +5,7 @@ from time import monotonic
 
 from filewheel.core.diagnostic_checks import explorer_rejection
 from filewheel.core.index_mapping import assess_index_mapping
-from filewheel.core.models import MouseEvent, TargetResolution
+from filewheel.core.models import MouseEvent, TargetResolution, mouse_event_permitted
 from filewheel.platforms.windows.native import Native
 
 
@@ -21,7 +21,9 @@ def proven_target_from_evidence(event: MouseEvent, evidence: dict) -> None:
 class ExplorerTargetResolver:
     """Own UIA on MTA; optional Shell STA exchanges only diagnostic DTOs."""
 
-    def __init__(self, write_record, *, dry_run_mapping: bool = False):
+    def __init__(self, write_record, *, dry_run_mapping: bool = False,
+                 allow_injected_candidates: bool = False):
+        self._allow_injected_candidates = allow_injected_candidates is True
         self._native = Native()
         import comtypes.client
 
@@ -60,7 +62,8 @@ class ExplorerTargetResolver:
     def resolve(self, event: MouseEvent) -> TargetResolution | None:
         start = monotonic()
         self.counts["resolver_calls"] += 1
-        if event.injected:
+        allow_injected = getattr(self, "_allow_injected_candidates", False)
+        if not mouse_event_permitted(event, allow_injected=allow_injected):
             self.counts["injected"] += 1
             return None
         if start - event.timestamp > 0.5:
@@ -77,6 +80,7 @@ class ExplorerTargetResolver:
             "schema_version": 1, "sequence": event.sequence, "point": event.point,
             "timestamp_monotonic": event.timestamp, "window": window,
             "explorer_view": "unknown", "injected": event.injected,
+            "native_flags": event.native_flags,
             "resolved_path": None, "rejection": "mapping_unproven",
         }
         try:
@@ -94,19 +98,20 @@ class ExplorerTargetResolver:
                 record["snapshot_stable"] = (
                     identity_snapshot(again) == identity_snapshot(record["uia_ancestry"])
                 )
-                record["mapping"] = assess_index_mapping(record, now=monotonic())
+                record["mapping"] = assess_index_mapping(
+                    record, now=monotonic(), allow_injected_candidates=allow_injected)
                 record["rejection"] = record["mapping"]["rejection"]
             else:
                 record["shell_candidates"] = self._shell_evidence(event.window_id)
             # This intentionally returns None for every evidence combination.
             proven_target_from_evidence(event, record)
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001 - sanitize native evidence failures
             record["rejection"] = "evidence_error"
             record["error_type"] = type(error).__name__  # No arbitrary exception text.
         # A foreground/point-window race must discard payload, not just label it.
         try:
             unchanged = n.window_evidence(event.point) == window
-        except Exception:
+        except Exception:  # noqa: BLE001 - any window race discards evidence
             unchanged = False
         if not unchanged:
             record.pop("uia_ancestry", None)
@@ -127,7 +132,7 @@ class ExplorerTargetResolver:
                 return {"is_selected": None, "status": "unavailable"}
             selected = pattern.QueryInterface(self._selection_type).CurrentIsSelected
             return {"is_selected": bool(selected), "status": "observed"}
-        except Exception:
+        except Exception:  # noqa: BLE001 - optional diagnostic pattern
             return {"is_selected": None, "status": "unavailable_or_error"}
 
     def _uia_evidence(self, event: MouseEvent, expected_pid: int) -> list[dict]:

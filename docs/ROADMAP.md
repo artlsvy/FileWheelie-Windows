@@ -96,3 +96,13 @@ LibreOffice now polls cancellation. Linux suite: 402 tests /406 subtests; scoped
 Ruff/compilation pass. Native rebuilt-EXE Cancel -> same-file retry -> Quit
 acceptance is next. The folder-reopen symptom remains unconfirmed as the same
 issue; no Explorer evidence checks changed. See STATUS.md and NEXT_TASK.md.
+
+
+2026-10-26 touchpad follow-up (D-021): retain native injected/lower-integrity
+flags; add an off-by-default session tray setting for injected middle-clicks.
+Lower-integrity events remain rejected. Permitted injected events use all
+Explorer evidence checks and require exact-path consent through both UI and
+candidate gate; physical Mouse3/Send to are unchanged. Linux/offscreen suite:
+478 tests /406 subtests passed; scoped Ruff and compilation pass, focused review
+found no material issues. Laptop three-finger tap and physical Mouse3 native
+acceptance is next; this fix is not yet Windows-verified (NEXT_TASK.md).

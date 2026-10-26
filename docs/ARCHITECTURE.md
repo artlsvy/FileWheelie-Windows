@@ -176,3 +176,24 @@ Common native pools are limited and child priority reduced best effort; this doe
 not promise a universal one-thread limit for every third-party library. HEIF
 registration is performed in the fresh child because parent plugin state is not
 inherited. Source/frozen entry freeze_support remains before GUI startup.
+
+
+### Injected middle-click policy (D-021)
+
+MouseEvent carries the raw hook native_flags DWORD alongside injected. The
+shared mouse_event_permitted policy allows physical events by default and only
+allows LLMHF_INJECTED (0x1) when opted in. LLMHF_LOWER_IL_INJECTED (0x2), unknown
+bits, contradictions and injected legacy events without raw flags are rejected.
+The tray touchpad opt-in is session-only and immutable while a MouseRuntime
+source is active. Standalone diagnostics default to rejecting injected events.
+
+The runtime/controller/resolver/assessor all apply that policy; copied records
+are bound to the current hook event's sequence, time, window, point and flags.
+Opt-in never bypasses Explorer evidence or returns an injected trusted target.
+ExperimentalCandidate retains flags and derives requires_confirmation from
+them. CandidateGate rejects its unconfirmed activation; DesktopApplication
+forces the normal exact-path dialog regardless of the physical preference.
+Confirmation uses the usual token expiry, cancellation and file revalidation
+and returns user_confirmed_candidate provenance. The flags do not prove which
+device or application injected input. No engine, hook suppression or selected-
+file inference is added. Native acceptance remains required.

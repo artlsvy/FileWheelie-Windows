@@ -40,7 +40,7 @@ class FakeBackend:
     def uninitialize(self):
         self.note("uninitialize")
 
-    def create_resolver(self, write):
+    def create_resolver(self, write, *, allow_injected_candidates=False):
         self.note("create_resolver")
         backend = self
 

@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from filewheel.core.explicit_paths import ExplicitInvocationResult
 from filewheel.core.index_mapping import assess_index_mapping
+from filewheel.core.models import LLMHF_INJECTED
 
 
 def _time(value):
@@ -25,6 +26,11 @@ class ExperimentalCandidate:
     event_timestamp: float
     captured_at: float
     token: str = field(default_factory=lambda: uuid4().hex)
+    native_flags: int = 0
+
+    @property
+    def requires_confirmation(self):
+        return bool(self.native_flags & LLMHF_INJECTED)
 
     def __post_init__(self):
         if (
@@ -38,13 +44,17 @@ class ExperimentalCandidate:
             or not 0 <= self.captured_at - self.event_timestamp <= 0.5
             or not isinstance(self.token, str)
             or not self.token
+            or type(self.native_flags) is not int
+            or self.native_flags not in (0, LLMHF_INJECTED)
         ):
             raise ValueError("Invalid experimental candidate")
 
 
-def candidate_from_record(record: dict, *, now: float) -> ExperimentalCandidate | None:
+def candidate_from_record(record: dict, *, now: float,
+                          allow_injected_candidates=False) -> ExperimentalCandidate | None:
     """Reassess raw copied evidence; supplied mapping/verified flags are ignored."""
-    mapping = assess_index_mapping(record, now=now)
+    mapping = assess_index_mapping(record, now=now,
+                                   allow_injected_candidates=allow_injected_candidates)
     if mapping["status"] != "provisional" or record.get("snapshot_stable") is not True:
         return None
     checks = mapping["checks"]
@@ -71,6 +81,7 @@ def candidate_from_record(record: dict, *, now: float) -> ExperimentalCandidate 
             tuple(record["point"]),
             record["timestamp_monotonic"],
             now,
+            native_flags=record.get("native_flags") or 0,
         )
     except TypeError, ValueError:
         return None
@@ -135,6 +146,8 @@ class CandidateGate:
                 return ExplicitInvocationResult(None, "candidate_expired")
             if not confirmed and not 0 <= now - candidate.event_timestamp <= 0.5:
                 return ExplicitInvocationResult(None, "candidate_expired")
+            if not confirmed and candidate.requires_confirmation:
+                return ExplicitInvocationResult(None, "candidate_confirmation_required")
         result = controller.handle_explicit(
             [str(candidate.path)], point=candidate.point, timestamp=now, inspect_file=inspect_file
         )

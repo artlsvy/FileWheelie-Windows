@@ -29,12 +29,13 @@ class WindowsMouseSource:
                     event = MouseEvent(
                         self._sequence, (info.pt.x, info.pt.y), monotonic(),
                         n.user.GetForegroundWindow() or 0, bool(info.flags & 3),
+                        native_flags=int(info.flags),
                     )
                     try:
                         self._events.put_nowait(event)
                     except Full:
                         self.dropped_events += 1
-            except Exception:
+            except Exception:  # noqa: BLE001 - ctypes callback must not throw
                 # ctypes callbacks must not leak exceptions across the native boundary.
                 self.dropped_events += 1
             return n.user.CallNextHookEx(self._hook, code, message, data)

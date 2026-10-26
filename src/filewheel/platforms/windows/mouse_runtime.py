@@ -11,7 +11,7 @@ from time import monotonic
 
 from filewheel.core.controller import InvocationController
 from filewheel.core.experimental import CandidateGate, candidate_from_record
-from filewheel.core.models import MouseEvent
+from filewheel.core.models import MouseEvent, mouse_event_permitted
 from filewheel.platforms.windows.native import require_windows
 
 _IMPORT_LOCK = Lock()
@@ -38,7 +38,7 @@ class _WindowsMtaBackend:
     def uninitialize(self):
         self._comtypes.CoUninitialize()
 
-    def create_resolver(self, write):
+    def create_resolver(self, write, *, allow_injected_candidates=False):
         import os
         from pathlib import Path
         cache = os.environ.get("FILEWHEEL_COMTYPES_CACHE")
@@ -51,7 +51,8 @@ class _WindowsMtaBackend:
                 comtypes.gen.__path__.append(cache)
         from filewheel.platforms.windows.explorer_resolver import ExplorerTargetResolver
 
-        return ExplorerTargetResolver(write, dry_run_mapping=True)
+        return ExplorerTargetResolver(write, dry_run_mapping=True,
+                                      allow_injected_candidates=allow_injected_candidates)
 
     def create_source(self, events):
         require_windows()
@@ -84,11 +85,14 @@ class MouseRuntime:
     A runtime instance has one source lifetime; create a new one after shutdown.
     """
 
-    def __init__(self, on_candidate, on_error, *, _backend=None, _clock=monotonic):
+    def __init__(self, on_candidate, on_error, *, allow_injected_candidates=False,
+                 _backend=None, _clock=monotonic):
         self.gate = CandidateGate()
         self._on_candidate, self._on_error = on_candidate, on_error
         self._backend = _WindowsMtaBackend() if _backend is None else _backend
         self._clock = _clock
+        self._allow_injected_candidates = allow_injected_candidates is True
+        self._current_event = None  # Worker-owned; binds evidence to the original hook event.
         self._events = Queue(maxsize=64)
         self._stop = Event()
         self._ready = Event()
@@ -175,10 +179,22 @@ class MouseRuntime:
     def _write(self, record):
         if self._stop.is_set():
             return
+        event = self._current_event
+        if (event is None or not isinstance(record, dict)
+                or record.get("sequence") != event.sequence
+                or record.get("timestamp_monotonic") != event.timestamp
+                or record.get("point") not in (event.point, list(event.point))
+                or not isinstance(record.get("window"), dict)
+                or record["window"].get("foreground_hwnd") != event.window_id
+                or record.get("injected") is not event.injected
+                or record.get("native_flags") != event.native_flags):
+            self.gate.cancel()
+            return
         if isinstance(record, dict) and record.get("rejection") == "evidence_error":
             self._fail("mouse_evidence", RuntimeError())
             return
-        candidate = candidate_from_record(record, now=self._clock())
+        candidate = candidate_from_record(record, now=self._clock(),
+                                          allow_injected_candidates=self._allow_injected_candidates)
         self.gate.offer(candidate)
         if candidate is not None and not self._stop.is_set():
             self._on_candidate(candidate)
@@ -192,10 +208,12 @@ class MouseRuntime:
             initialized = True
             if self._stop.is_set():
                 return
-            resolver = self._backend.create_resolver(self._write)
+            resolver = self._backend.create_resolver(
+                self._write, allow_injected_candidates=self._allow_injected_candidates)
             if self._stop.is_set():
                 return
-            controller = InvocationController(_ReportingResolver(resolver, self._fail))
+            controller = InvocationController(_ReportingResolver(resolver, self._fail),
+                                              allow_injected_candidates=self._allow_injected_candidates)
             self._ready.set()
             self._worker_startup.put_nowait(True)
             ready = True
@@ -204,12 +222,18 @@ class MouseRuntime:
                     event = self._events.get(timeout=0.05)
                 except Empty:
                     continue
-                if not isinstance(event, MouseEvent) or event.injected:
+                if not isinstance(event, MouseEvent):
                     continue
                 self.gate.cancel()
+                if not mouse_event_permitted(event, allow_injected=self._allow_injected_candidates):
+                    continue
                 # The return stays on the worker and is never sent to the UI.
                 # Existing diagnostic resolver still returns None unconditionally.
-                controller.handle(event)
+                self._current_event = event
+                try:
+                    controller.handle(event)
+                finally:
+                    self._current_event = None
         except Exception as error:  # noqa: BLE001 - sanitized worker/native boundary
             self._fail("mouse_worker", error)
         finally:

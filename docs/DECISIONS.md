@@ -276,3 +276,25 @@ communicate calls. This fixes uninterruptible library work without making source
 or pre-existing output deletion part of cancellation. Native packaged Windows
 Cancel/Quit/retry acceptance remains required. Explorer evidence checks are
 unchanged; the reported need to reopen a folder is not yet diagnosed.
+
+
+## D-021 — Opt-in injected Mouse3, always confirmed
+
+The laptop's configured three-finger middle-click reaches the hook but is
+rejected by the existing injected-event gate. Preserve the raw DWORD; allow
+LLMHF_INJECTED (1) only through a session-only tray opt-in. Always reject
+LLMHF_LOWER_IL_INJECTED (2), unknown bits and unknown-integrity legacy events.
+A runtime's policy is fixed for its source lifetime; turn Mouse3 off before
+changing the option. Physical events still work by default.
+
+Injected candidates must pass all normal Explorer evidence checks and be bound
+to their actual event metadata. They can never be returned as trusted targets.
+Retain their flags through CandidateGate, which forbids direct activation; the
+UI must confirm the exact path even if the physical confirmation preference is
+off. After consent, revalidate via the shared controller and preserve
+user_confirmed_candidate provenance. This does not identify or authenticate a
+touchpad: an unrelated application's foreground event fails Explorer provenance,
+and eligible synthetic input over Explorer still requires explicit consent.
+Native laptop acceptance is required before declaring the fix verified.
+
+Reference: [Microsoft MSLLHOOKSTRUCT flags](https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct).

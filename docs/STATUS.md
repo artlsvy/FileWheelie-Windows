@@ -1147,3 +1147,64 @@ retry of that same file without reopening its folder, and Cancel -> tray Quit
 -> relaunch. Also verify normal conversion/Send to still work in the new build.
 If folder-reopen behavior persists, capture its actual Mouse3 rejection rather
 than relaxing provenance/freshness checks. No push performed.
+
+
+## 2026-10-26 — Precision Touchpad injected middle-click opt-in
+
+User reports the laptop three-finger middle-click works on browser hyperlinks
+and reaches Filewheel's hook, but diagnostics show worker_received=1,
+controller_skipped=1 and no dropped events. Physical Mouse3 works on the desktop;
+Send to and the standalone Windows EXE are user-reported functional. These facts
+isolate the existing unconditional injected-event rejection as a likely cause;
+the exact gesture flags/new route still require native acceptance.
+
+Implemented, Linux-tested (D-021):
+- MouseEvent retains the complete native hook DWORD in native_flags, alongside
+  the backward-compatible injected boolean. LLMHF_INJECTED (1) and
+  LLMHF_LOWER_IL_INJECTED (2) are distinguished. The hook remains passive and
+  queue-only; no COM, UIA or file work was added to its callback.
+- New session-only tray option: Touchpad middle-click (always confirm), off
+  by default. Stop Experimental Mouse3 before changing this setting, then
+  restart the listener; its policy is immutable during that source lifetime.
+  Physical Mouse3 requires no new setting. Unknown native bits, legacy injected
+  events without raw flags, contradictory metadata and lower-integrity events
+  (2 or 3) fail closed, even with opt-in enabled.
+- Opted-in LLMHF_INJECTED events collect provisional evidence through the same provenance,
+  geometry, active-tab, native path/filesystem, snapshot and freshness checks.
+  The runtime binds record flags/sequence/time/point/window to the original hook
+  event. The controller may allow evidence collection but cannot return a trusted
+  target from an injected event. Standalone diagnostics remain physical-only.
+- Injected candidates retain raw flags and always require the explicit exact-path
+  dialog, even with Confirm file before opening disabled. CandidateGate itself
+  rejects direct activation, so this is not merely a UI preference. Confirmation
+  still consumes a current token and revalidates the file through the controller;
+  the source remains user_confirmed_candidate, never explorer_hover.
+- An unrelated foreground application, invalid/missing/ambiguous/stale Explorer
+  target, rejected gesture, cancelled dialog or superseded token cannot launch
+  a conversion. Send to and converter engines are unchanged.
+
+The injected flag does not authenticate a touchpad/device or identify the
+injecting process. An eligible synthetic event over Explorer can only propose
+a checked candidate for explicit consent, not silently convert it. This is why
+mandatory confirmation cannot be disabled for this route.
+
+Verification: **478 tests /406 subtests passed** using Python 3.14, Linux and
+Qt offscreen. New tests cover full hook flag preservation/passive forwarding,
+physical/injected/lower-integrity policy, controller trust rejection, real worker
+routing with fake native backends, record/event mismatches, all evidence guards,
+mandatory confirmation/cancel/expiry, file revalidation and session-setting
+lifecycle. Changed-file Ruff, compileall and git diff --check pass. Whole-repo
+Ruff still reports 25 findings in unchanged files (previously 31; touched native
+boundary catches now have scoped rationale). Focused read-only review found no
+material issues. No Windows run or push by Codex occurred.
+
+WINDOWS_VALIDATION_REQUIRED: rebuild/update on the laptop, confirm the new option
+is off by default, then enable it before Experimental Mouse3 and three-finger tap
+an Explorer file. Check the exact-path dialog is unavoidable, Cancel opens no
+wheel, Use this file opens the correct wheel, and normal conversion works. Test
+a physical middle button with touchpad opt-in both off/on, unrelated browser
+links, background/folders and Send to. Do not call this fix Windows-verified until
+those native tests pass. The previous large-PDF Cancel/Quit native acceptance
+queue remains open unless separately reported successful.
+
+API reference: [MSLLHOOKSTRUCT flags](https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct).

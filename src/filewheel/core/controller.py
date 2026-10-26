@@ -4,8 +4,17 @@ import math
 from collections.abc import Sequence
 from threading import Lock
 
-from filewheel.core.explicit_paths import ExplicitInvocationResult, FileInspector, validate_explicit_paths
-from filewheel.core.models import MouseEvent, TargetResolution, TargetResolver
+from filewheel.core.explicit_paths import (
+    ExplicitInvocationResult,
+    FileInspector,
+    validate_explicit_paths,
+)
+from filewheel.core.models import (
+    MouseEvent,
+    TargetResolution,
+    TargetResolver,
+    mouse_event_permitted,
+)
 
 
 class InvocationController:
@@ -15,10 +24,12 @@ class InvocationController:
     its own COM thread ownership. No lock is held while resolving.
     """
 
-    def __init__(self, resolver: TargetResolver | None = None, debounce_seconds: float = 0.15):
+    def __init__(self, resolver: TargetResolver | None = None, debounce_seconds: float = 0.15,
+                 *, allow_injected_candidates: bool = False):
         if debounce_seconds < 0:
             raise ValueError("debounce_seconds must be nonnegative")
         self._resolver = resolver
+        self._allow_injected_candidates = allow_injected_candidates is True
         self._debounce = debounce_seconds
         self._lock = Lock()
         self._generation = 0
@@ -68,15 +79,17 @@ class InvocationController:
             self._last_sequence = event.sequence
             self._generation += 1
             generation = self._generation
-            if event.injected or event.timestamp - self._last_timestamp < self._debounce:
+            if (not mouse_event_permitted(event, allow_injected=self._allow_injected_candidates)
+                    or event.timestamp - self._last_timestamp < self._debounce):
                 return None
             self._last_timestamp = event.timestamp
         try:
             result = self._resolver.resolve(event)
-        except Exception:
+        except Exception:  # noqa: BLE001 - resolver boundary fails closed
             return None
         with self._lock:
-            if generation != self._generation or result is None:
+            # Opt-in permits evidence collection, never a trusted injected target.
+            if event.injected or generation != self._generation or result is None:
                 return None
             if (
                 result.point != event.point

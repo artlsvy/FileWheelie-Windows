@@ -10,7 +10,7 @@ import re
 from pathlib import PureWindowsPath
 
 from filewheel.core.diagnostic_checks import explorer_rejection
-from filewheel.core.models import MouseEvent
+from filewheel.core.models import MouseEvent, mouse_event_permitted
 
 
 def _number(value) -> bool:
@@ -131,7 +131,7 @@ def _tab_window_index(windows: list, frame: int, ancestry: list, view: int, tab:
     return matched[0] if len(matched) == 1 else None
 
 
-def assess_index_mapping(record: dict, *, now: float) -> dict:
+def assess_index_mapping(record: dict, *, now: float, allow_injected_candidates=False) -> dict:
     """Return bounded JSON evidence for an index candidate, never a trusted path.
 
     ``candidate_path`` is copied only from Shell item lookup evidence. ``provisional``
@@ -173,11 +173,15 @@ def assess_index_mapping(record: dict, *, now: float) -> dict:
             or not _integer(window.get("pid")) or window["pid"] == 0
             or not _integer(record.get("sequence"))
             or not _number(timestamp) or not _number(now)
-            or record.get("injected") is not False
+            or type(record.get("injected")) is not bool
         ):
             return result
         event = MouseEvent(record["sequence"], tuple(point), timestamp,
-                           window["foreground_hwnd"])
+                           window["foreground_hwnd"], record["injected"],
+                           native_flags=record.get("native_flags"))
+        if (record["injected"] != event.injected
+                or not mouse_event_permitted(event, allow_injected=allow_injected_candidates)):
+            return reject("injected_event_rejected")
         rejection = explorer_rejection(event, window)
         if rejection:
             return reject(rejection)

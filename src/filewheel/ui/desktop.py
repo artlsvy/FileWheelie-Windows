@@ -44,6 +44,7 @@ class DesktopApplication(QObject):
         self.dialog = None
         self.confirm_button = None
         self.confirm_candidates = bool(confirm_candidates)
+        self.allow_injected_candidates = False  # Explicit, session-only touchpad opt-in.
         self.tray_mode = tray
         self.quitting = False
         self.bridge = _Bridge(self)
@@ -60,6 +61,11 @@ class DesktopApplication(QObject):
         self.experiment_action.setCheckable(True)
         self.experiment_action.toggled.connect(self.set_experiment)
         self.menu.addAction(self.experiment_action)
+        self.touchpad_action = QAction('Touchpad middle-click (always confirm)', self)
+        self.touchpad_action.setCheckable(True)
+        self.touchpad_action.setToolTip('Allow injected gestures; turn Mouse3 off before changing.')
+        self.touchpad_action.toggled.connect(self.set_touchpad)
+        self.menu.addAction(self.touchpad_action)
         self.confirm_action = QAction('Confirm file before opening', self)
         self.confirm_action.setCheckable(True)
         self.confirm_action.setChecked(self.confirm_candidates)
@@ -135,6 +141,7 @@ class DesktopApplication(QObject):
                 self.experimental_enabled = False
                 self._check_action(False)
                 self.experiment_action.setEnabled(False)
+                self.touchpad_action.setEnabled(False)
                 self.tray.setToolTip('Filewheel — Mouse3 stopping')
                 self.stop_timer.start()
                 return
@@ -145,7 +152,9 @@ class DesktopApplication(QObject):
             if factory is None:
                 from filewheel.platforms.windows.mouse_runtime import MouseRuntime
                 factory = MouseRuntime
-            self.runtime = factory(self.bridge.candidate.emit, self.bridge.error.emit)
+            self.runtime = factory(self.bridge.candidate.emit, self.bridge.error.emit,
+                                   allow_injected_candidates=self.allow_injected_candidates)
+            self.touchpad_action.setEnabled(False)
             try:
                 if hasattr(self.runtime, 'prepare'):
                     self.runtime.prepare()
@@ -159,6 +168,8 @@ class DesktopApplication(QObject):
             self.experiment_action.setEnabled(False)
             self._startup.start()
         self._check_action(self.experimental_enabled)
+        if self.runtime is None:
+            self.touchpad_action.setEnabled(not self.quitting)
         self.tray.setToolTip('Filewheel — Mouse3 experimental' if self.experimental_enabled
                              else 'Filewheel — Mouse3 experiment off')
 
@@ -169,6 +180,7 @@ class DesktopApplication(QObject):
         self.stop_timer.stop()
         self.runtime = None
         self.experiment_action.setEnabled(not self.quitting)
+        self.touchpad_action.setEnabled(not self.quitting)
         self.tray.setToolTip('Filewheel — Mouse3 experiment off')
 
     @Slot()
@@ -182,6 +194,7 @@ class DesktopApplication(QObject):
         self.tray.setToolTip('Filewheel — Mouse3 experimental' if self.experimental_enabled
                              else 'Filewheel — Mouse3 experiment off')
         if not self.experimental_enabled and not self.quitting:
+            self.stop_timer.start()  # Release a failed runtime before policy changes.
             self.notify('Mouse3 could not start; see local diagnostics.')
         if self.quitting:
             self._finish_quit()
@@ -201,6 +214,18 @@ class DesktopApplication(QObject):
         self.notify(f'Mouse3 stopped: {message}. Send to remains available.')
 
     @Slot(bool)
+    def set_touchpad(self, enabled):
+        # A runtime's policy is immutable; don't leave an in-flight injected
+        # candidate valid across a setting change. Stop Mouse3 before changing.
+        if self.runtime is not None or self._startup is not None or self.quitting:
+            self.touchpad_action.blockSignals(True)
+            self.touchpad_action.setChecked(self.allow_injected_candidates)
+            self.touchpad_action.blockSignals(False)
+            return
+        self.close_confirmation()
+        self.allow_injected_candidates = enabled is True
+
+    @Slot(bool)
     def set_confirmation(self, enabled):
         self.close_confirmation()
         self.confirm_candidates = bool(enabled)
@@ -209,11 +234,12 @@ class DesktopApplication(QObject):
     def offer_candidate(self, candidate):
         if (not self.experimental_enabled or self.runtime is None or self.quitting
                 or self.popup.job is not None
+                or (candidate.requires_confirmation and not self.allow_injected_candidates)
                 or not self.runtime.gate.is_current(candidate.token, now=monotonic())):
             return
         self.close_confirmation(cancel_gate=False)
         self.popup.dismiss()
-        if not self.confirm_candidates:
+        if not self.confirm_candidates and not candidate.requires_confirmation:
             result = self.runtime.gate.activate(candidate.token, self.controller, self.inspector,
                                                 now=monotonic())
             if result.target is not None:
@@ -228,7 +254,9 @@ class DesktopApplication(QObject):
         box.setText('Explorer mapping is provisional. Confirm this exact file before continuing.')
         box.setInformativeText(str(candidate.path))
         box.setDetailedText('This is an experimental index correlation, not a verified hover identity.\n'
-                            'Cancel if the proposed path is not the file you intended.')
+                            'Cancel if the proposed path is not the file you intended.'
+                            + ('\nInjected middle-clicks always require confirmation; the hook flags '
+                               'do not identify a touchpad.' if candidate.requires_confirmation else ''))
         yes = box.addButton('Use this file', QMessageBox.ButtonRole.AcceptRole)
         cancel = box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(cancel)
@@ -279,6 +307,7 @@ class DesktopApplication(QObject):
         self.quitting = True
         self.stop_timer.stop()
         self.experiment_action.setEnabled(False)
+        self.touchpad_action.setEnabled(False)
         self.experimental_enabled = False
         self.close_confirmation()
         self.controller.cancel()
