@@ -30,7 +30,7 @@ can be restored in the tray. The listener stays opt-in and Send to stays usable.
 
 Compact UI polish is implemented: 170px wheel, larger labels, small Esc/Back
 center, forest/ivory/brass themes and circular progress/results. Linux checks:
-377 tests and 387 subtests pass; new direct-route/native visuals await Windows
+382 tests and 398 subtests pass; new direct-route/native visuals await Windows
 acceptance. G11/G12 source build/bundle seams remain implemented, with native
 packaging/portable-office checks queued separately. No push was performed.
 
@@ -72,3 +72,10 @@ curved sector labels and subtle surface transparency are implemented. The user
 reported cursor stalls; original-file Windows responsiveness remains unverified.
 DOCX → PDF setup is documented in DOCX_TO_PDF.md. No new conversion formats or
 mouse-mapping changes are introduced by this task.
+
+
+User now confirms the curved UI, isolated-conversion responsiveness and readable
+outputs on Windows. A shared false Failed/WinError109 completion status is fixed
+with narrow poll-EOF normalization; actual native status verification is next.
+The correction preserves real error/crash detection and never infers success
+from an existing output (NEXT_TASK.md).

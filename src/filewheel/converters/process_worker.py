@@ -197,6 +197,21 @@ def _supervisor_failure(error, manager, source, extension, operation):
     return error
 
 
+def _poll_reader(connection, timeout):
+    """Normalize a closed Windows pipe at the polling boundary only.
+
+    CPython's Windows PipeConnection.poll() calls PeekNamedPipe, which may
+    raise ERROR_BROKEN_PIPE rather than making recv_bytes() raise EOFError.
+    Read errors (including partial frames) must keep their failure semantics.
+    """
+    try:
+        return connection.poll(timeout)
+    except OSError as error:
+        if getattr(error, 'winerror', None) == 109:  # ERROR_BROKEN_PIPE
+            raise EOFError from error
+        raise
+
+
 def run_in_process(manager, source, extension, *, progress, cancel, on_started=None,
                    _context=None, _target=_child):
     """Supervise one owned child off the GUI thread, then return after it exits.
@@ -228,7 +243,17 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
         while True:
             if cancel.is_set():
                 child_cancel.set()
-            if receive.poll(.05):
+            try:
+                ready = _poll_reader(receive, .05)
+            except EOFError:
+                break  # Completion still requires a valid outcome and exit code.
+            except OSError as error:
+                failure = ConversionError('Conversion worker pipe polling failed')
+                failure.__cause__ = error
+                child_cancel.set()
+                receive.close()
+                break
+            if ready:
                 try:
                     payload = receive.recv_bytes(MAX_PACKET_BYTES)
                 except EOFError:
@@ -285,7 +310,7 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
                     process.join(.05)
                 else:
                     try:
-                        if receive.poll(.05):
+                        if _poll_reader(receive, .05):
                             receive.recv_bytes(MAX_PACKET_BYTES)
                     except (OSError, EOFError, ValueError):
                         receive.close()

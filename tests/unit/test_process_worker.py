@@ -304,3 +304,142 @@ class WorkerLifecycleTests(unittest.TestCase):
                 job.wait(5000)
                 job.deleteLater()
                 app.processEvents()
+
+
+def windows_pipe_error(code):
+    error = OSError(f'fixture Windows pipe error {code}')
+    error.winerror = code
+    return error
+
+
+class WindowsEndedReader:
+    """Simulate Windows poll closure after a real spawned child's outcome."""
+    def __init__(self, connection):
+        self.connection = connection
+        self.terminal = False
+
+    def __getattr__(self, name):
+        return getattr(self.connection, name)
+
+    def poll(self, timeout):
+        if self.terminal:
+            raise windows_pipe_error(109)
+        return self.connection.poll(timeout)
+
+    def recv_bytes(self, maximum):
+        payload = self.connection.recv_bytes(maximum)
+        self.terminal = decode_packet(payload)['type'] in ('result', 'error')
+        return payload
+
+
+class WindowsEndedContext:
+    def __init__(self):
+        import multiprocessing
+        self.context = multiprocessing.get_context('spawn')
+
+    def __getattr__(self, name):
+        return getattr(self.context, name)
+
+    def Pipe(self, *, duplex):
+        receive, send = self.context.Pipe(duplex=duplex)
+        return WindowsEndedReader(receive), send
+
+
+class WindowsPipeEofTests(unittest.TestCase):
+    def test_real_conversion_with_windows_poll_eof_keeps_success_and_output(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / 'input.sample'
+            source.write_bytes(b'unchanged source')
+            result = run_in_process(ConversionManager(Registry((PolicyEngine(),))), source, '.json',
+                                    progress=lambda *args: None, cancel=Event(),
+                                    _context=WindowsEndedContext())
+            self.assertNotEqual(json.loads(result.path.read_text())['pid'], os.getpid())
+            self.assertEqual(source.read_bytes(), b'unchanged source')
+            self.assertFalse(list(Path(folder).glob('.filewheel-*')))
+
+    def run_script(self, messages, *, exitcode=0, poll_error=109):
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+
+        from filewheel.converters import process_worker as worker
+        remaining = list(messages)
+        receive, send, process = Mock(), Mock(), Mock()
+        receive.closed = False
+        def close_reader():
+            receive.closed = True
+        receive.close.side_effect = close_reader
+        def poll(timeout):
+            if remaining:
+                return True
+            raise windows_pipe_error(poll_error)
+        receive.poll.side_effect = poll
+        def read(maximum):
+            value = remaining.pop(0)
+            if isinstance(value, Exception):
+                raise value
+            return value if isinstance(value, bytes) else json.dumps(value).encode()
+        receive.recv_bytes.side_effect = read
+        process.pid, process.exitcode = 777, exitcode
+        process.is_alive.return_value = False
+        context = SimpleNamespace(Pipe=lambda **kwargs: (receive, send), Event=Event,
+                                  Process=lambda **kwargs: process)
+        try:
+            return worker.run_in_process(ConversionManager(Registry((PolicyEngine(),))),
+                                         Path(self.folder) / 'input.sample', '.json',
+                                         progress=lambda *args: None, cancel=Event(), _context=context)
+        finally:
+            self.assertTrue(receive.closed)
+            send.close.assert_called()
+            process.join.assert_called_once()
+            process.close.assert_called_once()
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.folder = self.temporary.name
+        environment = patch.dict(os.environ, {'FILEWHEEL_LOG_DIR': str(Path(self.folder) / 'logs')})
+        environment.start()
+        self.addCleanup(environment.stop)
+        self.start = {'type': 'started', 'pid': 777}
+        self.result = {'type': 'result', 'outputs': [str(Path(self.folder) / 'output.json')],
+                       'warnings': ['Preserved warning'], 'engine_id': PolicyEngine.engine_id}
+
+    def test_valid_terminal_and_zero_exit_survive_closed_poll(self):
+        result = self.run_script([self.start, self.result])
+        self.assertEqual(result.engine_id, PolicyEngine.engine_id)
+        self.assertEqual(result.warnings, ('Preserved warning',))
+
+    def test_close_without_terminal_or_after_crash_cannot_claim_success(self):
+        Path(self.result['outputs'][0]).write_text('{}')  # Existing output is not an outcome receipt.
+        for messages, code in (([], 0), ([self.start], 0), ([self.start, self.result], 7)):
+            with self.subTest(messages=messages, exitcode=code), self.assertRaises(ConversionError):
+                self.run_script(messages, exitcode=code)
+
+    def test_real_error_categories_survive_normal_pipe_closure(self):
+        from filewheel.converters.base import DependencyUnavailable
+        for category, expected in (('conversion', ConversionError), ('cancelled', ConversionCancelled),
+                                    ('dependency', DependencyUnavailable)):
+            error = {'type': 'error', 'category': category, 'message': 'Actual engine failure',
+                     'engine_id': 'test-engine', 'operation': 'convert', 'kind': 'test-kind',
+                     'debug_log': str(Path(self.folder) / 'worker-debug.log')}
+            with self.subTest(category=category), self.assertRaises(expected) as caught:
+                self.run_script([self.start, error])
+            self.assertEqual(str(caught.exception), 'Actual engine failure')
+            self.assertEqual(caught.exception.engine_id, 'test-engine')
+            self.assertEqual(caught.exception.operation, 'convert')
+
+    def test_other_poll_errors_and_read_errors_are_not_normalized_to_success(self):
+        for mode in ('access_denied', 'broken_read', 'partial_read', 'malformed_protocol', 'extra_terminal'):
+            messages, poll_error = [self.start, self.result], 109
+            if mode == 'access_denied':
+                poll_error = 5
+            elif mode == 'broken_read':
+                messages.append(windows_pipe_error(109))
+            elif mode == 'partial_read':
+                messages.append(OSError('got end of file during message'))
+            elif mode == 'malformed_protocol':
+                messages = [self.start, b'not JSON', self.result]
+            else:
+                messages.append(self.result)
+            with self.subTest(mode=mode), self.assertRaises(ConversionError):
+                self.run_script(messages, poll_error=poll_error)

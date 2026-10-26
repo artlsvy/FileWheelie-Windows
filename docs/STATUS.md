@@ -1043,3 +1043,35 @@ plausible mechanism, not a Windows-profiled root-cause claim.
   tests +32 subtests. The HEIF registration regression and hover-outline contrast
   gap they identified were fixed and regression-tested. Text and outline checks
   now include both base and hover surfaces over extreme composited backdrops.
+
+
+## 2026-10-26 — False Failed status after successful Windows conversion
+
+User verifies the new UI and cursor performance work on Windows and that the
+converted files are readable, but every completed conversion reports Failed with
+WinError 109 (pipe ended). Record UI/responsiveness and output success as user-
+reported Windows evidence, separately from this still-pending status correction.
+
+CPython's Windows PipeConnection.poll uses PeekNamedPipe, which may raise
+ERROR_BROKEN_PIPE (109) after normal writer closure. Its recv_bytes path maps
+that condition to EOFError, but the supervisor previously guarded only the read,
+so the polling error bypassed the already received successful outcome.
+
+- Added a narrow polling adapter: only poll-time winerror109 becomes EOFError.
+  The normal completion path still requires a validated terminal packet, matching
+  worker identity, no earlier protocol failure and zero child exit status. No
+  conversion is retried and output existence is never used to infer success.
+- Missing outcomes, nonzero exits, malformed/extra messages, partial reads and
+  other polling/read errors remain failures. Real error/cancel/dependency packets
+  preserve their category and engine/operation details after normal pipe closure.
+  Existing child join, cooperative cleanup and handle ownership are unchanged.
+- Linux tests simulate Windows poll EOF after an actual spawned conversion and
+  exercise all negative cases, including an existing output without a terminal
+  result. Full suite: **382 tests and 398 subtests passed**; scoped Ruff,
+  compileall and git diff --check passed. Focused read-only review independently
+  passed 26 tests /22 subtests and found no material blockers.
+- Native Windows status acceptance remains required: a successful conversion
+  should show Done/File saved, while real errors/cancellation stay distinct. No
+  native Windows run by Codex or push was performed.
+
+Primary reference: [CPython 3.14 pipe implementation](https://github.com/python/cpython/blob/3.14/Lib/multiprocessing/connection.py).

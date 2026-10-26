@@ -1,41 +1,28 @@
-# Next task: Windows responsiveness and curved/translucent UI acceptance
+# Next task: Windows completion-status verification
 
-The interrupted implementation is complete: production conversions now run in one
-spawned child, supervised by Qt. This addresses converter/hook shared-GIL
-contention and limits common native worker pools best effort; actual Windows
-cursor lag resolution still needs testing on the reported file. Keep all existing
-Mouse3 identity checks, Send to, persistent status and manager output safeguards.
+User confirms conversion outputs, curved/translucent UI and cursor performance
+work on Windows. The reported false Failed/WinError109 after success is addressed
+by normalizing poll-time closed-pipe EOF; the supervisor still requires a valid
+outcome and clean child exit. Engines, publishing and UI behavior are unchanged.
 
-Linux validation: 377 tests / 387 subtests pass, with scoped Ruff, compilation
-and focused review. Actual cursor-lag resolution on Windows is not yet verified.
+Linux checks: 382 tests /398 subtests, scoped Ruff, compilation and focused review
+pass. Tests include Windows-style poll EOF after a real spawned conversion;
+these simulations do not establish native Windows acceptance.
 
-Quit the old tray process, update the source checkout and run:
+Quit the old Filewheel tray process, update the source checkout and run:
 
 ```powershell
 git pull --ff-only origin main
 .\.venv-filewheel\Scripts\python.exe -m filewheel --tray
 ```
 
-No new Python dependency is required for process isolation. Enable Mouse3 and
-repeat the conversion that previously lagged while continuously moving the cursor
-and using Explorer/another app. Progress/results must stay visible and responsive;
-Cancel/Escape/Quit must wait for owned cleanup, and no uncontrolled extra tray
-processes should open. Check readable output, original bytes and collision names.
-Test with Mouse3 off and Send to if lag remains, then provide conversion pair,
-file size/page count and whether both invocation routes are affected. Do not claim
-all possible CPU/memory/driver stalls were solved by the isolation change.
+Repeat one conversion that previously produced a valid output but displayed
+Failed/pipe ended. Expect Done/File saved, readable output and no WinError109.
+Keep the original and earlier outputs; a repeated conversion uses a collision-
+safe numbered name. Check another conversion if practical. Actual failures and
+Cancel must still show Failed/Cancelled; a missing outcome or crashed worker must
+never be marked Done just because an output file exists.
 
-The 170px menu now says No formats, follows sector curvature and has a slightly
-translucent surface with opaque labels/actions. Check upper/lower labels,
-hover/separators, light/dark backdrop readability and transparent corners on the
-actual Windows DPI setup. Full labels, paths and errors remain in tooltips/logs.
-
-DOCX → PDF is already implemented. Follow DOCX_TO_PDF.md to install the normal
-LibreOffice application, check LibreOfficeEngine detection in .venv-filewheel,
-restart the tray to rebuild capabilities and choose Docs → PDF. Do not install a
-Python package named libreoffice or confuse this with the PDF → DOCX engine.
-
-Native Windows/frozen spawning, priority and compositor behavior remain pending;
-Linux tests do not prove them. Cooperative engine hangs may delay shutdown and
-catastrophic native crashes can leave staging artifacts; never blindly remove
-unknown files. Record results in STATUS.md. Do not push without authorization.
+Record native results in STATUS.md. No process-isolation rollback, conversion
+retry, unrelated engine work or extra diagnostic tooling is needed. DOCX→PDF
+setup remains in DOCX_TO_PDF.md. Do not push without separate authorization.
