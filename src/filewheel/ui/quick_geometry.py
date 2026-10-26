@@ -7,6 +7,12 @@ INNER = 40
 OUTER = 110
 
 
+def inside_boundary(x, y):
+    """Circular window interaction boundary; center is inside, even with no options."""
+    return (all(type(value) in (int, float) and math.isfinite(value) for value in (x, y))
+            and math.hypot(x - CENTER, y - CENTER) <= OUTER)
+
+
 def hit_test(x, y, count):
     if not all(type(value) in (int, float) and math.isfinite(value) for value in (x, y)):
         return -1

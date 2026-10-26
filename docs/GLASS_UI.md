@@ -1,5 +1,8 @@
 # Experimental native glass wheel
 
+For the current geometry/mouse-leave correction and approval gate, see
+[Phase 1 review build](GLASS_UI_PHASE1.md). Phase 2 is not authorized yet.
+
 The default is still the working **170 px QWidget** wheel. The experimental
 Quick backend uses a **240 logical pixel window / 220 px circular surface**, a
 moving annular lens, forest/ivory/brass material, sharp labels and transparent
@@ -28,7 +31,7 @@ Get-Content "$env:LOCALAPPDATA\Filewheel\logs\self-test.json"
 
 The explicit Quick self-test must report `quick_qml_render: true`, `corner_alpha: 0`
 and an actual `graphics_api`, alongside normal converter results. It verifies a
-nonblank 240 × 240 frame, not just imports. If FILEWHEEL_LOG_DIR is set, the report is
+nonblank DPI-scaled frame (240 logical pixels), not just imports. If FILEWHEEL_LOG_DIR is set, the report is
 under that directory instead. Keep the whole onedir folder together. No Windows
 EXE was built in the Kubuntu environment.
 
@@ -57,7 +60,7 @@ opt-in is enabled. Do not bypass it to evaluate animation.
    must select the original stable sector even while the lens is moving.
 2. Test arrows/Tab/Home/End, Enter/Space, center Back, Backspace, Escape, outside
    click, focus loss and reopening. Empty capability lists say No formats. Check
-   selection windows close once and transient Send to processes exit normally.
+   selection windows close on circular mouse leave and finish once and transient Send to processes exit normally.
 3. Convert a PNG, a normal PDF and an installed document pair. Check the output
    opens, the source is unchanged and collisions create new filenames. During
    conversion click elsewhere: progress/results stay visible and topmost, with

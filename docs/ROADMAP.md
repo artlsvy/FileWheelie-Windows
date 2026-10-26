@@ -115,3 +115,11 @@ seams are tested; Windows GPU/DPI/focus/frozen Quick acceptance remains pending.
 Reusable native design skill lives at .agents/skills/filewheel-glass/SKILL.md.
 Use GLASS_UI.md for the next native check and PERFORMANCE_ARCHITECTURE.md for
 actual measurements and their boundaries. Existing D-020/D-021 queues remain.
+
+
+2026-10-26 Phase 1 UI correction: concentric Quick glare/lens geometry, removed
+label dots and selection-only circular mouse-leave dismissal are implemented.
+Real before/after captures and portable 100%/150% checks accompany the review
+build (GLASS_UI_PHASE1.md). Native Windows acceptance is pending. **STOP for user
+review: Phase 2 Markdown navigation/format expansion has NOT started and must
+not begin without explicit approval in a subsequent user message.**

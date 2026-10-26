@@ -34,8 +34,9 @@ Item {
             return
         const target = (activeIndex + 0.5) * sectorAngle
         // Keep the target unwrapped so neighbours across zero take the short arc.
-        const delta = ((target - lensRotation + 540) % 360 + 360) % 360 - 180
-        lensRotation = lensReady ? lensRotation + delta : target
+        const current = hoverLens.rotation
+        const delta = ((target - current + 540) % 360 + 360) % 360 - 180
+        lensRotation = current + delta
         lensReady = true
     }
     onActiveIndexChanged: updateLens()
@@ -107,12 +108,11 @@ Item {
     }
 
     Lens {
+        id: hoverLens
         x: 120; y: 120
         dark: wheel.dark
         lowEffects: wheel.lowEffects
-        // Rounded ends already occupy about 46 degrees; cap the entire lens
-        // near 85 degrees rather than filling half the wheel for two options.
-        halfArc: Math.max(0.5, Math.min(18, (root.sectorAngle - 48) / 2))
+        sectorAngle: root.sectorAngle
         rotation: root.lensRotation
         opacity: wheel.movingLens && root.selection && root.count > 0 && root.activeIndex >= 0 ? 1 : 0
         Behavior on rotation {
@@ -125,9 +125,13 @@ Item {
         }
     }
 
-    // Pointer glare is a transformed fixed arc, independent of label raster.
+    // Every rotating arc uses local (0,0) translated to wheel center. Shape
+    // implicit bounds must never supply the rotation pivot.
     Shape {
+        objectName: "pointerGlare"
         x: 120; y: 120
+        width: 0; height: 0
+        transformOrigin: Item.TopLeft
         rotation: root.pointerAngle
         visible: wheel.movingLens && !wheel.lowEffects && root.selection && wheel.hovered >= 0
         ShapePath {
@@ -135,29 +139,51 @@ Item {
             strokeColor: wheel.dark ? "#70E5EBD8" : "#B0FFFFFF"
             strokeWidth: 1.8
             capStyle: ShapePath.RoundCap
-            startX: -24; startY: -101
-            PathArc { x: 24; y: -101; radiusX: 104; radiusY: 104; direction: PathArc.Clockwise }
+            startX: -104 * Math.sin(13 * Math.PI / 180)
+            startY: -104 * Math.cos(13 * Math.PI / 180)
+            PathArc {
+                x: 104 * Math.sin(13 * Math.PI / 180)
+                y: -104 * Math.cos(13 * Math.PI / 180)
+                radiusX: 104; radiusY: 104
+                direction: PathArc.Clockwise
+            }
         }
     }
 
-    // A continuous, restrained specular edge belongs to the whole surface.
+    // Restrained highlights are exact arcs of the same centered circle.
     Shape {
+        objectName: "surfaceReflections"
+        x: 120; y: 120
+        width: 0; height: 0
+        transformOrigin: Item.TopLeft
         visible: !wheel.lowEffects
         ShapePath {
             fillColor: "transparent"
             strokeColor: wheel.dark ? "#719EB29B" : "#D9FFFFFF"
             strokeWidth: 1.4
             capStyle: ShapePath.RoundCap
-            startX: 24; startY: 75
-            PathArc { x: 163; y: 22; radiusX: 106; radiusY: 106; direction: PathArc.Clockwise }
+            startX: 108 * Math.sin(-65 * Math.PI / 180)
+            startY: -108 * Math.cos(-65 * Math.PI / 180)
+            PathArc {
+                x: 108 * Math.sin(20 * Math.PI / 180)
+                y: -108 * Math.cos(20 * Math.PI / 180)
+                radiusX: 108; radiusY: 108
+                direction: PathArc.Clockwise
+            }
         }
         ShapePath {
             fillColor: "transparent"
             strokeColor: wheel.dark ? "#686A865F" : "#647D805F"
             strokeWidth: 1
             capStyle: ShapePath.RoundCap
-            startX: 217; startY: 160
-            PathArc { x: 151; y: 224; radiusX: 106; radiusY: 106; direction: PathArc.Clockwise }
+            startX: 108 * Math.sin(110 * Math.PI / 180)
+            startY: -108 * Math.cos(110 * Math.PI / 180)
+            PathArc {
+                x: 108 * Math.sin(160 * Math.PI / 180)
+                y: -108 * Math.cos(160 * Math.PI / 180)
+                radiusX: 108; radiusY: 108
+                direction: PathArc.Clockwise
+            }
         }
     }
 
@@ -187,12 +213,6 @@ Item {
             maximumLineCount: 2
             elide: Text.ElideRight
             textFormat: Text.PlainText
-            Rectangle {
-                visible: root.activeIndex === index
-                width: 4; height: 4; radius: 2
-                x: parent.width / 2 - 2; y: parent.height - 3
-                color: root.accent
-            }
         }
     }
 
@@ -275,6 +295,7 @@ Item {
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
+        onEntered: root.session.hoverAt(mouseX, mouseY)
         onPositionChanged: function(mouse) {
             root.pointerAngle = Math.atan2(mouse.x - 120, 120 - mouse.y) * 180 / Math.PI
             root.session.hoverAt(mouse.x, mouse.y)

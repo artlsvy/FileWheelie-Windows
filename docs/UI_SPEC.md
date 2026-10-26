@@ -129,3 +129,22 @@ The shared controller/registry/worker path, mandatory injected consent, status
 persistence, Cancel/Back/Escape and outside/focus selection dismissal are retained.
 See GLASS_UI.md for native acceptance and startup fallback; source/offscreen
 visual proof does not establish Windows compositor/driver/focus correctness.
+
+
+## Phase 1 glass correction and review gate
+
+All Quick rotating annular elements use local (0,0) with an explicit TopLeft
+origin translated to (120,120). Lens arcs share a centerline; quarter-circle end
+caps remove diametric-arc ambiguity. One subtle contour replaces duplicate
+outlines/shadows. The label dots are removed; the lens alone shows selection.
+Interrupted transitions always choose the shortest rotation from the displayed
+angle, including first appearance. Default size, colors and fixed hits remain.
+
+Only category/format selection auto-dismisses after 75 ms outside r110, including
+transparent rectangular corners. Re-entry stops the timer; expiration rechecks
+QCursor through QWindow mapping. Center, Back, sector movement and keyboard remain
+usable. Progress/results remain persistent; no new global hook is installed.
+
+Phase 2 format/navigation work is blocked until explicit subsequent user approval.
+Passing tests, screenshot generation and automated resume do not grant approval.
+See GLASS_UI_PHASE1.md for real rendered before/after evidence and native checks.

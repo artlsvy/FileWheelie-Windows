@@ -43,9 +43,10 @@ def run(*, include_quick=False):
                 view.session.hoverAt(195, 120)
                 application.processEvents()
                 image = view.grabWindow()
-                if (image.isNull() or image.width() != 240 or image.height() != 240
+                pixels = round(240 * view.devicePixelRatio())
+                if (image.isNull() or image.width() != pixels or image.height() != pixels
                         or image.pixelColor(0, 0).alpha() != 0
-                        or image.pixelColor(120, 120).alpha() == 0):
+                        or image.pixelColor(pixels // 2, pixels // 2).alpha() == 0):
                     raise RuntimeError('Quick render or transparent-corner self-test failed')
                 results.append({'quick_qml_render': True, 'corner_alpha': 0,
                                 'graphics_api': str(view.rendererInterface().graphicsApi()), 'ok': True})

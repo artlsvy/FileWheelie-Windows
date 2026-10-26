@@ -21,7 +21,8 @@ source of truth. Default QWidget remains available until native acceptance.
   Default material alpha about 0.85–0.88; the lens can be more opaque for depth.
   Low-effects surfaces are opaque. Keep text fully opaque and sharp.
 - Label size 14 logical pixels, at most two lines with elision. Emphasize via
-  transform scale 1.04 and a brass marker, without moving actual hit regions.
+  transform scale 1.04 and the lens alone, without moving actual hit regions.
+  Do not reintroduce independent label dots that can disagree with the lens.
   Esc/Back/Cancel/Done belong in the center. Keep engine logs in escaped tooltips,
   not the wheel face. Progress/result words should fit at a glance.
 - Check sampled rendered text/material contrast >=4.5:1 over black and white,
@@ -32,7 +33,10 @@ source of truth. Default QWidget remains available until native acceptance.
 
 - Stable hit geometry: center (120,120), inner action radius 40, outer radius 110.
   `quick_geometry.hit_test` owns sectors; optics never change click targets.
-- Lens stays within the annulus (current raised capsule r46–106). Static path
+- Lens stays within the annulus (centerline r76, cap radius <=28). Outer/inner
+  arcs are concentric and each semicircular end uses two quarter arcs. Narrow
+  menus adapt thickness only when option count changes. All rotating Shapes use
+  explicit local (0,0), TopLeft origin translated to wheel (120,120). Static path
   geometry changes with option count only. Animate the item rotation/opacity,
   not paths, fonts, textures or layout each frame.
 - Use shortest-arc movement, about 145 ms OutCubic; appearance 70 ms and label
@@ -51,6 +55,9 @@ source of truth. Default QWidget remains available until native acceptance.
   no OS rectangle shadow. Reuse the window. Share physical-to-logical monitor
   mapping and work-area clamping with QWidget; never divide global coordinates
   by one DPR. Test mixed scaling and negative monitor origins on Windows.
+- Selection also dismisses 75 ms after circular mouse leave, with a current-
+  cursor logical-coordinate recheck. Center/sector motion and quick re-entry stay
+  open. No new global hooks. Conversion/results never auto-dismiss on leave.
 - Selection dismisses on Escape/outside/focus loss; conversion/results persist
   topmost until explicit action. Native hide must finish a transient invocation
   once. Retain the conversion job until its owned worker/cleanup completes.

@@ -19,7 +19,7 @@ from filewheel.ui.conversion_job import ConversionJob
 from filewheel.ui.desktop_errors import DesktopInitializationError
 from filewheel.ui.placement import Rect, popup_position
 from filewheel.ui.popup import logical_point
-from filewheel.ui.quick_geometry import SIZE, hit_test
+from filewheel.ui.quick_geometry import SIZE, hit_test, inside_boundary
 from filewheel.ui.radial import DEFAULT_PREVIEW_REGISTRY, RadialState
 
 
@@ -116,6 +116,7 @@ class GlassSession(QObject):
 
     @Slot(float, float)
     def hoverAt(self, x, y):
+        self.view.pointer_boundary(x, y)
         index = hit_test(x, y, len(self.state.options))
         if index == self._hovered:
             return
@@ -130,6 +131,7 @@ class GlassSession(QObject):
 
     @Slot()
     def clearHover(self):
+        self.view.pointer_boundary(-1, -1)
         self._hovered = -1
         self.hoverChanged.emit()
         self.view.tooltip_timer.stop()
@@ -281,6 +283,10 @@ class GlassPopup(QQuickView):
         self.focus_timer = QTimer(self)
         self.focus_timer.setSingleShot(True)
         self.focus_timer.timeout.connect(self._dismiss_if_inactive)
+        self.leave_timer = QTimer(self)
+        self.leave_timer.setSingleShot(True)
+        self.leave_timer.setInterval(75)
+        self.leave_timer.timeout.connect(self._dismiss_if_outside)
         self.tooltip_timer = QTimer(self)
         self.tooltip_timer.setSingleShot(True)
         self.tooltip_timer.setInterval(450)
@@ -301,6 +307,24 @@ class GlassPopup(QQuickView):
     @property
     def persistent(self):
         return self.state.stage in ('converting', 'result')
+
+    def pointer_boundary(self, x, y):
+        # MouseArea's rectangle includes transparent corners. Test the actual
+        # circle even when the hovered sector remains -1. Do not restart an
+        # active debounce for every outside move or dismissal could starve.
+        if self.state.stage not in ('categories', 'formats') or inside_boundary(x, y):
+            self.leave_timer.stop()
+        elif self.isVisible() and not self.leave_timer.isActive():
+            self.leave_timer.start()
+
+    def _dismiss_if_outside(self):
+        if not self.isVisible() or self.state.stage not in ('categories', 'formats'):
+            return
+        # Recheck the current logical cursor after the debounce. Mapping via
+        # QWindow avoids applying one DPR to global/mixed-monitor coordinates.
+        local = self.mapFromGlobal(QCursor.pos())
+        if not inside_boundary(local.x(), local.y()):
+            self.dismiss()
 
     def mark_pending(self, stage):
         if self._timings.enabled:
@@ -345,6 +369,7 @@ class GlassPopup(QQuickView):
     def present(self, target):
         if self.job:
             return False
+        self.leave_timer.stop()
         if not self.state.open(target):
             self._finish()
             return False
@@ -381,6 +406,8 @@ class GlassPopup(QQuickView):
         return True
 
     def set_persistent(self, enabled):
+        if enabled and hasattr(self, 'leave_timer'):
+            self.leave_timer.stop()
         kind = Qt.WindowType.Tool if enabled else Qt.WindowType.Popup
         flags = (kind | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
                  | Qt.WindowType.NoDropShadowWindowHint)
@@ -407,6 +434,7 @@ class GlassPopup(QQuickView):
             return
         self._finished = True  # Native hide/close can reenter during hide().
         self.focus_timer.stop()
+        self.leave_timer.stop()
         self.tooltip_timer.stop()
         self.hide()
         self.state.dismiss()
@@ -422,6 +450,8 @@ class GlassPopup(QQuickView):
             if event.type() in (QEvent.Type.FocusOut, QEvent.Type.WindowDeactivate):
                 if not self.persistent:
                     self.focus_timer.start(0)
+            elif event.type() == QEvent.Type.Leave:
+                self.pointer_boundary(-1, -1)
             elif event.type() == QEvent.Type.Hide and not self.persistent:
                 self._finish()
             elif event.type() == QEvent.Type.Close:

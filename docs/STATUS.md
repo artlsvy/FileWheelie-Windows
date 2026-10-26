@@ -1322,3 +1322,57 @@ Quit and D-021 Precision Touchpad acceptance remain queued, not implicitly passe
 Follow GLASS_UI.md for exact build, selection, measurement and rollback commands.
 No automatic Windows reduced-motion/high-contrast detection is claimed; explicit
 reduced-motion and low-effects modes are available. No push was performed.
+
+
+## Phase 1 glass UI correction — awaiting user review (2026-10-26)
+
+**Phase 2 has NOT started and is blocked pending explicit user approval in a
+subsequent message. Stop on resume; do not infer approval from successful tests,
+screenshots or silence.** This supersedes earlier autonomous milestone guidance
+for the current UI/Markdown request. NEXT_TASK.md records the hard stop.
+
+Inspected all supplied native screenshots (/home/lsvy/1.jpg, 2.jpg, 3.jpg) before
+implementation. Fixed Quick glare/reflections to explicit local-zero wheel-center
+origins and exact polar endpoints. Rebuilt concentric annular lens caps as two
+quarter arcs per end; one outline, no displaced shadow/duplicate inner contour.
+Removed label dots. Shortest-path interrupted movement uses the displayed lens
+angle, including its first appearance. Stable sector hits, colors, transparency,
+240 logical pixel size and the QWidget fallback remain.
+
+Added 75 ms circular leave dismissal for categories/formats only, including the
+transparent corners inside MouseArea. Re-entry/center/sector motion stay open;
+expiration rechecks QCursor through QWindow logical mapping. Timers stop on
+finish/reopen/conversion start. Progress/results retain persistence/topmost
+behavior and leaving never cancels a job. No global hook, converter, navigation
+category, Mouse3 trust, Send to or tray-policy change was made.
+
+Actual rendered before/after proof is in docs/ui-phase1. Before uses the QML pair
+from f0e3203; after includes 100%/150%, both appearances, every sector for 2,3,4,5,6,8
+choices, reference Text/Image/Docs states and reduced motion. Visually inspected
+reference boards, option matrices and reduced-motion captures. These are actual
+Quick software raster images over synthetic lists, not native Windows captures.
+The generator positions the pointer and asserts the hover before capture, after
+catching queued cursor events that could otherwise overwrite a requested state.
+The DPI-aware self-test now accepts 360 physical pixels at 150% rather than
+mistaking that valid raster for a 240px failure.
+
+Final Kubuntu checks, Python 3.14.4 / PySide6 6.12.0:
+
+- **544 tests and 406 subtests passed** (full suite, exit 0).
+- Real QML origin/path/raster checks cover 2,3,4,5,6,8,12 options in both themes;
+  sampled pixels outside r112 stay transparent at every sector. Interrupted
+  wrap/selection, actual corner leave, debounce re-entry/reopen, center, progress
+  and result persistence are covered. Separate 100%/150% Qt processes verify
+  logical input and physical raster dimensions with actual QML pointer events.
+- Actual source `--self-test --ui-backend quick` at QT_SCALE_FACTOR=1.5 passed all
+  14 checks, including nonblank alpha render and 11 real converter pairs.
+- Scoped Ruff, compilation, diff checks and local design-skill validation pass.
+  Focused read-only review found no remaining material implementation findings.
+
+**WINDOWS_VALIDATION_REQUIRED:** Native leave events/Qt Popup semantics, D3D11
+raster/compositor, light/dark/mixed DPI/negative coordinates and rebuilt frozen
+execution remain pending. The supplied screenshots establish the old bugs, not
+acceptance of this fix. Earlier D-020 Cancel/retry/Quit and D-021 touchpad checks
+remain open. GLASS_UI_PHASE1.md gives before/after paths and exact source/EXE
+commands. No native build/test or push was performed here. Deliver Phase 1 and
+wait for the user's review; do not begin any Markdown/format expansion.

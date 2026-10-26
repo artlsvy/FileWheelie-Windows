@@ -319,3 +319,20 @@ represent older input. Do not equate preparation/queued frames with physical
 presentation, or claim 60 FPS from graphics backend selection alone.
 
 See PERFORMANCE_ARCHITECTURE.md and GLASS_UI.md for evidence and primary sources.
+
+
+## D-023 — Correct Quick geometry; dismiss selection on circular leave
+
+The supplied Windows screenshots establish displaced specular arcs, noisy lens
+contours and inconsistent dot positions. Use one explicit wheel-center origin,
+deterministic concentric annular geometry, single contours and no label dots.
+Retain the translucent green material and lightweight scenegraph implementation.
+
+Selection-only circular mouse leave starts a 75 ms debounce and current-position
+recheck. Re-entry/center motion stay open; conversion and result persistence are
+unchanged. No hooks, trust-rule changes or converter work are needed.
+
+The user explicitly requires a hard stop after this Phase 1 delivery. Markdown
+navigation/new formats (Phase 2) require approval in a subsequent user message;
+no test, screenshot, automatic continuation or absence of feedback substitutes
+for approval. Follow NEXT_TASK.md's review gate on every resume.

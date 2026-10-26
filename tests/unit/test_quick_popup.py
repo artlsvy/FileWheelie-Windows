@@ -314,3 +314,141 @@ def test_quick_conversion_cancel_persistence_and_error_feedback(app, target):
             view.setSource('')
             view.deleteLater()
             app.processEvents()
+
+
+@pytest.mark.parametrize('count', [2, 3, 4, 5, 6, 8, 12])
+def test_boundary_and_all_angles_are_independent_of_option_count(count):
+    from filewheel.ui.quick_geometry import inside_boundary
+    assert inside_boundary(120, 120)
+    assert not inside_boundary(18, 18)  # Inside MouseArea, outside the circle.
+    assert not inside_boundary(float('nan'), 120)
+    for degrees in range(360):
+        a = math.radians(degrees + .125)
+        x, y = 120 + 109 * math.sin(a), 120 - 109 * math.cos(a)
+        assert inside_boundary(x, y)
+        assert hit_test(x, y, count) == int((degrees + .125) * count / 360)
+        assert not inside_boundary(120 + 111 * math.sin(a), 120 - 111 * math.cos(a))
+
+
+def move_pointer(view, x, y):
+    from PySide6.QtCore import QPoint
+    from PySide6.QtGui import QCursor
+    from PySide6.QtTest import QTest
+    point = QPoint(x, y)
+    QCursor.setPos(view.mapToGlobal(point))
+    QTest.mouseMove(view, point)
+    # A window-system may coalesce identical moves; update the same session
+    # bridge explicitly for deterministic non-native timer assertions.
+    view.session.hoverAt(x, y)
+
+
+def test_circular_leave_without_click_then_reopen(popup, app, target):
+    from PySide6.QtTest import QTest
+    completions = []
+    popup.finished.connect(lambda: completions.append(True))
+    popup.present(target)
+    move_pointer(popup, 195, 120)
+    move_pointer(popup, 18, 18)  # No rectangular exit event.
+    assert popup.leave_timer.isActive()
+    QTest.qWait(110)
+    assert not popup.isVisible()
+    assert popup.state.stage == 'closed'
+    assert completions == [True]
+    popup.present(target)
+    move_pointer(popup, 120, 120)
+    QTest.qWait(110)
+    assert popup.isVisible()
+    assert not popup.leave_timer.isActive()
+    assert popup.session.hovered == -2
+
+
+def test_edge_debounce_reentry_center_and_fast_sector_movement(popup, app, target):
+    from PySide6.QtTest import QTest
+    popup.present(target)
+    move_pointer(popup, 18, 18)
+    QTest.qWait(20)
+    move_pointer(popup, 120, 120)
+    QTest.qWait(110)
+    assert popup.isVisible()
+    for x, y in ((195, 120), (120, 195), (45, 120), (120, 45)) * 8:
+        move_pointer(popup, x, y)
+    assert not popup.leave_timer.isActive()
+    QTest.qWait(110)
+    assert popup.isVisible()
+
+
+def test_debounce_rechecks_actual_cursor_and_rectangle_exit(popup, app, target):
+    from PySide6.QtCore import QPoint
+    from PySide6.QtGui import QCursor
+    from PySide6.QtTest import QTest
+    popup.present(target)
+    move_pointer(popup, 18, 18)
+    # Model a coalesced re-entry: the cursor is inside before a hover callback.
+    QCursor.setPos(popup.mapToGlobal(QPoint(120, 120)))
+    QTest.qWait(110)
+    assert popup.isVisible()
+    move_pointer(popup, -20, 120)
+    popup.session.clearHover()
+    QTest.qWait(110)
+    assert not popup.isVisible()
+
+
+def test_leaving_during_conversion_and_result_never_cancels_or_hides(app, target):
+    from PySide6.QtTest import QTest
+    from test_persistent_progress import BlockingManager
+    manager = BlockingManager()
+    view = GlassPopup(manager.registry, manager=manager, point_mapper=lambda p, s: p)
+    try:
+        view.present(target)
+        view.session.choose(0)
+        move_pointer(view, 18, 18)  # Pending selection leave must not survive start.
+        assert view.leave_timer.isActive()
+        view.session.choose(0)
+        pump(app, manager.started.is_set)
+        assert not view.leave_timer.isActive()
+        move_pointer(view, -30, 120)
+        view.session.clearHover()
+        QTest.qWait(110)
+        assert view.isVisible()
+        assert not view.job.cancelled.is_set()
+        manager.release.set()
+        pump(app, lambda: view.job is None)
+        assert view.state.stage == 'result'
+        move_pointer(view, 18, 18)
+        QTest.qWait(110)
+        assert view.isVisible()
+        assert view.session.statusTitle == 'Converted'
+    finally:
+        manager.release.set()
+        view.dismiss()
+        pump(app, lambda: view.job is None)
+        view.setSource('')
+        view.deleteLater()
+        app.processEvents()
+
+
+def test_actual_qml_motion_to_transparent_corner_starts_leave_debounce(popup, app, target):
+    from PySide6.QtCore import QPoint
+    from PySide6.QtGui import QCursor
+    from PySide6.QtTest import QTest
+    popup.present(target)
+    QTest.mouseMove(popup, QPoint(120, 120))
+    QTest.mouseMove(popup, QPoint(20, 20))
+    QCursor.setPos(popup.mapToGlobal(QPoint(20, 20)))
+    assert popup.session.hovered == -1
+    assert popup.leave_timer.isActive()  # MouseArea itself delivered this update.
+    QTest.qWait(110)
+    assert not popup.isVisible()
+
+
+def test_pending_leave_does_not_leak_into_reopened_wheel(popup, app, target):
+    from PySide6.QtTest import QTest
+    popup.present(target)
+    move_pointer(popup, 18, 18)
+    assert popup.leave_timer.isActive()
+    popup.dismiss()
+    popup.present(target)
+    move_pointer(popup, 120, 120)
+    QTest.qWait(110)
+    assert popup.isVisible()
+    assert not popup.leave_timer.isActive()
