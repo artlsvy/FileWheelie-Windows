@@ -1,0 +1,130 @@
+{
+  "backend": "widgets",
+  "diameter": 240,
+  "platform": "linux",
+  "graphics_api": "QWidget raster",
+  "reduced_motion": false,
+  "low_effects": false,
+  "quick_backend_requested": null,
+  "observed_operations": {
+    "activation": {
+      "count": 100,
+      "p50_ms": 1.2232250001034117,
+      "p95_ms": 1.2790700000095967,
+      "max_ms": 1.6832690000683215
+    },
+    "hover": {
+      "count": 100,
+      "p50_ms": 1.2355090000255586,
+      "p95_ms": 1.2847310001689038,
+      "max_ms": 1.4097949999722914
+    },
+    "level": {
+      "count": 100,
+      "p50_ms": 1.0722230001647404,
+      "p95_ms": 1.1194200001227728,
+      "max_ms": 1.2568480001391436
+    }
+  },
+  "animation_frame_intervals": null,
+  "animation_frame_samples": 0,
+  "qt_platform": "offscreen",
+  "python": "3.14.4",
+  "iterations": 100,
+  "imports_ms": 84.44862900000771,
+  "peak_rss_bytes": 68947968,
+  "metrics": {
+    "choose_to_paint": {
+      "count": 100,
+      "p50_ms": 1.051684000003661,
+      "p95_ms": 1.0989720001362002,
+      "max_ms": 1.234786999930293
+    },
+    "move_to_paint": {
+      "count": 100,
+      "p50_ms": 1.199571000142896,
+      "p95_ms": 1.2432829998942907,
+      "max_ms": 1.3708320000205276
+    },
+    "paint_cpu": {
+      "count": 300,
+      "p50_ms": 0.8604580000000084,
+      "p95_ms": 0.8870470000000297,
+      "max_ms": 1.2290390000000428
+    },
+    "paint_wall": {
+      "count": 300,
+      "p50_ms": 0.9983830000237504,
+      "p95_ms": 1.0431079999762005,
+      "max_ms": 1.4713710002070002
+    },
+    "present_to_paint": {
+      "count": 100,
+      "p50_ms": 1.2026570000216452,
+      "p95_ms": 1.2579509998431604,
+      "max_ms": 1.6571700000440615
+    },
+    "present_to_show": {
+      "count": 100,
+      "p50_ms": 0.1361059998998826,
+      "p95_ms": 0.15570300001854775,
+      "max_ms": 0.26348500000494823
+    },
+    "show_to_paint": {
+      "count": 100,
+      "p50_ms": 1.0632350001742452,
+      "p95_ms": 1.105353999946601,
+      "max_ms": 1.5205940001123963
+    }
+  },
+  "sample_count": 1100,
+  "cold_first_activation_metrics": {
+    "paint_cpu": {
+      "count": 1,
+      "p50_ms": 14.570958000000008,
+      "p95_ms": 14.570958000000008,
+      "max_ms": 14.570958000000008
+    },
+    "paint_wall": {
+      "count": 1,
+      "p50_ms": 14.794552000012118,
+      "p95_ms": 14.794552000012118,
+      "max_ms": 14.794552000012118
+    },
+    "present_to_paint": {
+      "count": 1,
+      "p50_ms": 15.861975999996503,
+      "p95_ms": 15.861975999996503,
+      "max_ms": 15.861975999996503
+    },
+    "present_to_show": {
+      "count": 1,
+      "p50_ms": 0.6796559998747398,
+      "p95_ms": 0.6796559998747398,
+      "max_ms": 0.6796559998747398
+    },
+    "show_to_paint": {
+      "count": 1,
+      "p50_ms": 15.182320000121763,
+      "p95_ms": 15.182320000121763,
+      "max_ms": 15.182320000121763
+    }
+  },
+  "heartbeat_spawned_conversion": {
+    "samples": 252,
+    "interval_ms": 5,
+    "p95_gap_ms": 5.746382999859634,
+    "max_gap_ms": 6.742282000004707,
+    "child_isolated": true
+  },
+  "limits": [
+    "Synthetic input and preview registry; no Windows hook/Explorer evidence",
+    "Widget boundary=paint dispatch; Quick boundary=frameSwapped queued for presentation",
+    "Quick preparation stages and QWidget paint CPU are not equivalent",
+    "Animation samples begin at the first 110ms hover pulse; 145ms lens motion overlaps pulses",
+    "Software offscreen frameSwapped timestamps are not native display FPS",
+    "Offscreen defaults; use QT_QPA_PLATFORM for a native desktop comparison",
+    "CPU fixture uses production ConversionJob; no real document conversion"
+  ],
+  "cold_process_to_first_paint_ms": 138.3917250000195
+}

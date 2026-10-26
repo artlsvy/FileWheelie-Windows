@@ -1247,3 +1247,27 @@ geometry/QML/navigation/focus/actual spawned PNG-conversion tests pass. Current
 hover is static; the moving lens is deliberately the next separate commit.
 Qt preparation timing is explicitly distinct from actual frame presentation.
 No native Windows focus/DPI/compositor or frozen Quick execution was tested.
+
+## Performance phase3 — moving lens and actual frame observations
+
+Added retained rounded-annular glass lens, shortest-arc145ms movement,70ms
+appearance and120ms4% label emphasis. Reduced motion/low effects are immediate;
+low effects is opaque; hit geometry does not move. Actual QML MouseArea/keyboard
+and native-hide lifecycle regression tests were added.17 Quick tests pass,
+including real spawned conversion, alpha and rendered contrast across themes.
+The fresh four-backdrop visual proof in docs/performance/glass-proof.png is an
+actual Quick raster composited over synthetic scenes, not Windows/desktop capture.
+
+Serial240px comparison: QWidget/Quick process-first-render138.39/167.15ms;
+peakRSS65.75/92.81MiB; warm activation p951.279/1.371ms. Quick hover/level queued-
+frame p955.280/6.763ms; Widget paint-dispatch p951.285/1.119ms (different
+boundaries, not display latency). Active software lens swaps:67 frames,
+median15.973/p9517.733/max21.905ms; not a locked60FPS/native GPU claim. Both GUI
+heartbeats remain responsive while a1.2s production spawned CPU fixture runs.
+Scoped Ruff passes; focused read-only review found no material phase1–3 issues.
+Final native renderer integration/resource review is still queued. Next stage:
+experimental selectable Quick backend with default Widget preserved, packaging
+seams/smoke checks, reusable native design skill and native validation instructions.
+
+Phase3 final full Linux/offscreen suite: **500 tests /406 subtests passed**.
+Scoped Ruff and git diff --check passed. No native Windows run or push occurred.

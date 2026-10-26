@@ -20,3 +20,10 @@ Phase2 source prototype is now runnable:
 `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software PYTHONPATH=src .venv-ui/bin/python -m filewheel.ui.glass_demo --screenshot /tmp/glass.png`.
 Ten actual QML/geometry/worker tests pass. Next: staged moving lens, comparison
 benchmark/visual QA, then opt-in integration and native resource validation.
+
+Phase3 lens and rendered proof now exist. Actual software frame cadence and
+240px renderer comparison are in PERFORMANCE_ARCHITECTURE.md. Quick's richer
+visuals justify an experimental opt-in, not a default replacement or language
+rewrite. Finish backend selection/fallback and resource/smoke checks, then the
+native-only design skill and Windows instructions. Keep all earlier native
+acceptance queues visible. Do not claim Linux software FPS establishes D3D11 FPS.

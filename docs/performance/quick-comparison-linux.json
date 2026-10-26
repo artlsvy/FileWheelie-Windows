@@ -1,0 +1,87 @@
+{
+  "backend": "quick",
+  "diameter": 240,
+  "platform": "linux",
+  "graphics_api": "GraphicsApi.Software",
+  "reduced_motion": false,
+  "low_effects": false,
+  "quick_backend_requested": "software",
+  "observed_operations": {
+    "activation": {
+      "count": 100,
+      "p50_ms": 0.9664539998084365,
+      "p95_ms": 1.3707630000681092,
+      "max_ms": 2.0159330001661147
+    },
+    "hover": {
+      "count": 100,
+      "p50_ms": 4.571619000216742,
+      "p95_ms": 5.27954699964539,
+      "max_ms": 5.564541999774519
+    },
+    "level": {
+      "count": 100,
+      "p50_ms": 6.211496000105399,
+      "p95_ms": 6.762800999695173,
+      "max_ms": 7.120592000319448
+    }
+  },
+  "animation_frame_intervals": {
+    "count": 66,
+    "p50_ms": 15.97308400005204,
+    "p95_ms": 17.733156999838684,
+    "max_ms": 21.905485999923258
+  },
+  "animation_frame_samples": 67,
+  "qt_platform": "offscreen",
+  "python": "3.14.4",
+  "iterations": 100,
+  "imports_ms": 98.4066820001317,
+  "peak_rss_bytes": 97316864,
+  "metrics": {
+    "quick_choose_to_sync": {
+      "count": 100,
+      "p50_ms": 5.3372859997580235,
+      "p95_ms": 5.828166999890527,
+      "max_ms": 5.859254999904806
+    },
+    "quick_move_to_sync": {
+      "count": 100,
+      "p50_ms": 3.5548209998523816,
+      "p95_ms": 4.100344000107725,
+      "max_ms": 4.115283000373893
+    },
+    "quick_present_to_sync": {
+      "count": 100,
+      "p50_ms": 0.07022199997663847,
+      "p95_ms": 0.09122099982050713,
+      "max_ms": 0.5090450003990554
+    }
+  },
+  "sample_count": 300,
+  "cold_first_activation_metrics": {
+    "quick_present_to_sync": {
+      "count": 1,
+      "p50_ms": 2.1462780000547355,
+      "p95_ms": 2.1462780000547355,
+      "max_ms": 2.1462780000547355
+    }
+  },
+  "heartbeat_spawned_conversion": {
+    "samples": 253,
+    "interval_ms": 5,
+    "p95_gap_ms": 5.69087900021259,
+    "max_gap_ms": 6.289572000241606,
+    "child_isolated": true
+  },
+  "limits": [
+    "Synthetic input and preview registry; no Windows hook/Explorer evidence",
+    "Widget boundary=paint dispatch; Quick boundary=frameSwapped queued for presentation",
+    "Quick preparation stages and QWidget paint CPU are not equivalent",
+    "Animation samples begin at the first 110ms hover pulse; 145ms lens motion overlaps pulses",
+    "Software offscreen frameSwapped timestamps are not native display FPS",
+    "Offscreen defaults; use QT_QPA_PLATFORM for a native desktop comparison",
+    "CPU fixture uses production ConversionJob; no real document conversion"
+  ],
+  "cold_process_to_first_paint_ms": 167.1489680002196
+}

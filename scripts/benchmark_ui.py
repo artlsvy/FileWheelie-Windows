@@ -1,4 +1,4 @@
-"""Repeatable local QWidget CPU/event-loop benchmark (no compositor claims).
+"""Repeatable QWidget/Quick CPU/event-loop benchmark (no compositor claims).
 
 Run with the project's Python 3.14 UI environment. Synthetic preview targets
 exercise existing UI code; the declared preview registry attests no converter.
@@ -10,8 +10,9 @@ import os
 import subprocess
 import sys
 import tempfile
+from itertools import pairwise
 from pathlib import Path
-from time import monotonic
+from time import monotonic, sleep
 
 
 class BusyEngine:
@@ -29,7 +30,7 @@ class BusyEngine:
 
     def convert(self, source, extension, workdir, progress, cancel):
         from filewheel.converters.base import EngineOutput, check_cancel
-        end = monotonic() + .4
+        end = monotonic() + 1.2
         while monotonic() < end:
             check_cancel(cancel)
         output = workdir / "result.json"
@@ -51,8 +52,10 @@ def peak_rss_bytes():
         return None
 
 
-def worker(iterations):
+def worker(iterations, backend, diameter):
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    if backend == 'quick' and os.getenv('QT_QPA_PLATFORM') == 'offscreen':
+        os.environ.setdefault('QT_QUICK_BACKEND', 'software')
     import_started = monotonic()
     from pathlib import PureWindowsPath
 
@@ -66,35 +69,72 @@ def worker(iterations):
     from filewheel.performance import get_recorder, summarize
     from filewheel.ui.conversion_job import ConversionJob
     from filewheel.ui.popup import RadialPopup
+    if backend == 'quick':
+        from filewheel.ui.quick_popup import GlassPopup
     imports_ms = (monotonic() - import_started) * 1000
     app = QApplication([])
-    popup = RadialPopup(point_mapper=lambda point, screens: point)
+    if backend == 'quick':
+        popup = GlassPopup(point_mapper=lambda point, screens: point)
+    else:
+        popup = RadialPopup(point_mapper=lambda point, screens: point, diameter=diameter)
+    swap_times = []
+    if backend == 'quick':
+        # Benchmark-only direct callback: clock/list append, no Qt GUI calls or IO.
+        popup.frameSwapped.connect(lambda: swap_times.append(monotonic()), Qt.ConnectionType.DirectConnection)
+    graphics_api = str(popup.rendererInterface().graphicsApi()) if backend == 'quick' else 'QWidget raster'
+    observed = {'activation': [], 'hover': [], 'level': []}
     target = TargetResolution(PureWindowsPath("C:/benchmark/preview.png"), 0,
                               (200, 200), monotonic(), source="shell_explicit")
 
-    def paint_events():
-        # Two bounded dispatches handle show/update and posted paint delivery.
-        app.processEvents()
-        app.processEvents()
+    def observe(kind, operation):
+        before = len(swap_times)
+        started = monotonic()
+        operation()
+        if backend == 'quick':
+            deadline = monotonic() + .6
+            while len(swap_times) == before and monotonic() < deadline:
+                app.processEvents()
+                sleep(.0005)
+            if len(swap_times) == before:
+                raise RuntimeError('Quick did not queue a rendered frame')
+            observed[kind].append((swap_times[before] - started) * 1000)
+        else:
+            app.processEvents()
+            app.processEvents()
+            observed[kind].append((monotonic() - started) * 1000)
 
-    popup.present(target)
-    paint_events()
+    observe('activation', lambda: popup.present(target))
     first_paint_at = monotonic()
+    if backend == 'quick':
+        graphics_api = str(popup.rendererInterface().graphicsApi())
     cold_rows = get_recorder().snapshot()
+    observed = {'activation': [], 'hover': [], 'level': []}
     warm_start = len(cold_rows)
-    for index in range(iterations):
-        popup.present(target)
-        paint_events()
-        angle = index % 2
-        position = QPointF(115 + angle * 15, 45 + angle * 20)
+    def mouse_move(index):
+        # Same reference geometry input, scaled for the QWidget size.
+        scale = diameter / 240 if backend == 'widgets' else 1
+        position = QPointF((115 + index % 2 * 15) * scale, (45 + index % 2 * 20) * scale)
         app.sendEvent(popup, QMouseEvent(QEvent.Type.MouseMove, position, position,
                       Qt.MouseButton.NoButton, Qt.MouseButton.NoButton,
                       Qt.KeyboardModifier.NoModifier))
-        paint_events()
-        popup._choose(0)
-        paint_events()
-    popup.dismiss()
-    paint_events()
+    for index in range(iterations):
+        observe('activation', lambda: popup.present(target))
+        observe('hover', lambda index=index: mouse_move(index))
+        choose = popup.session.choose if backend == 'quick' else popup._choose
+        observe('level', lambda choose=choose: choose(0))
+    warm_rows = get_recorder().snapshot()[warm_start:]
+    animation_start = [None]
+    # Keep the scene active while the real spawned fixture works.
+    hover_timer = QTimer()
+    hover_timer.setInterval(110)
+    hover_index = [0]
+    def animate_hover():
+        if animation_start[0] is None:
+            animation_start[0] = len(swap_times)
+        hover_index[0] += 1
+        mouse_move(hover_index[0])
+    hover_timer.timeout.connect(animate_hover)
+    hover_timer.start()
 
     heartbeat = []
     timer = QTimer()
@@ -123,17 +163,36 @@ def worker(iterations):
         job.start()
         loop.exec()
         timer.stop()
+        hover_timer.stop()
         timeout.stop()
         if not job.wait(5000):
             raise RuntimeError("Benchmark conversion worker failed to stop")
         if not outcome or outcome[0][1] is not None:
             raise RuntimeError("Benchmark conversion fixture did not complete")
         child_isolated = job.worker_pid is not None and job.worker_pid != os.getpid()
-    recorder = get_recorder()
-    rows = recorder.snapshot()[warm_start:]
+    rows = warm_rows
+    animation_swaps = swap_times[animation_start[0]:] if animation_start[0] is not None else []
+    intervals = [(b - a) * 1000 for a, b in pairwise(animation_swaps)]
+    def stats(values):
+        ordered = sorted(values)
+        return ({'count': len(values), 'p50_ms': ordered[(len(ordered) - 1) // 2],
+                 'p95_ms': ordered[max(0, (len(ordered) * 95 + 99) // 100 - 1)],
+                 'max_ms': max(values)} if values else None)
+    popup.dismiss()
+    if backend == 'quick':
+        popup.setSource('')
+    popup.deleteLater()
+    app.processEvents()
     ordered = sorted(heartbeat)
     return {
-        "backend": "widgets", "platform": sys.platform,
+        "backend": backend, "diameter": diameter, "platform": sys.platform,
+        "graphics_api": graphics_api,
+        "reduced_motion": os.getenv('FILEWHEEL_REDUCED_MOTION') == '1',
+        "low_effects": os.getenv('FILEWHEEL_LOW_EFFECTS') == '1',
+        "quick_backend_requested": os.getenv('QT_QUICK_BACKEND') if backend == 'quick' else None,
+        "observed_operations": {key: stats(value) for key, value in observed.items()},
+        "animation_frame_intervals": stats(intervals),
+        "animation_frame_samples": len(animation_swaps),
         "qt_platform": app.platformName(), "python": sys.version.split()[0],
         "iterations": iterations, "imports_ms": imports_ms,
         "first_paint_at": first_paint_at, "peak_rss_bytes": peak_rss_bytes(),
@@ -147,7 +206,10 @@ def worker(iterations):
             "child_isolated": child_isolated,
         },
         "limits": ["Synthetic input and preview registry; no Windows hook/Explorer evidence",
-                   "Paint callback completion measures CPU/event dispatch, not displayed frames",
+                   "Widget boundary=paint dispatch; Quick boundary=frameSwapped queued for presentation",
+                   "Quick preparation stages and QWidget paint CPU are not equivalent",
+                   "Animation samples begin at the first 110ms hover pulse; 145ms lens motion overlaps pulses",
+                   "Software offscreen frameSwapped timestamps are not native display FPS",
                    "Offscreen defaults; use QT_QPA_PLATFORM for a native desktop comparison",
                    "CPU fixture uses production ConversionJob; no real document conversion"],
     }
@@ -155,7 +217,8 @@ def worker(iterations):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--backend", choices=("widgets",), default="widgets")
+    parser.add_argument("--backend", choices=("widgets", "quick"), default="widgets")
+    parser.add_argument("--diameter", type=int, choices=(170, 240), default=240)
     parser.add_argument("--iterations", type=int, default=100)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
@@ -165,8 +228,10 @@ def main():
     if sys.version_info[:2] != (3, 14):
         parser.error("run this benchmark with Python 3.14")
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    if args.backend == "quick" and args.diameter != 240:
+        parser.error("Quick prototype is 240px; use --diameter 240")
     if args.worker:
-        print(json.dumps(worker(args.iterations)))
+        print(json.dumps(worker(args.iterations, args.backend, args.diameter)))
         return
     if args.output is None:
         parser.error("--output is required")
@@ -175,7 +240,8 @@ def main():
         environment["FILEWHEEL_TIMINGS"] = str(Path(directory) / "timings.json")
         started = monotonic()
         result = subprocess.run([sys.executable, str(Path(__file__).resolve()), "--worker",
-                                 "--iterations", str(args.iterations)], env=environment,
+                                 "--iterations", str(args.iterations), "--backend", args.backend,
+                                 "--diameter", str(args.diameter)], env=environment,
                                 capture_output=True, text=True, check=True, timeout=90)
         report = json.loads(result.stdout)
         report["cold_process_to_first_paint_ms"] = (report.pop("first_paint_at") - started) * 1000

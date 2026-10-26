@@ -162,3 +162,79 @@ def test_actual_conversion_uses_shared_spawned_manager_and_keeps_input(app, tmp_
         view.setSource('')
         view.deleteLater()
         app.processEvents()
+
+
+def test_real_qml_pointer_keyboard_and_center_events(popup, app, target):
+    from PySide6.QtCore import QPoint
+    from PySide6.QtTest import QTest
+    popup.present(target)
+    assert QTest.qWaitForWindowExposed(popup, 1000)
+    QTest.mouseMove(popup, QPoint(195, 120))
+    pump(app, lambda: popup.session.hovered == 0)
+    QTest.mouseClick(popup, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier,
+                     QPoint(195, 120))
+    assert popup.state.stage == 'formats'
+    QTest.keyClick(popup, Qt.Key.Key_Right)
+    assert popup.session.keyboardIndex == 0
+    QTest.mouseClick(popup, Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier,
+                     QPoint(120, 120))
+    assert popup.state.stage == 'categories'
+    QTest.keyClick(popup, Qt.Key.Key_Escape)
+    assert not popup.isVisible()
+
+
+def test_native_hide_finishes_once_for_transient_invocation(popup, app, target):
+    completions = []
+    popup.finished.connect(lambda: completions.append(True))
+    popup.present(target)
+    popup.hide()  # Models the native Qt.Popup outside-dismissal hide path.
+    app.processEvents()
+    assert completions == [True]
+    assert popup.state.stage == 'closed'
+    popup.dismiss()
+    assert completions == [True]
+
+
+def test_reduced_motion_low_effects_and_shortest_arc_keep_hit_regions(popup, app, target):
+    popup.present(target)
+    popup.session.choose(0)
+    root = popup.rootObject()
+    popup.session._reduced = True
+    popup.session._low = True
+    popup.session.appearanceChanged.emit()
+    assert root.property('animateLens') is False
+    popup.session.hoverAt(140, 45)
+    first = root.property('lensRotation')
+    # Cross the top boundary (last/first sector); never spin around a full circle.
+    popup.session.hoverAt(100, 45)
+    second = root.property('lensRotation')
+    assert abs(second - first) <= 180
+    assert popup.session.hovered == hit_test(100, 45, len(popup.state.options))
+    assert not popup.errors()
+
+
+@pytest.mark.parametrize('dark', [False, True])
+@pytest.mark.parametrize('low_effects', [False, True])
+def test_rendered_material_contrast_over_black_white_and_opaque_fallback(popup, app, target,
+                                                                        dark, low_effects):
+    from filewheel.ui.theme import contrast_ratio
+    popup.present(target)
+    popup.session._dark = dark
+    popup.session._low = low_effects
+    popup.session._reduced = True
+    popup.session.appearanceChanged.emit()
+    popup.session.choose(0)
+    popup.session.hoverAt(195, 120)
+    app.processEvents()
+    image = popup.grabWindow()
+    foreground = popup.rootObject().property('foreground').name()
+    # Sample actual rendered material near opaque text, away from glyphs/rims.
+    for x, y in ((196, 105), (196, 137), (44, 105), (44, 137), (120, 50)):
+        color = image.pixelColor(x, y)
+        for background in (0, 255):
+            channels = [round(channel * color.alphaF() + background * (1 - color.alphaF()))
+                        for channel in (color.red(), color.green(), color.blue())]
+            composite = '#' + ''.join(f'{channel:02x}' for channel in channels)
+            assert contrast_ratio(foreground, composite) >= 4.5
+    assert image.pixelColor(0, 0).alpha() == 0
+    assert (image.pixelColor(120, 50).alpha() == 255) is low_effects

@@ -42,7 +42,7 @@ class GlassSession(QObject):
         self._dark = QApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
         self._reduced = os.getenv('FILEWHEEL_REDUCED_MOTION') == '1'
         self._low = os.getenv('FILEWHEEL_LOW_EFFECTS') == '1'
-        self._moving = False  # Enabled by the separately staged lens experiment.
+        self._moving = True
         QApplication.styleHints().colorSchemeChanged.connect(self._sync_scheme)
 
     @Slot()
@@ -163,7 +163,8 @@ class GlassSession(QObject):
                 self._keyboard = count - 1
             else:
                 delta = -1 if key in (Qt.Key.Key_Left, Qt.Key.Key_Up) else 1
-                self._keyboard = (self._keyboard + delta) % count
+                self._keyboard = ((self._keyboard + delta) % count if self._keyboard >= 0
+                                  else 0 if delta > 0 else count - 1)
             self._hovered = -1
             self.view.mark_pending('move_to_paint')
             self.hoverChanged.emit()
@@ -342,6 +343,7 @@ class GlassPopup(QQuickView):
         self.raise_()
         self.requestActivate()
         self.rootObject().forceActiveFocus()
+        self.update()
         return True
 
     def set_persistent(self, enabled):
@@ -371,9 +373,10 @@ class GlassPopup(QQuickView):
             return
         self.focus_timer.stop()
         self.tooltip_timer.stop()
+        was_finished = self._finished
+        self._finished = True
         self.hide()
-        if not self._finished:
-            self._finished = True
+        if not was_finished:
             self.state.dismiss()
             self.session._refresh()
             self.finished.emit()
@@ -387,6 +390,8 @@ class GlassPopup(QQuickView):
             if event.type() in (QEvent.Type.FocusOut, QEvent.Type.WindowDeactivate):
                 if not self.persistent:
                     self.focus_timer.start(0)
+            elif event.type() == QEvent.Type.Hide and not self.persistent:
+                self._finish()
             elif event.type() == QEvent.Type.Close:
                 self.dismiss()
                 event.ignore()

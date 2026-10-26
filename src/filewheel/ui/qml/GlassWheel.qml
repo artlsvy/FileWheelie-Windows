@@ -8,6 +8,8 @@ Item {
     width: 240
     height: 240
     focus: true
+    // MouseArea has its own wheel signal; resolve the context bridge here.
+    readonly property var session: wheel
 
     readonly property bool selection: wheel.stage === "categories" || wheel.stage === "formats"
     readonly property int count: wheel.labels.length
@@ -15,13 +17,33 @@ Item {
     readonly property color foreground: wheel.dark ? "#F3ECDD" : "#20392F"
     readonly property color accent: wheel.dark ? "#D6BF83" : "#65532A"
     readonly property color material: wheel.dark
-        ? (wheel.lowEffects ? "#182C24" : "#F5182C24")
-        : (wheel.lowEffects ? "#F4F0E5" : "#F5F4F0E5")
+        ? (wheel.lowEffects ? "#182C24" : "#D8182C24")
+        : (wheel.lowEffects ? "#F4F0E5" : "#D8F4F0E5")
     readonly property color selectedMaterial: wheel.dark ? "#304A38" : "#E3E5CF"
     readonly property real sectorAngle: count > 0 ? 360 / count : 360
     readonly property real halfRadians: sectorAngle * Math.PI / 360
     readonly property real radians: sectorAngle * Math.PI / 180
     readonly property real progressAngle: Math.max(0, Math.min(1, wheel.progress)) * Math.PI * 2
+    readonly property bool animateLens: wheel.movingLens && !wheel.reducedMotion && !wheel.lowEffects
+    property real lensRotation: 0
+    property bool lensReady: false
+    property real pointerAngle: 0
+
+    function updateLens() {
+        if (activeIndex < 0 || count === 0)
+            return
+        const target = (activeIndex + 0.5) * sectorAngle
+        // Keep the target unwrapped so neighbours across zero take the short arc.
+        const delta = ((target - lensRotation + 540) % 360 + 360) % 360 - 180
+        lensRotation = lensReady ? lensRotation + delta : target
+        lensReady = true
+    }
+    onActiveIndexChanged: updateLens()
+    onCountChanged: {
+        lensReady = false
+        updateLens()
+    }
+    Component.onCompleted: updateLens()
 
     Keys.onPressed: function(event) {
         wheel.keyAction(event.key)
@@ -33,6 +55,11 @@ Item {
         color: root.material
         border.width: 1
         border.color: wheel.dark ? "#A196B69A" : "#B38B9478"
+        gradient: Gradient {
+            GradientStop { position: 0; color: wheel.lowEffects ? root.material : (wheel.dark ? "#DF304637" : "#E0FFFDF3") }
+            GradientStop { position: 0.45; color: root.material }
+            GradientStop { position: 1; color: wheel.lowEffects ? root.material : (wheel.dark ? "#D9172B23" : "#D9E0E2CD") }
+        }
     }
 
     // Only this fixed path rotates on hover. No per-frame path generation,
@@ -40,7 +67,7 @@ Item {
     Shape {
         x: 120; y: 120
         width: 0; height: 0
-        visible: root.selection && root.count > 0 && root.activeIndex >= 0
+        visible: !wheel.movingLens && root.selection && root.count > 0 && root.activeIndex >= 0
         rotation: root.activeIndex * root.sectorAngle
         transformOrigin: Item.TopLeft
         ShapePath {
@@ -79,6 +106,40 @@ Item {
         }
     }
 
+    Lens {
+        x: 120; y: 120
+        dark: wheel.dark
+        lowEffects: wheel.lowEffects
+        // Rounded ends already occupy about 46 degrees; cap the entire lens
+        // near 85 degrees rather than filling half the wheel for two options.
+        halfArc: Math.max(0.5, Math.min(18, (root.sectorAngle - 48) / 2))
+        rotation: root.lensRotation
+        opacity: wheel.movingLens && root.selection && root.count > 0 && root.activeIndex >= 0 ? 1 : 0
+        Behavior on rotation {
+            enabled: root.animateLens && root.lensReady
+            NumberAnimation { duration: 145; easing.type: Easing.OutCubic }
+        }
+        Behavior on opacity {
+            enabled: root.animateLens
+            NumberAnimation { duration: 70; easing.type: Easing.OutCubic }
+        }
+    }
+
+    // Pointer glare is a transformed fixed arc, independent of label raster.
+    Shape {
+        x: 120; y: 120
+        rotation: root.pointerAngle
+        visible: wheel.movingLens && !wheel.lowEffects && root.selection && wheel.hovered >= 0
+        ShapePath {
+            fillColor: "transparent"
+            strokeColor: wheel.dark ? "#70E5EBD8" : "#B0FFFFFF"
+            strokeWidth: 1.8
+            capStyle: ShapePath.RoundCap
+            startX: -24; startY: -101
+            PathArc { x: 24; y: -101; radiusX: 104; radiusY: 104; direction: PathArc.Clockwise }
+        }
+    }
+
     // A continuous, restrained specular edge belongs to the whole surface.
     Shape {
         visible: !wheel.lowEffects
@@ -114,12 +175,24 @@ Item {
             color: root.foreground
             font.family: "Segoe UI"
             font.pixelSize: 14
-            font.weight: root.activeIndex === index ? Font.DemiBold : Font.Medium
+            font.weight: Font.Medium
+            scale: wheel.movingLens && root.activeIndex === index ? 1.04 : 1
+            Behavior on scale {
+                enabled: root.animateLens
+                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+            }
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.Wrap
             maximumLineCount: 2
             elide: Text.ElideRight
+            textFormat: Text.PlainText
+            Rectangle {
+                visible: root.activeIndex === index
+                width: 4; height: 4; radius: 2
+                x: parent.width / 2 - 2; y: parent.height - 3
+                color: root.accent
+            }
         }
     }
 
@@ -202,8 +275,11 @@ Item {
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
-        onPositionChanged: function(mouse) { wheel.hoverAt(mouse.x, mouse.y) }
-        onExited: wheel.clearHover()
-        onPressed: function(mouse) { wheel.activateAt(mouse.x, mouse.y) }
+        onPositionChanged: function(mouse) {
+            root.pointerAngle = Math.atan2(mouse.x - 120, 120 - mouse.y) * 180 / Math.PI
+            root.session.hoverAt(mouse.x, mouse.y)
+        }
+        onExited: root.session.clearHover()
+        onPressed: function(mouse) { root.session.activateAt(mouse.x, mouse.y) }
     }
 }

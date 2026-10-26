@@ -152,3 +152,64 @@ boundary and must be labelled separately.
 
 Prototype results, visuals, native instructions and backend selection will be
 recorded below when implemented. The original renderer remains available.
+
+## Prototype and moving lens comparison
+
+The Quick prototype is a separate240px QQuickView/scene, using the existing
+RadialState and production ConversionJob. Real PNG → JPEG fixture conversion,
+keyboard navigation, Back/Escape, actual QML pointer dispatch, transient native
+hide and persistent result behavior pass on the software scenegraph. A QML
+MouseArea's `wheel` signal shadowed the original context name; actual pointer
+coverage caught it, and the scene now resolves its session at the root.
+
+The raised capsule lens is retained geometry, r46..106, rotated along the shorter
+arc. Its145ms OutCubic motion,70ms appearance and120ms label emphasis animate
+transforms/opacity rather than rebuilding paths or hit regions. The base/rim
+remains continuous, without adjacent doubled sector outlines. Reduced-motion
+and low-effects modes disable transitions; low-effects material is opaque.
+Idle scenes have no perpetual animations or Python frame callbacks when timing
+is disabled. The optional shader stage is not justified: the lightweight lens
+works without shader binaries, extra sampling or a software-renderer exception.
+
+![Actual Quick rendering over synthetic backdrops](performance/glass-proof.png)
+
+This board composites actual QML software-renderer grabs over four **synthetic**
+Explorer/media backdrops. It is not a Windows screenshot, desktop capture or
+proof of native compositing. Pixel tests verify zero-alpha corners and sampled
+material/text contrast >=4.5:1 over black and white in both themes/effect modes.
+It does not establish every real Windows backdrop, font or display condition.
+Regenerate with `scripts/render_glass_preview.py --output-dir docs/performance`.
+
+The following serial local runs use240px for **both** renderers,100 warm
+operations each, then a1.2s spawned CPU fixture while hover transitions continue.
+[Widget report](performance/widgets240-comparison-linux.json),
+[Quick report](performance/quick-comparison-linux.json). The170px baseline above
+is retained separately. No Windows Explorer, real hardware input or GPU display
+was measured. Quick reports `GraphicsApi.Software`, not hardware acceleration.
+
+| Local observation | QWidget240 | Quick240 + lens |
+|---|---:|---:|
+| Fresh process to first render boundary | 138.39ms | 167.15ms |
+| UI imports | 84.45ms | 98.41ms |
+| Peak process RSS incl. fixture supervision | 65.75MiB | 92.81MiB |
+| Warm activation p95 | 1.279ms | 1.371ms |
+| Hover update boundary p95 | 1.285ms | 5.280ms |
+| Category change boundary p95 | 1.119ms | 6.763ms |
+| 5ms GUI heartbeat p95/max under spawned work | 5.746/6.742ms | 5.691/6.290ms |
+| Active lens frameSwapped intervals | not sampled | p50 15.973/p95 17.733/max21.905ms;67 frames |
+
+**The boundaries differ:** QWidget samples paint dispatch completion, Quick
+samples `frameSwapped` (queued presentation). Quick's earlier GUI preparation
+stages are separately named `quick_*_to_sync`; those are not render completion.
+Do not interpret the table as proof that one renderer displays input N times
+faster. The software lens has roughly16ms median frame cadence, with outliers
+above16.67ms; it is **not** a verified locked60FPS result or Windows GPU result.
+Samples begin at the first110ms hover pulse;145ms transitions overlap later
+pulses to exercise active motion without counting the pre-input idle gap.
+
+Quick adds approximately29ms fresh-process time and27MiB peak RSS in this local
+comparison. Its benefit is richer retained motion/material, not an established
+latency reduction. This is reasonable for an **explicit experimental opt-in**,
+not a default replacement. Keep QWidget available and default until Windows
+performance, focus, DPI and frozen bundle acceptance pass. C++ migration remains
+unjustified by the evidence gathered so far.
