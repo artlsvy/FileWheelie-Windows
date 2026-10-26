@@ -1208,3 +1208,23 @@ those native tests pass. The previous large-PDF Cancel/Quit native acceptance
 queue remains open unless separately reported successful.
 
 API reference: [MSLLHOOKSTRUCT flags](https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct).
+
+## Performance phase 1 — opt-in baseline (2026-10-26)
+
+Added bounded, opt-in local timing for the existing runtime/UI, without changing
+input policy, mappings or engines. The recorder buffers fixed stage/duration
+pairs and flushes only at exit/request; off by default, no file/title/point data.
+Actual Linux offscreen sample (100 warm operations): fresh preview process to
+first paint140.60ms; warm p95 activation1.046ms, hover0.998ms, level0.965ms;
+paint GUI-thread CPU p95 0.713ms; peakRSS65.13MiB. A 5ms GUI heartbeat during a
+production spawned CPU fixture had p95 gap5.082ms/max5.589ms, isolated child PID.
+Separate actual registry first/repeated discovery49.50/1.28ms. These establish
+local CPU/event-loop behavior, not Windows hardware input/compositor latency.
+See PERFORMANCE_ARCHITECTURE.md and committed raw report. Do not infer a C++
+rewrite is necessary; retain the current host and measure Explorer natively.
+Phase2 is a separate QML prototype; original renderer remains the default.
+Touchpad and cancellation native acceptance queues above remain open.
+
+Phase1 checks: full suite482 tests /406 subtests passed. After tightening timing
+output to exclusive, once-only flush (never overwrite an existing file/link),
+27 focused timing/runtime/UI tests passed; scoped Ruff and diff checks passed.

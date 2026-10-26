@@ -4,12 +4,14 @@ import math
 import sys
 from dataclasses import replace
 from pathlib import Path
+from time import monotonic, thread_time
 
 from PySide6.QtCore import QEvent, QEventLoop, QPoint, QPointF, QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QApplication, QWidget
 
 from filewheel.core.models import TargetResolution
+from filewheel.performance import get_recorder
 from filewheel.ui.arc_text import arc_direction, arc_glyphs
 from filewheel.ui.desktop_errors import DesktopInitializationError
 from filewheel.ui.placement import Rect, popup_position
@@ -117,6 +119,8 @@ class RadialPopup(QWidget):
             | Qt.WindowType.WindowStaysOnTopHint
             | Qt.WindowType.NoDropShadowWindowHint,
         )
+        self._timings = get_recorder()
+        self._pending_timings = {}
         self.diameter = diameter
         self._scale = diameter / self.reference_diameter
         self.state = RadialState(registry)
@@ -156,6 +160,10 @@ class RadialPopup(QWidget):
     def present(self, target):
         if self.job is not None:
             return False
+        if self._timings.enabled:
+            self._pending_timings.clear()
+            self._pending_timings["present_to_paint"] = monotonic()
+        present_started = self._pending_timings.get("present_to_paint")
         self._closing = False
         self.conversion_result = None
         self.conversion_error = None
@@ -215,6 +223,11 @@ class RadialPopup(QWidget):
         self._hover_amounts = [0.0] * len(self.state.options)
         try:
             self.show()
+            if self._timings.enabled:
+                now = monotonic()
+                self._timings.record("present_to_show",
+                    (now - present_started) * 1000)
+                self._pending_timings["show_to_paint"] = now
             self.raise_()
             self.activateWindow()
             self.setFocus(Qt.FocusReason.PopupFocusReason)
@@ -325,6 +338,8 @@ class RadialPopup(QWidget):
         )
 
     def mouseMoveEvent(self, event):
+        if self._timings.enabled:
+            self._pending_timings.setdefault("move_to_paint", monotonic())
         self.hovered = self._hit(event.position())
         if self.state.stage in ("categories", "formats"):
             if self.hovered >= 0:
@@ -372,6 +387,8 @@ class RadialPopup(QWidget):
         self.update()
 
     def _choose(self, index):
+        if self._timings.enabled:
+            self._pending_timings.setdefault("choose_to_paint", monotonic())
         selection = self.state.choose(index)
         self._reset_hover()
         if selection is not None:
@@ -572,6 +589,20 @@ class RadialPopup(QWidget):
         return "\n".join(lines)
 
     def paintEvent(self, event):
+        if not self._timings.enabled:
+            return self._paint(event)
+        start, cpu = monotonic(), thread_time()
+        pending, self._pending_timings = self._pending_timings, {}
+        try:
+            self._paint(event)
+        finally:
+            end = monotonic()
+            self._timings.record("paint_cpu", (thread_time() - cpu) * 1000)
+            self._timings.record("paint_wall", (end - start) * 1000)
+            for stage, began in pending.items():
+                self._timings.record(stage, (end - began) * 1000)
+
+    def _paint(self, event):
         painter = QPainter(self)
         # Explicitly erase old alpha, including when switching between the wheel
         # and the smaller result panel. Never paint a rectangular backdrop.

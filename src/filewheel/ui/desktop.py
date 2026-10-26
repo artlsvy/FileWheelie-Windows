@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QApplication, QMenu, QMessageBox, QSystemTrayIcon
 from filewheel.converters import ConversionManager
 from filewheel.converters.debugging import record_failure
 from filewheel.core.controller import InvocationController
+from filewheel.performance import get_recorder
 from filewheel.platforms.windows.explicit_path_diagnostics import inspect_file
 from filewheel.ui.popup import RadialPopup
 
@@ -34,7 +35,11 @@ class DesktopApplication(QObject):
     def __init__(self, *, tray=False, manager=None, inspector=inspect_file,
                  runtime_factory=None, point_mapper=None, confirm_candidates=False, parent=None):
         super().__init__(parent)
+        timing = get_recorder()
+        started = monotonic() if timing.enabled else None
         self.manager = manager or ConversionManager()
+        if started is not None:
+            timing.record('registry_startup', (monotonic() - started) * 1000)
         self.controller = InvocationController()
         self.inspector = inspector
         self.runtime_factory = runtime_factory
@@ -237,13 +242,18 @@ class DesktopApplication(QObject):
                 or (candidate.requires_confirmation and not self.allow_injected_candidates)
                 or not self.runtime.gate.is_current(candidate.token, now=monotonic())):
             return
+        timing = get_recorder()
+        if timing.enabled:
+            timing.record('candidate_to_ui', (monotonic() - candidate.captured_at) * 1000)
         self.close_confirmation(cancel_gate=False)
         self.popup.dismiss()
         if not self.confirm_candidates and not candidate.requires_confirmation:
             result = self.runtime.gate.activate(candidate.token, self.controller, self.inspector,
                                                 now=monotonic())
             if result.target is not None:
-                self._present(result.target)
+                shown = self._present(result.target)
+                if shown and timing.enabled:
+                    timing.record('candidate_to_show', (monotonic() - candidate.captured_at) * 1000)
             else:
                 self.notify(f'Candidate rejected: {result.rejection}')
             return

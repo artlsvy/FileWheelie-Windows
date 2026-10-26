@@ -1,0 +1,100 @@
+{
+  "backend": "widgets",
+  "platform": "linux",
+  "qt_platform": "offscreen",
+  "python": "3.14.4",
+  "iterations": 100,
+  "imports_ms": 87.1879579999586,
+  "peak_rss_bytes": 68292608,
+  "metrics": {
+    "choose_to_paint": {
+      "count": 100,
+      "p50_ms": 0.891149000040059,
+      "p95_ms": 0.9650580000197806,
+      "max_ms": 1.1620360000961227
+    },
+    "move_to_paint": {
+      "count": 100,
+      "p50_ms": 0.9372050000138188,
+      "p95_ms": 0.9983799999417897,
+      "max_ms": 1.1696300000494375
+    },
+    "paint_cpu": {
+      "count": 300,
+      "p50_ms": 0.6514389999999759,
+      "p95_ms": 0.7131729999999836,
+      "max_ms": 0.9304219999999863
+    },
+    "paint_wall": {
+      "count": 300,
+      "p50_ms": 0.7654839999986507,
+      "p95_ms": 0.8243629999924451,
+      "max_ms": 1.0432939999418522
+    },
+    "present_to_paint": {
+      "count": 100,
+      "p50_ms": 0.9788529999923412,
+      "p95_ms": 1.0461089999580508,
+      "max_ms": 1.2968989999535552
+    },
+    "present_to_show": {
+      "count": 100,
+      "p50_ms": 0.13684700002158934,
+      "p95_ms": 0.1616530000774219,
+      "max_ms": 0.25653000000147586
+    },
+    "show_to_paint": {
+      "count": 100,
+      "p50_ms": 0.8414459999812607,
+      "p95_ms": 0.8863290000817869,
+      "max_ms": 1.0860940000156916
+    }
+  },
+  "sample_count": 1100,
+  "cold_first_activation_metrics": {
+    "paint_cpu": {
+      "count": 1,
+      "p50_ms": 15.39997,
+      "p95_ms": 15.39997,
+      "max_ms": 15.39997
+    },
+    "paint_wall": {
+      "count": 1,
+      "p50_ms": 15.797854999959782,
+      "p95_ms": 15.797854999959782,
+      "max_ms": 15.797854999959782
+    },
+    "present_to_paint": {
+      "count": 1,
+      "p50_ms": 16.475012999990213,
+      "p95_ms": 16.475012999990213,
+      "max_ms": 16.475012999990213
+    },
+    "present_to_show": {
+      "count": 1,
+      "p50_ms": 0.4103290000330162,
+      "p95_ms": 0.4103290000330162,
+      "max_ms": 0.4103290000330162
+    },
+    "show_to_paint": {
+      "count": 1,
+      "p50_ms": 16.064683999957197,
+      "p95_ms": 16.064683999957197,
+      "max_ms": 16.064683999957197
+    }
+  },
+  "heartbeat_spawned_conversion": {
+    "samples": 92,
+    "interval_ms": 5,
+    "p95_gap_ms": 5.082337999965603,
+    "max_gap_ms": 5.589006000036534,
+    "child_isolated": true
+  },
+  "limits": [
+    "Synthetic input and preview registry; no Windows hook/Explorer evidence",
+    "Paint callback completion measures CPU/event dispatch, not displayed frames",
+    "Offscreen defaults; use QT_QPA_PLATFORM for a native desktop comparison",
+    "CPU fixture uses production ConversionJob; no real document conversion"
+  ],
+  "cold_process_to_first_paint_ms": 140.6003839999812
+}

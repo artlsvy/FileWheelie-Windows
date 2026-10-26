@@ -12,6 +12,7 @@ from time import monotonic
 from filewheel.core.controller import InvocationController
 from filewheel.core.experimental import CandidateGate, candidate_from_record
 from filewheel.core.models import MouseEvent, mouse_event_permitted
+from filewheel.performance import get_recorder
 from filewheel.platforms.windows.native import require_windows
 
 _IMPORT_LOCK = Lock()
@@ -66,11 +67,16 @@ class _ReportingResolver:
         self.resolver, self.fail = resolver, fail
 
     def resolve(self, event):
+        timings = get_recorder()
+        started = monotonic() if timings.enabled else None
         try:
             return self.resolver.resolve(event)
         except Exception as error:  # noqa: BLE001 - sanitized worker/native boundary
             self.fail("mouse_evidence", error)
             return None
+        finally:
+            if started is not None:
+                timings.record("resolver", (monotonic() - started) * 1000)
 
 
 class MouseRuntime:
@@ -197,6 +203,9 @@ class MouseRuntime:
                                           allow_injected_candidates=self._allow_injected_candidates)
         self.gate.offer(candidate)
         if candidate is not None and not self._stop.is_set():
+            timings = get_recorder()
+            if timings.enabled:
+                timings.record("candidate_from_event", (self._clock() - event.timestamp) * 1000)
             self._on_candidate(candidate)
 
     def _run_worker(self):
@@ -229,6 +238,9 @@ class MouseRuntime:
                     continue
                 # The return stays on the worker and is never sent to the UI.
                 # Existing diagnostic resolver still returns None unconditionally.
+                timings = get_recorder()
+                if timings.enabled:
+                    timings.record("mouse_queue_age", (self._clock() - event.timestamp) * 1000)
                 self._current_event = event
                 try:
                     controller.handle(event)
