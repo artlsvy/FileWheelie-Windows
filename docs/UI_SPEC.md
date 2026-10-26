@@ -60,8 +60,11 @@ Cancel or Escape while working requests cooperative cancellation and shows
 “Stopping…” until cleanup finishes, then “Cancelled”. It keeps the window
 visible. Programmatic dismissal/Quit can still hide the window and wait for its
 owned worker to finish. A QThread supervises the spawned backend process;
-signals update Qt on its GUI thread. Library calls cannot all be interrupted mid-call; LibreOffice has
-a bounded process-tree deadline. Running workers are never destroyed early.
+signals update Qt on its GUI thread. A stuck encoder receives a two-second
+cancellation grace period before its owned process is stopped and staging is
+cleaned. Saving is protected by a publication permit and is never force-stopped;
+that short transaction must finish/roll back. OS process termination and file
+cleanup can add time beyond the grace period. Workers remain owned until exit.
 
 Outputs are adjacent to source, numbered on collision, validated before atomic
 publication. See CONVERTERS.md for limits, alpha behavior, OCR/fidelity and engine

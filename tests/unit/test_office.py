@@ -2,9 +2,10 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from threading import Event
 from unittest.mock import patch
 
-from filewheel.converters import ConversionError, ConversionManager, Registry
+from filewheel.converters import ConversionCancelled, ConversionError, ConversionManager, Registry
 from filewheel.converters.office import LibreOfficeEngine
 
 
@@ -50,6 +51,7 @@ class OfficeTests(unittest.TestCase):
             with self.assertRaisesRegex(ConversionError, 'timed out'):
                 manager.convert(self.source, '.pdf')
         self.assertEqual(run.call_args.kwargs['timeout'], 30)
+        self.assertIn('cancel', run.call_args.kwargs)
         self.assertTrue(any('UserInstallation=file:' in arg for arg in run.call_args.args[0]))
         self.assertEqual(list(self.folder.iterdir()), [self.source])
 
@@ -77,6 +79,7 @@ class OfficeTests(unittest.TestCase):
         process = Mock(pid=123)
         process.communicate.side_effect = [subprocess.TimeoutExpired('soffice', 1), (b'', b'')]
         with (patch('filewheel.converters.office.subprocess.Popen', return_value=process) as spawn,
+              patch('filewheel.converters.office.monotonic', side_effect=[0, 0, 2]),
               patch('filewheel.converters.office.os.killpg') as kill,
               self.assertRaisesRegex(ConversionError, 'timed out')):
             run_office(['soffice', '--headless'], workdir=self.folder, timeout=1)
@@ -84,6 +87,34 @@ class OfficeTests(unittest.TestCase):
         self.assertEqual(kill.call_args.args[0], 123)
         self.assertTrue(spawn.call_args.kwargs['start_new_session'])
         self.assertFalse(spawn.call_args.kwargs['shell'])
+
+    def test_cancel_stops_owned_office_tree_between_bounded_waits(self):
+        from unittest.mock import Mock
+
+        from filewheel.converters.office import run_office
+        event = Event()
+        process = Mock(pid=123)
+        def waiting(*, timeout):
+            self.assertLessEqual(timeout, .1)
+            event.set()
+            raise subprocess.TimeoutExpired('soffice', timeout)
+        process.communicate.side_effect = waiting
+        with (patch('filewheel.converters.office.subprocess.Popen', return_value=process),
+              patch('filewheel.converters.office._stop_office_tree') as stop,
+              self.assertRaises(ConversionCancelled)):
+            run_office(['soffice'], workdir=self.folder, timeout=30, cancel=event)
+        stop.assert_called_once()
+        self.assertIs(stop.call_args.args[0], process)
+        self.assertEqual(process.communicate.call_count, 1)
+
+    def test_precancelled_office_never_starts_process(self):
+        from filewheel.converters.office import run_office
+        event = Event()
+        event.set()
+        with (patch('filewheel.converters.office.subprocess.Popen') as spawn,
+              self.assertRaises(ConversionCancelled)):
+            run_office(['soffice'], workdir=self.folder, timeout=30, cancel=event)
+        spawn.assert_not_called()
 
     def test_real_wrapper_timeout_stops_descendant(self):
         import sys
@@ -113,3 +144,22 @@ class OfficeTests(unittest.TestCase):
         while running() and time.monotonic() < deadline:
             time.sleep(.01)
         self.assertFalse(running())
+
+    def test_real_wrapper_cancellation_finishes_promptly(self):
+        import os
+        import sys
+        import time
+        from threading import Timer
+
+        from filewheel.converters.office import run_office
+        if os.name == 'nt':
+            self.skipTest('Native Windows process-tree acceptance is separate')
+        event = Event()
+        timer = Timer(.2, event.set)
+        timer.start()
+        self.addCleanup(timer.cancel)
+        started = time.monotonic()
+        with self.assertRaises(ConversionCancelled):
+            run_office([sys.executable, '-c', 'import time; time.sleep(60)'],
+                       workdir=self.folder, timeout=30, cancel=event)
+        self.assertLess(time.monotonic() - started, 3)

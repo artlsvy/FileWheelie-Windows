@@ -6,7 +6,10 @@ complete. G9-A/B are WINDOWS-VERIFIED by the user's latest report. G10 tray and
 candidate consent are implemented; Windows hook/focus/startup acceptance remains
 pending. G11 Windows build recipe and G12 portable-office seams are implemented;
 no Windows EXE or self-contained Windows LibreOffice bundle was built here.
-Earlier sections below are historical evidence; the final checkpoint is current.
+User subsequently built the EXE and reported Cancel hanging on a large PDF;
+the current follow-up adds bounded pre-publication cancellation (D-020), pending
+native frozen acceptance. Earlier sections below are historical evidence; the
+final checkpoint is current.
 
 ## Implemented
 - Inspected all project guidance/configuration; repository initially had no
@@ -1092,3 +1095,55 @@ the existing script/spec. Optional G12 full portable LibreOffice acceptance and
 existing startup/Send to integration on the packaged app follow. These remain
 unverified until run on Windows. No new feature implementation or push was
 performed in this planning turn.
+
+
+## 2026-10-26 — Cancel on a large PDF hangs, then tray Quit waits
+
+User clarifies Stop means the conversion Cancel action, not disabling Mouse3.
+The user has built the EXE and reports cancelling a slow large PDF conversion
+never finishes, then tray Quit waits. After force quit some files only react
+after reopening their Explorer folder. This is not a new successful frozen
+acceptance checkpoint. Native Windows was not available to Codex.
+
+Cause established in code: the child cancellation Event cannot interrupt a
+long native engine call, and both normal/EOF and finally cleanup could wait
+indefinitely for that child. Quit correctly waits for the same job, so inherits
+that delay. No per-file failure blacklist exists; folder-reopen behavior is not
+established as the same defect. Explorer evidence code remains unchanged.
+
+Implemented (D-020):
+- Parent-owned private staging, passed through the same ConversionManager.
+  Direct manager callers retain the original self-owned staging behavior.
+- A publication fence after all outputs validate. The child must wait for a
+  parent permit before linking outputs; a cancelled job is denied that permit.
+- Two-second cooperative cancellation grace, then termination of only the
+  owned pre-publication worker/tree. Windows targets its PID via bounded
+  taskkill /T /F, with owned-process kill fallback; Linux uses its isolated
+  process group. No force termination once publication is permitted.
+- Child reaping and owned-stage cleanup precede the outcome signal. EOF,
+  callback/protocol failure and finally cleanup use the same grace deadline.
+  OS termination/cleanup failures remain errors, with original causes logged;
+  staging is retained if the worker is still alive. Source and prior outputs
+  are preserved. There is no automatic conversion retry.
+- LibreOffice communicates in <=100 ms waits, observes Cancel and stops its
+  own process group/tree. POSIX limitation: that separate Office session can
+  outlive the worker if it never reaches cooperative Office cleanup before
+  forced termination; normal cancellation tests exercise owned cleanup.
+
+Linux verification: **402 tests /406 subtests passed**, including real spawned
+uncooperative encoding/validation, before/after-publication cancellation,
+EOF/callback cleanup, OS-refusal/locked-stage errors, immediate same-file retry,
+Qt job completion, and Cancel followed by tray Quit. Existing actual Pillow,
+HEIF and LibreOffice conversion fixtures pass. Changed-file Ruff, compileall
+and git diff --check pass. Repository-wide Ruff reports 31 existing findings
+in unchanged files; none are introduced here. Initial full-suite subprocess
+import failures were resolved by the documented PYTHONPATH=src test environment;
+the final full run passes. Focused read-only review found no material blockers
+and noted the POSIX Office limitation above.
+
+WINDOWS_VALIDATION_REQUIRED: rebuild EXE and cancel the original large PDF;
+verify bounded Stop/Cancelled, worker/descendant exit, stage cleanup, immediate
+retry of that same file without reopening its folder, and Cancel -> tray Quit
+-> relaunch. Also verify normal conversion/Send to still work in the new build.
+If folder-reopen behavior persists, capture its actual Mouse3 rejection rather
+than relaxing provenance/freshness checks. No push performed.

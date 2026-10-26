@@ -260,3 +260,19 @@ DOCX → PDF needs the already supported LibreOffice backend, not a new converte
 Sources: [Python GIL/thread semantics](https://docs.python.org/3.14/c-api/threads.html),
 [Windows low-level hook timing](https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelmouseproc),
 [spawn and freeze support](https://docs.python.org/3.14/library/multiprocessing.html).
+
+
+## D-020 — Bounded cancellation before publication
+
+The user reports Cancel hanging on a large PDF, followed by a tray Quit that
+also waits, in the packaged EXE. Keep process isolation and no-overwrite output
+transactions, but supersede D-019's cooperative-only encoding cancellation.
+The parent owns private staging; the child must request permission after output
+validation before creating any destination links. Cancellation has a two-second
+grace period, then stops only the owned pre-publication process/tree and cleans
+its stage after reaping. Once permission is granted, never kill a publisher: let
+it complete or roll back. LibreOffice observes cancellation between bounded
+communicate calls. This fixes uninterruptible library work without making source
+or pre-existing output deletion part of cancellation. Native packaged Windows
+Cancel/Quit/retry acceptance remains required. Explorer evidence checks are
+unchanged; the reported need to reopen a folder is not yet diagnosed.

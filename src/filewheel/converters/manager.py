@@ -3,6 +3,8 @@
 import os
 import stat
 import tempfile
+from collections.abc import Callable
+from contextlib import nullcontext
 from pathlib import Path
 from threading import Event
 
@@ -35,7 +37,9 @@ class ConversionManager:
         self.registry = default_registry() if registry is None else registry
 
     def convert(self, source: Path, output_extension: str, *,
-                progress: Progress | None = None, cancel: Event | None = None) -> ConversionResult:
+                progress: Progress | None = None, cancel: Event | None = None,
+                workspace: Path | None = None,
+                before_publish: Callable[[], None] | None = None) -> ConversionResult:
         source = Path(source)
         if not source.is_absolute():
             raise ConversionError("Input path must be absolute")
@@ -55,7 +59,22 @@ class ConversionManager:
                 raise DependencyUnavailable(f"{engine_id} is no longer available")
             check_cancel(cancel)
             report(0.0, "Preparing conversion")
-            with tempfile.TemporaryDirectory(prefix=".filewheel-", dir=source.parent) as folder:
+            operation = "validate_workspace"
+            if workspace is not None:
+                workspace = Path(workspace)
+                if (not workspace.is_absolute() or workspace.parent != source.parent
+                        or ".." in workspace.parts or not workspace.name.startswith(".filewheel-")):
+                    raise ConversionError("Unsafe conversion workspace")
+                info = workspace.lstat()
+                if (not stat.S_ISDIR(info.st_mode)
+                        or getattr(info, "st_file_attributes", 0) & 0x400):
+                    raise ConversionError("Conversion workspace must be a private directory")
+                # The supervising process owns this directory, including cleanup
+                # after a converter that must be forcibly stopped.
+                staging = nullcontext(workspace)
+            else:
+                staging = tempfile.TemporaryDirectory(prefix=".filewheel-", dir=source.parent)
+            with staging as folder:
                 workdir = Path(folder)
                 operation = "convert"
                 generated = tuple(engine.convert(source, capability.output_extension, workdir,
@@ -70,6 +89,9 @@ class ConversionManager:
                     engine.validate(output)
                 operation = "publish_output"
                 report(.9, "Saving output")
+                if before_publish is not None:
+                    before_publish()
+                check_cancel(cancel)
                 for output in generated:
                     check_cancel(cancel)
                     created = output.path.lstat()

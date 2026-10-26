@@ -2,15 +2,19 @@
 
 The GUI's Python mouse-hook callbacks must not compete with converter code for
 one interpreter GIL. The existing ConversionManager still owns staging,
-validation, no-replacement publication and cleanup in the child process.
-Cancellation is cooperative: never kill a child during output publication.
+validation and no-replacement publication in the child process. The parent owns
+staging cleanup and may stop a stuck encoder before granting publication.
 """
 
 import json
 import math
 import multiprocessing
 import os
+import shutil
+import signal
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from time import monotonic
 
@@ -19,6 +23,7 @@ from filewheel.converters.base import (
     ConversionError,
     ConversionResult,
     DependencyUnavailable,
+    check_cancel,
 )
 from filewheel.converters.debugging import record_failure
 
@@ -49,6 +54,7 @@ def configure_child():
             kernel.SetPriorityClass.restype = w.BOOL
             kernel.SetPriorityClass(kernel.GetCurrentProcess(), 0x4000)  # BELOW_NORMAL
         else:
+            os.setsid()  # An owned group for cancellation, never the tray/UI group.
             os.nice(5)
     except OSError:
         pass  # Best-effort scheduling; isolation remains effective without it.
@@ -112,7 +118,7 @@ def _prepare_codecs(manager, source, extension):
                 raise failure from error
 
 
-def _child(manager, source, extension, cancellation, connection):
+def _child(manager, source, extension, cancellation, connection, workspace, publication_permit):
     """Top-level spawn target; imports only local engine logic, never the GUI."""
     configure_child()
     try:
@@ -121,7 +127,13 @@ def _child(manager, source, extension, cancellation, connection):
             connection, {'type': 'progress', 'fraction': fraction, 'message': message}))
         try:
             _prepare_codecs(manager, source, extension)
-            result = manager.convert(Path(source), extension, progress=progress, cancel=cancellation)
+            def before_publish():
+                _send(connection, {'type': 'publish_ready'})
+                while not publication_permit.wait(.05):
+                    check_cancel(cancellation)
+                check_cancel(cancellation)
+            result = manager.convert(Path(source), extension, progress=progress, cancel=cancellation,
+                                     workspace=Path(workspace), before_publish=before_publish)
         except Exception as error:  # noqa: BLE001 - child boundary reports real engine failures
             if not isinstance(error, ConversionError):
                 error.debug_log = record_failure('worker', 'convert', error)
@@ -151,6 +163,8 @@ def decode_packet(payload):
     valid = False
     if kind == 'started':
         valid = set(packet) == {'type', 'pid'} and type(packet['pid']) is int and packet['pid'] > 0
+    elif kind == 'publish_ready':
+        valid = set(packet) == {'type'}
     elif kind == 'progress':
         value = packet.get('fraction')
         valid = (set(packet) == {'type', 'fraction', 'message'}
@@ -212,25 +226,76 @@ def _poll_reader(connection, timeout):
         raise
 
 
+def _stop_owned_worker(process):
+    """Stop this still-owned child's tree before publication; never by image name."""
+    if not process.is_alive():
+        return
+    if sys.platform == 'win32':
+        executable = Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32' / 'taskkill.exe'
+        try:
+            subprocess.run([str(executable), '/PID', str(process.pid), '/T', '/F'],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                           timeout=2, check=False,
+                           creationflags=subprocess.CREATE_NO_WINDOW)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    else:
+        try:
+            # The child calls setsid before importing any conversion engine.
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass  # Cancellation during startup, before setsid.
+    if process.is_alive():
+        process.kill()
+    process.join(3)
+    if process.is_alive():
+        raise ConversionError('Conversion worker could not be stopped; close Filewheel and retry')
+
+
 def run_in_process(manager, source, extension, *, progress, cancel, on_started=None,
-                   _context=None, _target=_child):
+                   _context=None, _target=_child, _cancel_grace=2.):
     """Supervise one owned child off the GUI thread, then return after it exits.
 
-    No forced termination is used: existing engine deadlines and cooperative
-    cancellation retain the manager's output/cleanup guarantees. A native call
-    that never returns may still delay shutdown, but cannot hold the GUI GIL.
+    Give cancellation a short grace period, then stop a stuck encoder. Publication
+    requires a parent permit; after granting it, termination is forbidden so the
+    manager can finish or roll back its atomic links. Outcome follows cleanup.
     """
+    check_cancel(cancel)
     context = multiprocessing.get_context('spawn') if _context is None else _context
     receive, send = context.Pipe(duplex=False)
     child_cancel = context.Event()
-    process = context.Process(target=_target, args=(manager, str(source), extension, child_cancel, send),
+    publication_permit = context.Event()
+    workspace = Path(tempfile.mkdtemp(prefix='.filewheel-', dir=Path(source).parent))
+    process = context.Process(target=_target, args=(manager, str(source), extension, child_cancel, send,
+                                                  str(workspace), publication_permit),
                               name='filewheel-conversion')
     terminal = failure = None
     started = False
     seen_started = False
-    try:
-        if cancel.is_set():
+    publication_allowed = publish_ready = forced_cancel = False
+    stop_failed = False
+    stopping_since = None
+
+    def stop_if_overdue():
+        nonlocal stopping_since, forced_cancel, stop_failed
+        if cancel.is_set() or child_cancel.is_set():
             child_cancel.set()
+            if stopping_since is None:
+                stopping_since = monotonic()
+            if not publication_allowed and monotonic() - stopping_since >= _cancel_grace:
+                try:
+                    _stop_owned_worker(process)
+                except (OSError, ConversionError) as error:
+                    stop_failed = True
+                    failure = ConversionError('Could not stop conversion worker; temporary files retained')
+                    failure.__cause__ = error
+                    raise _supervisor_failure(failure, manager, source, extension, 'stop_worker') from error
+                forced_cancel = True
+                return True
+        return False
+
+    try:
+        check_cancel(cancel)
         try:
             process.start()
         except Exception as error:  # No unsafe shared-process fallback.
@@ -241,28 +306,35 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
         started = True
         send.close()  # EOF must depend on the child's writer, not our duplicate.
         while True:
-            if cancel.is_set():
-                child_cancel.set()
+            if stop_if_overdue():
+                break
+            if receive.closed:
+                if not process.is_alive():
+                    break
+                process.join(.05)
+                continue
             try:
                 ready = _poll_reader(receive, .05)
             except EOFError:
-                break  # Completion still requires a valid outcome and exit code.
+                receive.close()
+                continue  # Remain cancellable while waiting for the child's exit.
             except OSError as error:
                 failure = ConversionError('Conversion worker pipe polling failed')
                 failure.__cause__ = error
                 child_cancel.set()
                 receive.close()
-                break
+                continue
             if ready:
                 try:
                     payload = receive.recv_bytes(MAX_PACKET_BYTES)
                 except EOFError:
-                    break
+                    receive.close()
+                    continue
                 except OSError:
                     failure = ConversionError('Conversion worker report was interrupted')
                     child_cancel.set()
                     receive.close()  # Wake a writer blocked on an oversized/broken packet.
-                    break
+                    continue
                 if failure is not None:
                     continue  # Drain after a protocol failure without dispatching more callbacks.
                 try:
@@ -280,7 +352,16 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
                         raise ConversionError('Conversion worker did not identify itself')
                     elif kind == 'progress':
                         progress(packet['fraction'], packet['message'])
+                    elif kind == 'publish_ready':
+                        if publish_ready:
+                            raise ConversionError('Duplicate publication request')
+                        publish_ready = True
+                        if not cancel.is_set():
+                            publication_allowed = True
+                            publication_permit.set()
                     else:
+                        if kind == 'result' and not publication_allowed:
+                            raise ConversionError('Conversion result without publication permission')
                         terminal = packet
                 except ConversionError as error:
                     failure = error
@@ -290,6 +371,14 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
         process.join()  # Outcome is emitted only after owned-child cleanup/exit.
         if failure is not None:
             raise _supervisor_failure(failure, manager, source, extension, 'worker_protocol')
+        if forced_cancel:
+            error = ConversionCancelled('Conversion cancelled')
+            try:
+                error.engine_id = manager.registry.find(Path(source).suffix, extension).engine_id
+            except (AttributeError, ConversionError):
+                error.engine_id = 'worker'
+            error.operation, error.kind = 'convert', 'conversion_cancelled'
+            raise error
         if process.exitcode != 0 or terminal is None:
             failure = ConversionError(
                 f'Conversion worker exited unexpectedly (code {process.exitcode}); '
@@ -301,19 +390,33 @@ def run_in_process(manager, source, extension, *, progress, cancel, on_started=N
                                 tuple(terminal['warnings']), terminal['engine_id'])
     finally:
         send.close()
-        if started and process.is_alive():
-            child_cancel.set()
-            # Drain reports while awaiting cooperative cleanup so the pipe
-            # cannot block a worker which is trying to report cancellation.
-            while process.is_alive():
-                if receive.closed:
-                    process.join(.05)
-                else:
-                    try:
-                        if _poll_reader(receive, .05):
-                            receive.recv_bytes(MAX_PACKET_BYTES)
-                    except (OSError, EOFError, ValueError):
-                        receive.close()
-            process.join()
-        receive.close()
-        process.close()
+        try:
+            if started and not stop_failed and process.is_alive():
+                child_cancel.set()
+                # Drain reports during cancellation so a reporting child cannot
+                # deadlock on a full pipe. The same pre-publication deadline applies.
+                while process.is_alive():
+                    if stop_if_overdue():
+                        break
+                    if receive.closed:
+                        process.join(.05)
+                    else:
+                        try:
+                            if _poll_reader(receive, .05):
+                                receive.recv_bytes(MAX_PACKET_BYTES)
+                        except (OSError, EOFError, ValueError):
+                            receive.close()
+                process.join()
+        finally:
+            receive.close()
+            if not started or not process.is_alive():
+                process.close()
+                try:
+                    shutil.rmtree(workspace)
+                except OSError as error:
+                    failure = ConversionError('Could not remove conversion temporary files')
+                    failure.__cause__ = error
+                    raise _supervisor_failure(
+                        failure, manager, source, extension, 'cleanup_workspace') from error
+        # If the OS refuses termination, retain staging: never delete files
+        # beneath a live converter. The caller receives a cleanup failure.

@@ -160,12 +160,18 @@ loaded as a pickle. The private result pipe uses strict bounded JSON. Child
 progress is throttled, error types/engine/operation/log paths are reconstructed,
 and outcome signals occur only after the child exits and its handles are closed.
 
-The existing manager owns the complete staging/validation/publication/rollback
-transaction in the child. Cancellation uses a shared Event and remains
-cooperative; no forced termination risks interrupting publication. Unexpected
-native process death is contained but may leave private staging/partial new
-outputs, which are not blindly deleted by the parent. A hung native library can
-still delay shutdown, while Qt and hook execution remain in another interpreter.
+The parent creates and owns one private sibling staging directory. The manager
+validates it and owns conversion/validation/publication/rollback in the child.
+After validation a strict publish_ready message waits for a shared parent permit;
+the supervisor records permission before releasing that wait. Cancellation uses
+a shared Event, with a two-second grace period before terminating an owned
+pre-publication worker/tree. EOF, protocol and callback cleanup paths use the
+same deadline. The worker is joined before its stage is removed or Qt receives
+an outcome. Publication permission forbids forced termination so saving can
+finish or roll back. Unexpected death during publication may leave partial new
+outputs; the parent never guesses which destination files to remove. An OS
+termination/cleanup failure is surfaced rather than claiming clean cancellation.
+LibreOffice polls cancellation at 100 ms and stops its own process group/tree.
 Common native pools are limited and child priority reduced best effort; this does
 not promise a universal one-thread limit for every third-party library. HEIF
 registration is performed in the fresh child because parent plugin state is not

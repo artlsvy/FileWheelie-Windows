@@ -86,3 +86,13 @@ with correct completion status and responsive Windows during conversion. The
 WinError109 checkpoint is closed. Next recommended work is the existing G11
 native standalone build/acceptance, then optional packaged startup and G12 full
 portable LibreOffice verification. No urgent new converter/UI work is queued.
+
+
+2026-10-26 follow-up: the user built the Windows EXE and found Cancel hanging
+on a large PDF, then tray Quit waiting. D-020 adds parent-owned staging and a
+publication permit: stop uncooperative pre-publication workers after a short
+grace, never force-stop saving, then clean/reap before reporting cancellation.
+LibreOffice now polls cancellation. Linux suite: 402 tests /406 subtests; scoped
+Ruff/compilation pass. Native rebuilt-EXE Cancel -> same-file retry -> Quit
+acceptance is next. The folder-reopen symptom remains unconfirmed as the same
+issue; no Explorer evidence checks changed. See STATUS.md and NEXT_TASK.md.

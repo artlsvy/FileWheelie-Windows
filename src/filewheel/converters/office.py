@@ -7,10 +7,17 @@ import subprocess
 from importlib.util import find_spec
 from pathlib import Path
 from threading import Event
+from time import monotonic
 from xml.etree import ElementTree
 from zipfile import BadZipFile, ZipFile
 
-from filewheel.converters.base import Capability, ConversionError, EngineOutput, check_cancel
+from filewheel.converters.base import (
+    Capability,
+    ConversionCancelled,
+    ConversionError,
+    EngineOutput,
+    check_cancel,
+)
 from filewheel.libreoffice_bundle import external_tool_environment, find_libreoffice
 
 
@@ -49,10 +56,11 @@ class OfficeExit(int):
         return result
 
 
-def run_office(arguments, *, workdir, timeout):
+def run_office(arguments, *, workdir, timeout, cancel=None):
     """Bound the owned process tree and keep external libraries out of Qt's bundle."""
     process = None
     environment = None
+    check_cancel(cancel)
     try:
         with external_tool_environment() as environment:
             process = subprocess.Popen(
@@ -71,8 +79,21 @@ def run_office(arguments, *, workdir, timeout):
         if process is not None:
             _stop_office_tree(process, environment)
         raise
+    deadline = monotonic() + timeout
     try:
-        stdout, stderr = process.communicate(timeout=timeout)
+        while True:
+            check_cancel(cancel)
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired(arguments, timeout)
+            try:
+                stdout, stderr = process.communicate(timeout=min(.1, remaining))
+                break
+            except subprocess.TimeoutExpired:
+                continue
+    except ConversionCancelled:
+        _stop_office_tree(process, environment)
+        raise
     except subprocess.TimeoutExpired as error:
         _stop_office_tree(process, environment)
         raise ConversionError("LibreOffice timed out; conversion stopped") from error
@@ -149,6 +170,7 @@ class LibreOfficeEngine:
             ],
             workdir=workdir,
             timeout=self.timeout,
+            cancel=cancel,
         )
         check_cancel(cancel)
         generated = output_dir / "input.pdf"

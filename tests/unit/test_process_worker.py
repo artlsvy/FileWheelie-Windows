@@ -52,16 +52,16 @@ class CancellationEngine(PolicyEngine):
         raise ConversionError('Fixture cancellation deadline exceeded')
 
 
-def crash_child(manager, source, extension, cancel, connection):
+def crash_child(manager, source, extension, cancel, connection, workspace, permit):
     os._exit(7)
 
 
-def malformed_child(manager, source, extension, cancel, connection):
+def malformed_child(manager, source, extension, cancel, connection, workspace, permit):
     connection.send_bytes(b'not JSON')
     connection.close()
 
 
-def oversized_child(manager, source, extension, cancel, connection):
+def oversized_child(manager, source, extension, cancel, connection, workspace, permit):
     from filewheel.converters.process_worker import MAX_PACKET_BYTES
     try:
         connection.send_bytes(b'x' * (MAX_PACKET_BYTES + 1))
@@ -405,13 +405,13 @@ class WindowsPipeEofTests(unittest.TestCase):
                        'warnings': ['Preserved warning'], 'engine_id': PolicyEngine.engine_id}
 
     def test_valid_terminal_and_zero_exit_survive_closed_poll(self):
-        result = self.run_script([self.start, self.result])
+        result = self.run_script([self.start, {'type': 'publish_ready'}, self.result])
         self.assertEqual(result.engine_id, PolicyEngine.engine_id)
         self.assertEqual(result.warnings, ('Preserved warning',))
 
     def test_close_without_terminal_or_after_crash_cannot_claim_success(self):
         Path(self.result['outputs'][0]).write_text('{}')  # Existing output is not an outcome receipt.
-        for messages, code in (([], 0), ([self.start], 0), ([self.start, self.result], 7)):
+        for messages, code in (([], 0), ([self.start], 0), ([self.start, {'type': 'publish_ready'}, self.result], 7)):
             with self.subTest(messages=messages, exitcode=code), self.assertRaises(ConversionError):
                 self.run_script(messages, exitcode=code)
 
@@ -430,7 +430,7 @@ class WindowsPipeEofTests(unittest.TestCase):
 
     def test_other_poll_errors_and_read_errors_are_not_normalized_to_success(self):
         for mode in ('access_denied', 'broken_read', 'partial_read', 'malformed_protocol', 'extra_terminal'):
-            messages, poll_error = [self.start, self.result], 109
+            messages, poll_error = [self.start, {'type': 'publish_ready'}, self.result], 109
             if mode == 'access_denied':
                 poll_error = 5
             elif mode == 'broken_read':

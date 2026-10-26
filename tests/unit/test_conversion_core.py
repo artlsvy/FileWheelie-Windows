@@ -60,6 +60,84 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(self.source.read_bytes(), b"original")
         self.assertFalse(list(self.folder.glob(".filewheel-*")))
 
+    def test_publication_fence_runs_after_validation_before_any_link(self):
+        events = []
+        real_link = os.link
+        def link(source, destination):
+            events.append("link")
+            return real_link(source, destination)
+        with (patch.object(self.engine, "validate", side_effect=lambda output: events.append("validate")),
+              patch("filewheel.converters.manager.os.link", side_effect=link)):
+            self.manager.convert(self.source, ".xyz", before_publish=lambda: events.append("permit"))
+        self.assertEqual(events, ["validate", "permit", "link"])
+
+    def test_multi_output_fence_runs_once_after_every_validation(self):
+        events = []
+        def generate(source, extension, workdir, progress, cancel):
+            outputs = []
+            for index in range(2):
+                path = workdir / f"page-{index}.xyz"
+                path.write_bytes(b"output")
+                outputs.append(EngineOutput(path, path.name))
+            return tuple(outputs)
+        with (patch.object(self.engine, "convert", side_effect=generate),
+              patch.object(self.engine, "validate", side_effect=lambda output: events.append("validate"))):
+            self.manager.convert(self.source, ".xyz", before_publish=lambda: events.append("permit"))
+        self.assertEqual(events, ["validate", "validate", "permit"])
+
+    def test_fence_failure_or_cancellation_never_publishes(self):
+        for cancelled in (False, True):
+            event = Event()
+            def fence(cancelled=cancelled, event=event):
+                if cancelled:
+                    event.set()
+                else:
+                    raise RuntimeError("supervisor disconnected")
+            with self.subTest(cancelled=cancelled), self.assertRaises(ConversionError):
+                self.manager.convert(self.source, ".xyz", cancel=event, before_publish=fence)
+            self.assertEqual(list(self.folder.iterdir()), [self.source])
+
+    def test_validation_failure_does_not_request_publication(self):
+        with (patch.object(self.engine, "validate", side_effect=ConversionError("invalid")),
+              patch("filewheel.converters.manager.os.link") as link,
+              self.assertRaises(ConversionError)):
+            self.manager.convert(self.source, ".xyz", before_publish=link)
+        link.assert_not_called()
+
+    def test_supervisor_workspace_is_retained_on_success_and_failure(self):
+        workspace = self.folder / ".filewheel-owned"
+        workspace.mkdir()
+        self.manager.convert(self.source, ".xyz", workspace=workspace)
+        self.assertTrue((workspace / "output.xyz").is_file())
+        with (patch.object(self.engine, "validate", side_effect=ConversionError("invalid")),
+              self.assertRaises(ConversionError)):
+            self.manager.convert(self.source, ".xyz", workspace=workspace)
+        self.assertTrue(workspace.is_dir())
+        self.assertEqual(self.source.read_bytes(), b"original")
+        self.assertEqual((self.folder / "source.xyz").read_bytes(), b"validated output")
+
+    def test_unsafe_supervisor_workspaces_reject_before_engine(self):
+        ordinary = self.folder / "ordinary"
+        ordinary.mkdir()
+        file = self.folder / ".filewheel-file"
+        file.write_bytes(b"keep")
+        outside = self.folder / "nested" / ".filewheel-child"
+        outside.mkdir(parents=True)
+        paths = [Path(".filewheel-relative"), ordinary, file, outside,
+                 self.folder / ".filewheel-missing"]
+        link = self.folder / ".filewheel-link"
+        try:
+            link.symlink_to(ordinary, target_is_directory=True)
+            paths.append(link)
+        except OSError:
+            pass
+        with patch.object(self.engine, "convert") as convert:
+            for path in paths:
+                with self.subTest(path=path), self.assertRaises(ConversionError):
+                    self.manager.convert(self.source, ".xyz", workspace=path)
+        convert.assert_not_called()
+        self.assertEqual(file.read_bytes(), b"keep")
+
     def test_atomic_concurrent_collisions(self):
         with ThreadPoolExecutor(max_workers=4) as pool:
             results = list(pool.map(lambda _: self.manager.convert(self.source, ".xyz"), range(4)))

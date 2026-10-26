@@ -35,10 +35,15 @@ requests cooperative cancellation while keeping status visible. Production GUI
 conversions run in a spawned process, supervised off the Qt thread; the mouse
 hook and GUI no longer share the converter's interpreter lock. Engine work,
 validation and collision-safe publication still use the same ConversionManager.
-No forced termination during publication is used. A permanently blocked native
-call can still delay cancellation/exit; LibreOffice has a bounded deadline.
-Catastrophic native child crashes are reported but may leave staging artifacts;
-the parent does not blindly delete unknown directories or existing outputs.
+The supervisor owns the private staging directory. Before publication it grants
+a permit only after all outputs validate and cancellation has been checked. An
+uncooperative encoder is stopped after a two-second cancellation grace period,
+then the parent reaps the worker and cleans only its own stage. Windows cleanup
+targets the owned worker PID/tree; LibreOffice also polls cancellation at 100 ms.
+Once publication is permitted, the worker must finish/roll back without forced
+termination. Native death during that save step can still leave partial new
+outputs; existing outputs and the input are never overwritten. Cleanup failures
+are reported as failures rather than successful cancellation.
 
 For DOCX → PDF setup on Windows, see [DOCX_TO_PDF.md](DOCX_TO_PDF.md).
 
