@@ -10,6 +10,7 @@ from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QApplication, QWidget
 
 from filewheel.core.models import TargetResolution
+from filewheel.ui.arc_text import arc_direction, arc_glyphs
 from filewheel.ui.desktop_errors import DesktopInitializationError
 from filewheel.ui.placement import Rect, popup_position
 from filewheel.ui.radial import DEFAULT_PREVIEW_REGISTRY, RadialState
@@ -25,6 +26,7 @@ def logical_point(point, screens):
 
 
 _SEPARATOR_WIDTH = 0.8
+_SURFACE_ALPHA = 235
 
 
 def radial_separators(count, inner_radius=67, outer_radius=148):
@@ -532,6 +534,27 @@ class RadialPopup(QWidget):
             )
         painter.drawText(rect, flags, text)
 
+    def _arc_text(self, painter, text, color, center_angle, sector_sweep):
+        font = QFont("Segoe UI")
+        font.setPointSizeF((9.5 if self.diameter < 220 else 10.5) / self._scale)
+        font.setBold(True)
+        painter.setFont(font)
+        metrics = painter.fontMetrics()
+        # Ascenders point outward in the upper half and inward below the center.
+        # Offset the two baselines to keep the visual glyph centers on one ring.
+        radius = 102 if arc_direction(center_angle) == 1 else 124
+        span = math.radians(min(140, max(0, sector_sweep - 20))) * radius
+        label = metrics.elidedText(text, Qt.TextElideMode.ElideRight, int(span))
+        advances = [max(0, metrics.horizontalAdvance(label[:index + 1])
+                        - metrics.horizontalAdvance(label[:index])) for index in range(len(label))]
+        painter.setPen(color)
+        for glyph in arc_glyphs(label, advances, center_angle, radius):
+            painter.save()
+            painter.translate(glyph.x, glyph.y)
+            painter.rotate(glyph.rotation)
+            painter.drawText(QPointF(-glyph.advance / 2, 0), glyph.text)
+            painter.restore()
+
     @staticmethod
     def _wrap_long_words(text, metrics, width):
         lines = []
@@ -560,6 +583,7 @@ class RadialPopup(QWidget):
         painter.scale(self._scale, self._scale)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         base, foreground, muted, border = self._colors()
+        base.setAlpha(_SURFACE_ALPHA)
         # Painted ambient shadow keeps the transparent window compact and cheap.
         painter.setPen(Qt.PenStyle.NoPen)
         for spread in range(10, 0, -2):
@@ -641,7 +665,9 @@ class RadialPopup(QWidget):
                 index = row + self._list_offset
                 rectangle = QRectF(34, 72 + row * 30, 256, 28)
                 if index == self.hovered:
+                    painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceAtop)
                     painter.fillRect(rectangle, QColor(theme.hover))
+                    painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
                 self._text(painter, rectangle, getattr(option, "label", option), foreground, 10)
             return
         outer = QRectF(14, 14, 296, 296)
@@ -662,12 +688,16 @@ class RadialPopup(QWidget):
             for channel, setter in (("red", "setRed"), ("green", "setGreen"), ("blue", "setBlue")):
                 getattr(fill, setter)(round(getattr(base, channel)() * (1 - amount)
                                            + getattr(accent, channel)() * amount))
+            # SourceAtop changes the tint without compounding surface opacity.
+            fill.setAlpha(255)
+            painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceAtop)
             painter.setBrush(fill)
             painter.drawPath(
                 _annular_sector(
                     -90 + index * 360 / count, 360 / count, self.center_radius, self.outer_radius
                 )
             )
+            painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
         # Stroke the two circles once, then each radial separator exactly once.
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPen(QPen(border, 1))
@@ -677,24 +707,15 @@ class RadialPopup(QWidget):
         for start, end in radial_separators(count, self.center_radius, self.outer_radius):
             painter.drawLine(QPointF(*start), QPointF(*end))
         for index, option in enumerate(self.state.options):
-            angle = math.radians(-90 + (index + 0.5) * 360 / count)
-            x, y = 162 + 88 * math.cos(angle), 162 + 88 * math.sin(angle)
+            angle = -90 + (index + 0.5) * 360 / count
             label = option if isinstance(option, str) else option.label
             if self.diameter < 220 and isinstance(option, str):
                 label = {"Document": "Docs", "Markdown/Text": "Text/MD"}.get(label, label)
-            self._text(
-                painter,
-                QRectF(x - 55, y - 52, 110, 104),
-                label.replace("/", "\n"),
-                foreground,
-                9.5 if self.diameter < 220 else 10.5,
-                True,
-                True,
-            )
+            self._arc_text(painter, label, foreground, angle, 360 / count)
         self._text(painter, QRectF(125, 147, 74, 30),
                    "Back" if self.state.stage == "formats" else "Esc", muted, 9, True)
         if not count:
-            self._text(painter, QRectF(62, 214, 200, 38), "No available formats", muted, 10)
+            self._text(painter, QRectF(62, 214, 200, 38), "No formats", muted, 10)
 
 
 

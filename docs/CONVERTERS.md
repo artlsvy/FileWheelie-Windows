@@ -30,12 +30,17 @@ replacing files. Failure/cancellation cleans the stage and this job's partial
 publications, preserving source and pre-existing outputs. Input metadata is
 rechecked; a later action cannot reuse an old validation indefinitely.
 
-Escape/outside/focus-loss can cancel and hide the popup while a worker is active.
-Cancellation is cooperative: an in-progress Pillow/pdf2docx/MarkItDown call cannot
-be forcibly interrupted; LibreOffice has its own process deadline. Cleanup and
-application exit wait for that worker. A cancellation arriving after a completed
-publication cannot undo a successful conversion. Success/error and warnings appear
-inside the same popup; output/warning details are available through tooltips.
+Conversion/results remain visible on outside click and focus loss. Cancel/Escape
+requests cooperative cancellation while keeping status visible. Production GUI
+conversions run in a spawned process, supervised off the Qt thread; the mouse
+hook and GUI no longer share the converter's interpreter lock. Engine work,
+validation and collision-safe publication still use the same ConversionManager.
+No forced termination during publication is used. A permanently blocked native
+call can still delay cancellation/exit; LibreOffice has a bounded deadline.
+Catastrophic native child crashes are reported but may leave staging artifacts;
+the parent does not blindly delete unknown directories or existing outputs.
+
+For DOCX → PDF setup on Windows, see [DOCX_TO_PDF.md](DOCX_TO_PDF.md).
 
 ## One Python3.14 environment (development and builds)
 

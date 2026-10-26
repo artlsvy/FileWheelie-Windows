@@ -1,0 +1,306 @@
+"""Real spawned local conversions and bounded worker protocol tests on Linux."""
+import importlib.util
+import json
+import os
+import tempfile
+import time
+import unittest
+from pathlib import Path
+from threading import Event
+from unittest.mock import patch
+
+from filewheel.converters import (
+    Capability,
+    ConversionCancelled,
+    ConversionError,
+    ConversionManager,
+    EngineOutput,
+    Registry,
+)
+from filewheel.converters.images import PillowEngine
+from filewheel.converters.process_worker import ProgressThrottle, decode_packet, run_in_process
+
+
+class PolicyEngine:
+    engine_id = 'worker-policy-fixture'
+    capabilities = (Capability('.sample', 'Document', '.json', 'JSON', engine_id),)
+
+    def available(self):
+        return True
+
+    def convert(self, source, extension, workdir, progress, cancel):
+        path = workdir / 'policy.json'
+        path.write_text(json.dumps({'pid': os.getpid(), 'OMP_NUM_THREADS': os.getenv('OMP_NUM_THREADS'),
+                                    'OPENBLAS_NUM_THREADS': os.getenv('OPENBLAS_NUM_THREADS'),
+                                    'nice': os.getpriority(os.PRIO_PROCESS, 0) if os.name != 'nt' else None}),
+                        encoding='utf-8')
+        return (EngineOutput(path, 'policy.json'),)
+
+    def validate(self, output):
+        json.loads(output.path.read_text())
+
+
+class CancellationEngine(PolicyEngine):
+    engine_id = 'worker-cancellation-fixture'
+    capabilities = (Capability('.sample', 'Document', '.json', 'JSON', engine_id),)
+
+    def convert(self, source, extension, workdir, progress, cancel):
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            if cancel.wait(.01):
+                raise ConversionCancelled('Cancelled inside isolated converter')
+        raise ConversionError('Fixture cancellation deadline exceeded')
+
+
+def crash_child(manager, source, extension, cancel, connection):
+    os._exit(7)
+
+
+def malformed_child(manager, source, extension, cancel, connection):
+    connection.send_bytes(b'not JSON')
+    connection.close()
+
+
+def oversized_child(manager, source, extension, cancel, connection):
+    from filewheel.converters.process_worker import MAX_PACKET_BYTES
+    try:
+        connection.send_bytes(b'x' * (MAX_PACKET_BYTES + 1))
+    except (BrokenPipeError, OSError):
+        pass
+    finally:
+        connection.close()
+
+
+class ProcessWorkerTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.folder = Path(self.temporary.name)
+        self.environment = patch.dict(os.environ, {'FILEWHEEL_LOG_DIR': str(self.folder / 'logs')})
+        self.environment.start()
+        self.addCleanup(self.environment.stop)
+        self.source = self.folder / 'Unicode æ input.sample'
+        self.source.write_bytes(b'unchanged original')
+        self.cancel = Event()
+
+    def run_worker(self, manager, **kwargs):
+        return run_in_process(manager, self.source, '.json', progress=lambda *args: None,
+                              cancel=self.cancel, **kwargs)
+
+    def test_child_pid_and_thread_limits_do_not_change_parent(self):
+        before = os.environ.get('OMP_NUM_THREADS')
+        pids = []
+        result = self.run_worker(ConversionManager(Registry((PolicyEngine(),))), on_started=pids.append)
+        report = json.loads(result.path.read_text())
+        self.assertNotEqual(report['pid'], os.getpid())
+        self.assertEqual(pids, [report['pid']])
+        self.assertEqual(report['OMP_NUM_THREADS'], '1')
+        self.assertEqual(report['OPENBLAS_NUM_THREADS'], '1')
+        self.assertEqual(os.environ.get('OMP_NUM_THREADS'), before)
+        self.assertEqual(self.source.read_bytes(), b'unchanged original')
+        self.assertFalse(list(self.folder.glob('.filewheel-*')))
+
+    @unittest.skipUnless(importlib.util.find_spec('PIL'), 'Pillow required')
+    def test_actual_pillow_output_readable_and_source_preserved(self):
+        from PIL import Image
+        source = self.folder / 'real image.png'
+        Image.new('RGBA', (40, 24), (100, 0, 100, 0)).save(source)
+        before = source.read_bytes()
+        pids, progress = [], []
+        result = run_in_process(ConversionManager(Registry((PillowEngine(),))), source, '.jpg',
+                                progress=lambda *args: progress.append(args), cancel=self.cancel,
+                                on_started=pids.append)
+        self.assertNotEqual(pids[0], os.getpid())
+        with Image.open(result.path) as image:
+            self.assertEqual(image.format, 'JPEG')
+            self.assertEqual(image.size, (40, 24))
+            self.assertEqual(image.getpixel((10, 10)), (255, 255, 255))
+        self.assertEqual(source.read_bytes(), before)
+        self.assertEqual(progress[-1][0], 1.)
+        self.assertFalse(list(self.folder.glob('.filewheel-*')))
+
+    @unittest.skipUnless(importlib.util.find_spec('pillow_heif'), 'HEIF codec required')
+    def test_actual_heif_decoder_is_registered_in_spawned_child(self):
+        import pillow_heif
+        from PIL import Image
+        if not pillow_heif.libheif_info().get('HEIF'):
+            self.skipTest('HEIC fixture encoder unavailable')
+        source = self.folder / 'heif source.heic'
+        with Image.new('RGB', (32, 20), (70, 140, 210)) as image:
+            pillow_heif.from_pillow(image).save(source, quality=80)
+        before = source.read_bytes()
+        manager = ConversionManager(Registry((PillowEngine(),)))
+        result = run_in_process(manager, source, '.png', progress=lambda *args: None, cancel=self.cancel)
+        with Image.open(result.path) as output:
+            self.assertEqual(output.format, 'PNG')
+            self.assertEqual(output.size, (32, 20))
+        self.assertEqual(source.read_bytes(), before)
+        self.assertFalse(list(self.folder.glob('.filewheel-*')))
+
+    def test_actual_docx_pdf_in_spawned_child_when_libreoffice_available(self):
+        from filewheel.converters.office import LibreOfficeEngine
+        engine = LibreOfficeEngine(timeout=30)
+        if not engine.available() or importlib.util.find_spec('docx') is None:
+            self.skipTest('LibreOffice and DOCX fixture dependencies required')
+        import pymupdf
+        from docx import Document
+        source = self.folder / 'Unicode æ office input.docx'
+        document = Document()
+        document.add_paragraph('Worker PDF fixture rendered locally')
+        document.save(source)
+        before = source.read_bytes()
+        pids = []
+        result = run_in_process(ConversionManager(Registry((engine,))), source, '.pdf',
+                                progress=lambda *args: None, cancel=self.cancel, on_started=pids.append)
+        self.assertNotEqual(pids[0], os.getpid())
+        with pymupdf.open(result.path) as pdf:
+            self.assertIn('Worker PDF fixture', pdf[0].get_text())
+        self.assertEqual(source.read_bytes(), before)
+        self.assertFalse(list(self.folder.glob('.filewheel-*')))
+
+    def test_cancel_is_cooperative_child_exits_and_staging_is_removed(self):
+        with self.assertRaises(ConversionCancelled) as caught:
+            run_in_process(ConversionManager(Registry((CancellationEngine(),))), self.source, '.json',
+                           progress=lambda *args: self.cancel.set(), cancel=self.cancel)
+        self.assertEqual(caught.exception.engine_id, 'worker-cancellation-fixture')
+        self.assertEqual(caught.exception.operation, 'convert')
+        self.assertEqual(caught.exception.kind, 'conversion_cancelled')
+        self.assertFalse((self.folder / 'policy.json').exists())
+        self.assertFalse(list(self.folder.glob('.filewheel-*')))
+        self.assertEqual(self.source.read_bytes(), b'unchanged original')
+
+    def test_corrupt_input_preserves_engine_operation_and_child_debug_log(self):
+        with self.assertRaises(ConversionError) as caught:
+            run_in_process(ConversionManager(Registry((PillowEngine(),))), self.source.with_suffix('.png'), '.jpg',
+                           progress=lambda *args: None, cancel=self.cancel)
+        self.assertEqual(caught.exception.operation, 'validate_input')
+        self.assertTrue(caught.exception.debug_log.is_file())
+
+    def test_unexpected_exit_and_malformed_child_report_fail_without_hanging(self):
+        manager = ConversionManager(Registry((PolicyEngine(),)))
+        for target in (crash_child, malformed_child, oversized_child):
+            with self.subTest(target=target), self.assertRaises(ConversionError):
+                self.run_worker(manager, _target=target)
+        self.assertEqual(self.source.read_bytes(), b'unchanged original')
+
+    def test_precancelled_request_never_publishes(self):
+        self.cancel.set()
+        with self.assertRaises(ConversionCancelled):
+            self.run_worker(ConversionManager(Registry((PolicyEngine(),))))
+        self.assertFalse((self.folder / 'policy.json').exists())
+
+
+class WorkerProtocolTests(unittest.TestCase):
+    def test_malformed_messages_reject_instead_of_deserializing_arbitrary_objects(self):
+        for value in (b'not JSON', b'[]', b'{"type":"progress","fraction":NaN,"message":"x"}',
+                      b'{"type":"started","pid":true}',
+                      b'{"type":"result","outputs":["relative"],"warnings":[],"engine_id":"x"}',
+                      b'{"type":"error","category":"unknown"}'):
+            with self.subTest(value=value), self.assertRaises(ConversionError):
+                decode_packet(value)
+
+    def test_flood_is_coalesced_but_final_progress_is_retained(self):
+        records = []
+        clock = [1.]
+        report = ProgressThrottle(lambda *args: records.append(args), clock=lambda: clock[0])
+        for index in range(10000):
+            report(index / 10000, 'operation')
+        report(1., 'finished')
+        for _ in range(10000):
+            report(1., 'finished')
+        self.assertEqual(len(records), 2)
+        self.assertEqual(records[-1], (1., 'finished'))
+        clock[0] += .1
+        report(.5, 'new operation')
+        self.assertEqual(len(records), 3)
+
+
+class BusyEngine(PolicyEngine):
+    engine_id = 'worker-busy-fixture'
+    capabilities = (Capability('.sample', 'Document', '.json', 'JSON', engine_id),)
+
+    def convert(self, source, extension, workdir, progress, cancel):
+        deadline = time.monotonic() + .4
+        while time.monotonic() < deadline:
+            if cancel.is_set():
+                raise ConversionCancelled('Busy child cancelled')
+        return super().convert(source, extension, workdir, progress, cancel)
+
+
+class WorkerLifecycleTests(unittest.TestCase):
+    def test_spawn_failure_closes_pipe_and_does_not_run_converter_in_parent(self):
+        import multiprocessing
+        from unittest.mock import Mock
+        context = multiprocessing.get_context('spawn')
+        receive, send = context.Pipe(duplex=False)
+        process = Mock()
+        process.start.side_effect = OSError('fixture process startup failed')
+        seam = Mock()
+        seam.Pipe.return_value = receive, send
+        seam.Event.return_value = Event()
+        seam.Process.return_value = process
+        manager = Mock()
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'FILEWHEEL_LOG_DIR': directory}):
+            with self.assertRaises(ConversionError) as caught:
+                run_in_process(manager, Path(directory) / 'input.png', '.jpg', progress=lambda *args: None,
+                               cancel=Event(), _context=seam)
+            self.assertEqual(caught.exception.operation, 'start_worker')
+            self.assertTrue(caught.exception.debug_log.is_file())
+        manager.convert.assert_not_called()
+        process.close.assert_called_once()
+        self.assertTrue(receive.closed)
+        self.assertTrue(send.closed)
+
+    def test_callback_failure_requests_cleanup_and_does_not_leak_staging(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            source = folder / 'input.sample'
+            source.write_bytes(b'unchanged')
+            def fail_callback(*args):
+                raise RuntimeError('UI progress callback fixture failed')
+            with self.assertRaisesRegex(RuntimeError, 'progress callback'):
+                run_in_process(ConversionManager(Registry((CancellationEngine(),))), source, '.json',
+                               progress=fail_callback, cancel=Event())
+            self.assertFalse(list(folder.glob('.filewheel-*')))
+            self.assertEqual(source.read_bytes(), b'unchanged')
+
+    def test_qt_heartbeat_continues_during_cpu_bound_spawned_conversion(self):
+        try:
+            from PySide6.QtCore import QTimer
+            from PySide6.QtWidgets import QApplication
+
+            from filewheel.ui.conversion_job import ConversionJob
+        except ImportError:
+            self.skipTest('PySide6 required')
+        os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
+        app = QApplication.instance() or QApplication(['process-heartbeat'])
+        app.setQuitOnLastWindowClosed(False)
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / 'input.sample'
+            source.write_bytes(b'unchanged')
+            manager = ConversionManager(Registry((BusyEngine(),)))
+            job = ConversionJob(manager, source, '.json')
+            outcomes, ticks = [], []
+            job.outcome.connect(lambda *args: outcomes.append(args))
+            timer = QTimer()
+            timer.setInterval(10)
+            timer.timeout.connect(lambda: ticks.append(time.monotonic()))
+            timer.start()
+            try:
+                job.start()
+                deadline = time.monotonic() + 5
+                while (job.isRunning() or not outcomes) and time.monotonic() < deadline:
+                    app.processEvents()
+                    time.sleep(.003)
+                self.assertFalse(job.isRunning())
+                self.assertEqual(len(outcomes), 1)
+                self.assertIsNone(outcomes[0][1])
+                self.assertNotEqual(job.worker_pid, os.getpid())
+                self.assertGreaterEqual(len(ticks), 5)
+                self.assertEqual(source.read_bytes(), b'unchanged')
+            finally:
+                timer.stop()
+                job.cancelled.set()
+                job.wait(5000)
+                job.deleteLater()
+                app.processEvents()

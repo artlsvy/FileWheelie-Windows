@@ -149,3 +149,24 @@ status face uses short words/percentages; actual engine messages and outcomes
 remain unchanged in metadata/tooltips/logs. UI Cancel/Escape requests cooperative
 cancellation without hiding, while explicit application dismissal/Quit retains
 its cleanup contract. Busy invocation rejects without cancelling ongoing work.
+
+
+### Isolated conversion execution
+
+ConversionJob remains an owned QThread for supervision, but production
+ConversionManager work runs in one fresh multiprocessing spawn child. Trusted
+local engine/registry options are serialized as spawn arguments; no user file is
+loaded as a pickle. The private result pipe uses strict bounded JSON. Child
+progress is throttled, error types/engine/operation/log paths are reconstructed,
+and outcome signals occur only after the child exits and its handles are closed.
+
+The existing manager owns the complete staging/validation/publication/rollback
+transaction in the child. Cancellation uses a shared Event and remains
+cooperative; no forced termination risks interrupting publication. Unexpected
+native process death is contained but may leave private staging/partial new
+outputs, which are not blindly deleted by the parent. A hung native library can
+still delay shutdown, while Qt and hook execution remain in another interpreter.
+Common native pools are limited and child priority reduced best effort; this does
+not promise a universal one-thread limit for every third-party library. HEIF
+registration is performed in the fresh child because parent plugin state is not
+inherited. Source/frozen entry freeze_support remains before GUI startup.

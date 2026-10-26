@@ -239,3 +239,24 @@ Quit/programmatic dismissal retains the existing owned-worker shutdown path.
 Qt documents [Tool/Popup and topmost flags](https://doc.qt.io/qt-6/qt.html#WindowType-enum)
 and that [changing window flags hides widgets](https://doc.qt.io/qt-6/qwidget.html#windowFlags-prop).
 Native Windows focus/z-order remains a manual acceptance item.
+
+
+## D-019 — Isolate CPU/native converters from the mouse-hook interpreter
+
+User reports severe cursor lag during conversion and requests curved labels,
+subtle transparency, a short empty state and DOCX → PDF guidance. Production GUI
+jobs use one spawn child plus a Qt supervisor, preserving the same controller,
+registry/options and manager transaction. No automatic fallback runs a failed
+spawn in the hook interpreter. Child-native pool limits/priority are best effort;
+cooperative cancellation avoids killing a publishing process. Windowed source and
+frozen entry freeze_support remains before GUI initialization. Native Windows
+responsiveness must be tested; the GIL/hook explanation is a hypothesis until then.
+
+The UI uses No formats and readable arc-following labels. Surface-only alpha
+keeps text/actions opaque; contrast checks include base/hover compositing. Existing
+always-on-top progress/results and Mouse3 evidence checks remain unchanged.
+DOCX → PDF needs the already supported LibreOffice backend, not a new converter.
+
+Sources: [Python GIL/thread semantics](https://docs.python.org/3.14/c-api/threads.html),
+[Windows low-level hook timing](https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelmouseproc),
+[spawn and freeze support](https://docs.python.org/3.14/library/multiprocessing.html).

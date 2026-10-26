@@ -59,8 +59,8 @@ Native Windows z-order/focus acceptance remains required.
 Cancel or Escape while working requests cooperative cancellation and shows
 “Stopping…” until cleanup finishes, then “Cancelled”. It keeps the window
 visible. Programmatic dismissal/Quit can still hide the window and wait for its
-owned worker to finish. A QThread runs only backend work; signals update Qt on
-its GUI thread. Library calls cannot all be interrupted mid-call; LibreOffice has
+owned worker to finish. A QThread supervises the spawned backend process;
+signals update Qt on its GUI thread. Library calls cannot all be interrupted mid-call; LibreOffice has
 a bounded process-tree deadline. Running workers are never destroyed early.
 
 Outputs are adjacent to source, numbered on collision, validated before atomic
@@ -92,3 +92,21 @@ A circular progress ring, compact Cancel/Done control and chord-constrained text
 retain transparent corners and consistent hit regions. Selection menus dismiss
 on outside click; conversion/results persist. Cancel/Escape while busy requests
 cancellation visibly, and worker ownership remains until cleanup completes.
+
+
+## Curved labels, surface transparency and responsiveness
+
+Empty capability state reads “No formats”. Category/format glyphs follow measured
+circular baselines, reverse on the lower half for readable orientation, and elide
+within sector arc limits. Compact aliases and full-label tooltips remain. The
+forest/ivory/brass surface uses alpha 235/255; text and action controls stay
+opaque, rather than lowering whole-window opacity. Hover tint preserves surface
+alpha. Text/outline contrast is checked against black/white composited backdrop
+extremes; native Windows rendering still needs acceptance.
+
+Production ConversionManager jobs now run in one spawned process, with the Qt
+worker only supervising bounded progress/outcome messages. Common native-library
+thread limits and reduced child scheduling priority are best effort. Progress
+updates are throttled instead of flooding the UI. Cancellation, persistent status,
+ring and output safety remain; injected fake-manager tests retain an explicit
+in-process seam. No production spawn failure falls back to a converter thread.

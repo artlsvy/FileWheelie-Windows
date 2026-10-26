@@ -1,38 +1,41 @@
-# Next task: Windows acceptance of persistent simple conversion status
+# Next task: Windows responsiveness and curved/translucent UI acceptance
 
-The user confirms the grouped Explorer fix works. Do not repeat that investigation.
-Current UI changes: only In progress/percentage plus the existing round ring;
-results use simple words, with details retained in tooltips/logs. Conversion and
-results stay in a non-modal topmost Tool window when clicking elsewhere. Selection
-menus still use normal popup dismissal. Wheel size stays 170 logical pixels.
+The interrupted implementation is complete: production conversions now run in one
+spawned child, supervised by Qt. This addresses converter/hook shared-GIL
+contention and limits common native worker pools best effort; actual Windows
+cursor lag resolution still needs testing on the reported file. Keep all existing
+Mouse3 identity checks, Send to, persistent status and manager output safeguards.
 
-Linux checks: 357 tests / 362 subtests passed, plus scoped Ruff, compilation
-and focused review. Native Windows persistence still requires acceptance.
+Linux validation: 377 tests / 387 subtests pass, with scoped Ruff, compilation
+and focused review. Actual cursor-lag resolution on Windows is not yet verified.
 
-## Windows test
-
-Quit the old tray process, update the checkout, then start:
+Quit the old tray process, update the source checkout and run:
 
 ```powershell
+git pull --ff-only origin main
 .\.venv-filewheel\Scripts\python.exe -m filewheel --tray
 ```
 
-Enable Experimental Mouse3, open a file and choose a conversion. Use a conversion
-long enough to click Explorer/Notepad while it runs. The circular progress window
-must remain visible at its original position, above ordinary windows, without
-cancelling or blocking interaction with the other app. It should show only In
-progress, a percentage/ring and Cancel. After completion, simple Done/File saved
-(or Failed/Cancelled) must remain visible until Done/Escape. Hover for output,
-warning or error details; detailed diagnostic logging must still be available.
+No new Python dependency is required for process isolation. Enable Mouse3 and
+repeat the conversion that previously lagged while continuously moving the cursor
+and using Explorer/another app. Progress/results must stay visible and responsive;
+Cancel/Escape/Quit must wait for owned cleanup, and no uncontrolled extra tray
+processes should open. Check readable output, original bytes and collision names.
+Test with Mouse3 off and Send to if lag remains, then provide conversion pair,
+file size/page count and whether both invocation routes are affected. Do not claim
+all possible CPU/memory/driver stalls were solved by the isolation change.
 
-Cancel or Escape while busy should show Stopping until the worker finishes,
-then Cancelled; it must not destroy a running worker. Tray Quit must still exit
-cleanly after owned cleanup. Start a second invocation while busy: it must reject
-without cancelling. After finishing/dismissing, open another file: the normal
-category/format wheel must again dismiss on outside click and keep correct near-
-cursor/DPI placement. Check transparent corners and no native rectangular frame.
+The 170px menu now says No formats, follows sector curvature and has a slightly
+translucent surface with opaque labels/actions. Check upper/lower labels,
+hover/separators, light/dark backdrop readability and transparent corners on the
+actual Windows DPI setup. Full labels, paths and errors remain in tooltips/logs.
 
-Linux offscreen flags/worker/visibility tests do not establish Windows z-order,
-focus or compositor behavior. Record actual native acceptance in STATUS.md.
-Send to and Mouse3 evidence filters are unchanged. Do not push without separate
-authorization.
+DOCX → PDF is already implemented. Follow DOCX_TO_PDF.md to install the normal
+LibreOffice application, check LibreOfficeEngine detection in .venv-filewheel,
+restart the tray to rebuild capabilities and choose Docs → PDF. Do not install a
+Python package named libreoffice or confuse this with the PDF → DOCX engine.
+
+Native Windows/frozen spawning, priority and compositor behavior remain pending;
+Linux tests do not prove them. Cooperative engine hangs may delay shutdown and
+catastrophic native crashes can leave staging artifacts; never blindly remove
+unknown files. Record results in STATUS.md. Do not push without authorization.

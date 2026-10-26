@@ -30,7 +30,7 @@ can be restored in the tray. The listener stays opt-in and Send to stays usable.
 
 Compact UI polish is implemented: 170px wheel, larger labels, small Esc/Back
 center, forest/ivory/brass themes and circular progress/results. Linux checks:
-357 tests and 362 subtests pass; new direct-route/native visuals await Windows
+377 tests and 387 subtests pass; new direct-route/native visuals await Windows
 acceptance. G11/G12 source build/bundle seams remain implemented, with native
 packaging/portable-office checks queued separately. No push was performed.
 
@@ -65,3 +65,10 @@ The user confirms grouped-folder activation now works. Current UI follow-up keep
 170px conversion/results topmost and visible through outside activity, with short
 status words and the existing progress ring. Details stay in tooltips/logs; native
 Windows focus/z-order acceptance is the next check (D-018, NEXT_TASK.md).
+
+
+Current follow-up (D-019): spawned converter isolation, throttled progress,
+curved sector labels and subtle surface transparency are implemented. The user
+reported cursor stalls; original-file Windows responsiveness remains unverified.
+DOCX → PDF setup is documented in DOCX_TO_PDF.md. No new conversion formats or
+mouse-mapping changes are introduced by this task.

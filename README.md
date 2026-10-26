@@ -48,3 +48,9 @@ During conversion the 170px circle shows a short status and percentage/ring.
 Conversion/results stay visible above ordinary windows when clicking elsewhere;
 Cancel/Escape waits visibly for cleanup, and Done closes the result. Technical
 messages and file/output details remain available in tooltips and local logs.
+
+Production conversion jobs now use a separate process to keep native converters
+out of the mouse-hook/UI interpreter. Menu labels follow the ring, surfaces are
+subtly translucent and empty state reads No formats. Windows cursor performance
+still needs acceptance. To enable the existing DOCX → PDF route, follow
+[the LibreOffice setup guide](docs/DOCX_TO_PDF.md).

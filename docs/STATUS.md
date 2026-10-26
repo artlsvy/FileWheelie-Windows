@@ -1,6 +1,6 @@
 # Status and Windows-validation queue
 
-Updated: 2026-10-25
+Updated: 2026-10-26
 Current checkpoint: G9–G12 source implementation and available Linux checks
 complete. G9-A/B are WINDOWS-VERIFIED by the user's latest report. G10 tray and
 candidate consent are implemented; Windows hook/focus/startup acceptance remains
@@ -995,3 +995,51 @@ when clicking elsewhere.
   conversion and after completion, verify persistent topmost placement without
   input blocking, then Cancel/Escape/Done, tray Quit and reopening. Offscreen
   tests do not establish native z-order/compositor behavior. No push was performed.
+
+
+## 2026-10-26 — Conversion isolation, curved labels and translucent menu
+
+User reports cursor/PC lag while converting. The exact conversion pair, file size
+and comparison with Mouse3 disabled were not supplied. Shared-interpreter GIL
+contention between native converters and Python WH_MOUSE_LL callbacks is a
+plausible mechanism, not a Windows-profiled root-cause claim.
+
+- Production GUI ConversionManager jobs now run in one spawned interpreter;
+  QThread only supervises bounded private JSON progress/outcome messages. The
+  GUI and passive mouse hook no longer share the converter's GIL. Common native
+  thread pools are limited and child scheduling priority lowered best effort;
+  progress is throttled to avoid flooding Qt. No native hook code was changed.
+- The existing manager still owns staging, source checks, output validation,
+  collision-safe publication and rollback in the child. Cancellation is
+  cooperative and outcome signals wait for child/pipe cleanup. Spawn failure is
+  explicit, with no shared-thread production fallback. Injected fake test
+  managers retain a documented in-process seam. A permanently blocked native
+  converter may delay cancellation/shutdown; catastrophic child death may leave
+  staging/partial new outputs, which are not blindly deleted by the parent.
+- Review found HEIF registration was parent-local after spawn. Child bootstrap
+  now registers the decoder; real spawned HEIC → JPEG and PNG → JPEG fixtures
+  pass. A real DOCX → PDF conversion through installed Linux LibreOffice also
+  passes in the isolated child, preserving input bytes and readable PDF text.
+- Empty state shortened to No formats. Sector glyphs follow measured circular
+  baselines with lower-half orientation reversal and arc-fit elision. Surface
+  alpha is 235/255; text/actions remain opaque and hover preserves alpha.
+  Outline colors were adjusted after review to preserve >=3:1 against both base
+  and hover surfaces over black/white backdrop extremes; text pairs meet >=4.5:1.
+  These calculations/offscreen renders are not native Windows compositor proof.
+- DOCX → PDF was already implemented. docs/DOCX_TO_PDF.md now gives normal
+  LibreOffice/WinGet install, venv dependency/detection and Docs → PDF steps.
+  PDF → DOCX remains a separate engine and does not require LibreOffice.
+- Windows cursor responsiveness, source/frozen spawn behavior, process priority,
+  native curve rendering/transparency and original problematic-file acceptance
+  remain WINDOWS_VALIDATION_REQUIRED. No claim is made that every cause of a
+  system-wide stall is eliminated. No new Windows run or push was performed.
+
+- Final Linux validation: **377 tests and 387 subtests passed**. Scoped Ruff,
+  compileall and git diff --check passed. Real spawned PNG → JPEG, HEIC → JPEG
+  and LibreOffice DOCX → PDF output/source-integrity fixtures passed; a Qt
+  heartbeat continued during a CPU-bound spawned conversion. Protocol, spawn
+  failure, cancellation, cleanup and error metadata tests also pass.
+- Focused read-only reviews passed 20 process/Qt tests +11 subtests and 39 UI
+  tests +32 subtests. The HEIF registration regression and hover-outline contrast
+  gap they identified were fixed and regression-tested. Text and outline checks
+  now include both base and hover surfaces over extreme composited backdrops.
