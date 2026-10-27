@@ -1,0 +1,195 @@
+{
+  "ok": true,
+  "results": [
+    {
+      "qt_version": "6.12.0",
+      "widgets": "QWidget",
+      "image_width": 1,
+      "ok": true
+    },
+    {
+      "comtypes": "1.4.17",
+      "ok": true
+    },
+    {
+      "quick_qml_render": true,
+      "corner_alpha": 0,
+      "graphics_api": "GraphicsApi.OpenGL",
+      "ok": true
+    },
+    {
+      "quick_progress_render": true,
+      "ok": true
+    },
+    {
+      "libreoffice_source": "system",
+      "libreoffice_executable": "C:\\Program Files\\LibreOffice\\program\\soffice.com",
+      "ok": true
+    },
+    {
+      "pandoc": "3.13",
+      "pandoc_source": "system",
+      "optional": true,
+      "ok": true
+    },
+    {
+      "pair": ".png->.jpg",
+      "engine": "pillow",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".png->.webp",
+      "engine": "pillow",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".png->.pdf",
+      "engine": "pillow",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".pdf->.docx",
+      "engine": "pdf2docx",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".pdf->.png",
+      "engine": "pymupdf-images",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".docx->.md",
+      "engine": "markitdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".pdf->.md",
+      "engine": "markitdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".pptx->.md",
+      "engine": "markitdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".xlsx->.md",
+      "engine": "markitdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".html->.md",
+      "engine": "markitdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".txt->.md",
+      "engine": "structured-markdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".csv->.md",
+      "engine": "structured-markdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".json->.md",
+      "engine": "structured-markdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".xml->.md",
+      "engine": "structured-markdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".htm->.md",
+      "engine": "markitdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".epub->.md",
+      "engine": "markitdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".zip->.md",
+      "engine": "archive-markdown",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".md->.docx",
+      "engine": "pandoc",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".md->.html",
+      "engine": "pandoc",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".md->.txt",
+      "engine": "pandoc",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".md->.rtf",
+      "engine": "pandoc",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".md->.odt",
+      "engine": "pandoc",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".md->.epub",
+      "engine": "pandoc",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".md->.pptx",
+      "engine": "pandoc",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "pair": ".md->.pdf",
+      "engine": "pandoc",
+      "outputs": 1,
+      "ok": true
+    },
+    {
+      "collision_safe": true,
+      "ok": true
+    },
+    {
+      "pair": ".docx->.pdf",
+      "engine": "libreoffice",
+      "ok": true
+    }
+  ]
+}

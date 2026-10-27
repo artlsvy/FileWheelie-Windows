@@ -36,6 +36,7 @@ from filewheel.ui.popup import logical_point
 from filewheel.ui.progress_state import ProgressMode, ProgressPresentation, progress_position
 from filewheel.ui.quick_geometry import SIZE, hit_test, inside_dismiss_boundary
 from filewheel.ui.radial import DEFAULT_PREVIEW_REGISTRY, RadialState
+from filewheel.ui.render_diagnostics import RenderDiagnostics
 
 
 class GlassSession(QObject):
@@ -251,6 +252,8 @@ class GlassSession(QObject):
             self._detail = f'{selection.input_path}\n{selection.intended_path}\nNo file created.'
             self._refresh()
         else:
+            self.view.render_diagnostics.sequence += 1
+            self.view.render_diagnostics.record('conversion_start')
             self.state.stage = 'converting'
             self._status, self._detail, self._progress = 'Converting', '', 0.
             self.last_selection = replace(selection, action='conversion_started')
@@ -309,6 +312,7 @@ class GlassPopup(QQuickView):
                  manager=None, source_mapper=lambda path: Path(str(path)), coordinator=None, _scene_file=None):
         QQuickWindow.setDefaultAlphaBuffer(True)
         super().__init__()
+        self.render_diagnostics = RenderDiagnostics(self, 'wheel')
         self.point_mapper = point_mapper
         self.coordinator = coordinator or ConversionController(QApplication.instance())
         self.progress_view = None
@@ -328,6 +332,7 @@ class GlassPopup(QQuickView):
         self._frame_lock = Lock()
         self.frame_count = 0
         self.session = GlassSession(self, registry, manager, source_mapper)
+        self.session.presentationChanged.connect(self._trace_presentation)
         self.setColor(QColor('transparent'))
         self.set_persistent(False)
         self.setWidth(SIZE)
@@ -369,6 +374,12 @@ class GlassPopup(QQuickView):
     @property
     def state(self):
         return self.session.state
+
+    def _trace_presentation(self):
+        self.render_diagnostics.snapshot('presentation')
+        if self.progress_view is not None and isValid(self.progress_view):
+            self.progress_view.render_diagnostics.sequence = self.render_diagnostics.sequence
+            self.progress_view.render_diagnostics.snapshot('presentation')
 
     @property
     def job(self):
@@ -589,6 +600,7 @@ class GlassPopup(QQuickView):
         visible = self.isVisible()
         self._changing_flags = True
         try:
+            self.render_diagnostics.record('flags', old=int(self.flags()), new=int(flags))
             self.setFlags(flags)
             if visible and not self.isVisible():
                 self.show()
@@ -645,6 +657,7 @@ class GlassPopup(QQuickView):
             try:
                 surface = ProgressSurface(self)
                 self.progress_view = surface
+                surface.render_diagnostics.sequence = self.render_diagnostics.sequence
                 self._surface_serial += 1
                 serial = self._surface_serial
                 surface.destroyed.connect(lambda: self._progress_surface_destroyed(serial))
@@ -675,6 +688,7 @@ class GlassPopup(QQuickView):
         """Finite transition/hide recovery, not a desktop polling loop."""
         if not self._current_progress(generation, serial):
             return
+        self.render_diagnostics.snapshot('recovery')
         if self.session.presentation_state.compact:
             self._finish_collapse(generation, serial)
             return
@@ -932,6 +946,7 @@ class ProgressSurface(QQuickView):
     """No-focus topmost informational surface; never owns or cancels a worker."""
     def __init__(self, owner):
         super().__init__()
+        self.render_diagnostics = RenderDiagnostics(self, 'progress')
         self.owner = owner
         owner.destroyed.connect(self.deleteLater)
         self._changing = False
@@ -950,15 +965,21 @@ class ProgressSurface(QQuickView):
         self.entrance_animation = QPropertyAnimation(self.rootObject(), b'entrance', self)
         self.entrance_animation.setDuration(210)
         self.entrance_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        if self.render_diagnostics.enabled:
+            self.entrance_animation.stateChanged.connect(
+                lambda new, old: self.render_diagnostics.snapshot('animation_' + new.name))
 
     def set_accepts_focus(self, accept):
+        flags = (Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint
+                 | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.NoDropShadowWindowHint)
+        if not accept:
+            flags |= Qt.WindowType.WindowDoesNotAcceptFocus
+        if self.flags() == flags:
+            return
         visible = self.isVisible()
         self._changing = True
         try:
-            flags = (Qt.WindowType.Tool | Qt.WindowType.FramelessWindowHint
-                     | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.NoDropShadowWindowHint)
-            if not accept:
-                flags |= Qt.WindowType.WindowDoesNotAcceptFocus
+            self.render_diagnostics.record('flags', old=int(self.flags()), new=int(flags))
             self.setFlags(flags)
             if visible:
                 self.show()

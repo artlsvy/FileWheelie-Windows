@@ -1,5 +1,11 @@
 # Durable background conversion feedback
 
+F5 update (2026-10-27): Windows Quick now prefers OpenGL RHI unless an explicit
+Qt graphics setting is supplied. Native D3D11 desktop-presentation failure and
+100-cycle OpenGL evidence, bounded tracing and exact commands are recorded in
+[F5_RENDERER_RELIABILITY.md](F5_RENDERER_RELIABILITY.md). The approved UX below is
+unchanged. This practical mitigation does not establish a universal driver cause.
+
 Windows user acceptance: all eight functional progress checks passed. A later
 intermittent missing transition recovered after restart; its cause remains
 unproven. F1–F4 lifecycle polish/recovery still needs native acceptance.

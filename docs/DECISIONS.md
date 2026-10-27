@@ -354,3 +354,18 @@ Markdown paths remain offline, bounded and staged; Pandoc is an actual discovere
 executable, optional rather than a Python wrapper assumption. Do not expose audio,
 OCR, remote services or unsafe recursive archive conversion. Native Windows pill
 and new tool integration require acceptance separate from portable fixtures.
+
+## D-025 — Prefer OpenGL RHI for Windows Quick (F5)
+
+Native Qt6.12/Windows11/Arc B580 comparisons corroborate the user's backend
+experiment: default and explicit D3D11 lose desktop pill presentation on cycle6,
+despite an intact render target; OpenGL completes100 controlled UI cycles.
+Software also completes100 but retains user-reported artifact/first-use concerns.
+Prefer OpenGL before Qt initialization, preserve all explicit Qt backend settings,
+offer FILEWHEEL_QUICK_RHI=default for the genuine platform default, and retain
+Widgets. Do not switch APIs at runtime. No claim of universal D3D11/driver fault
+or permanent resolution across other hardware. Guard redundant pill flag writes;
+do not rewrite lifecycle state or add timers. Bounded optional local tracing can
+capture current state from the tray without restart. Details, measurements,
+packaging evidence and real-world50-conversion acceptance: F5_RENDERER_RELIABILITY.md.
+Stop after F5; no unrelated development or automatic push.

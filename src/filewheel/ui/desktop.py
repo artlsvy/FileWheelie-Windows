@@ -78,6 +78,10 @@ class DesktopApplication(QObject):
         self.confirm_action.setChecked(self.confirm_candidates)
         self.confirm_action.toggled.connect(self.set_confirmation)
         self.menu.addAction(self.confirm_action)
+        diagnostics = getattr(self.popup, 'render_diagnostics', None)
+        if diagnostics is not None and diagnostics.enabled:
+            trace_action = self.menu.addAction('Save UI trace snapshot')
+            trace_action.triggered.connect(self.popup._trace_presentation)
         quit_action = self.menu.addAction('Quit Filewheel')
         quit_action.triggered.connect(self.request_quit)
         self.tray.setContextMenu(self.menu)

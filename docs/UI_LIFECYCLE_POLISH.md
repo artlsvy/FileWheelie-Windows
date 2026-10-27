@@ -1,5 +1,12 @@
 # F1–F4: selection motion and progress lifecycle consistency
 
+F5 supersedes the earlier equal-weight lifecycle hypotheses: native tests now
+reproduce absent desktop pixels with an intact D3D11 render target, while OpenGL
+passes100 repeated cycles. Windows Quick therefore prefers OpenGL at startup;
+explicit settings and Widgets remain available. See
+[F5_RENDERER_RELIABILITY.md](F5_RENDERER_RELIABILITY.md). No new recovery timers
+or changes to the approved QML were introduced.
+
 Windows user acceptance of the earlier progress build passed all eight functional
 checks. A later intermittent missing pill transition recovered after restart;
 its exact cause remains unproven. This milestone strengthens tested lifecycle

@@ -18,3 +18,4 @@ logs/
 .venv-filewheel/
 .venv-build314/
 packaging/vendor/
+artifacts/f5/

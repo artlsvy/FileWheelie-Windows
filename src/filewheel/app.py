@@ -1,5 +1,6 @@
 """Normal application entry; diagnostics and management need no permanent window."""
 import argparse
+import os
 import sys
 
 from filewheel.converters.debugging import record_failure
@@ -17,10 +18,20 @@ def main(argv=None):
     parser.add_argument('--sendto', choices=('stage', 'install', 'remove'))
     parser.add_argument('--diagnostic', action='store_true')
     parser.add_argument('--self-test', action='store_true')
+    parser.add_argument('--ui-stress-test', metavar='OUTPUT_DIRECTORY',
+                        help='isolated Windows Quick cycles; synthetic inputs, no conversions')
+    parser.add_argument('--ui-stress-cycles', type=int, default=100)
     parser.add_argument('paths', nargs='*')
     args = parser.parse_args(argv)
+    from filewheel.ui.graphics_config import configure_quick_graphics
+    configure_quick_graphics('quick' if args.ui_stress_test else args.ui_backend)
     try:
         require_runtime()
+        if args.ui_stress_test:
+            if not 1 <= args.ui_stress_cycles <= 1000:
+                parser.error('--ui-stress-cycles must be between 1 and 1000')
+            from filewheel.ui.render_stress import run
+            return run(args.ui_stress_test, args.ui_stress_cycles)
         if args.startup:
             from filewheel.platforms.windows.startup import configure
             configure(args.startup)
@@ -60,6 +71,9 @@ def main(argv=None):
                     if request['paths'] else host.ensure_tray())
         broker = SingleInstance(receive)
         outcome = broker.acquire_or_forward(packet)
+        if args.ui_backend == 'quick' or os.getenv('FILEWHEEL_UI_BACKEND') == 'quick':
+            from filewheel.ui.render_diagnostics import record_instance
+            record_instance(outcome)
         if outcome != 'owner':
             return 0 if outcome == 'forwarded' else 3
         tray_mode = args.tray or not args.paths

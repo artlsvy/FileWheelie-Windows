@@ -77,6 +77,18 @@ def test_pure_presentation_transitions_do_not_infer_job_outcome():
     assert not model.compact and model.mode == ProgressMode.FAILED
 
 
+def test_repeated_focus_policy_does_not_touch_native_flags(running):
+    view, _manager, _coordinator = running
+    surface = view._ensure_progress()
+    with patch.object(surface, 'setFlags', wraps=surface.setFlags) as flags:
+        surface.set_accepts_focus(False)
+        flags.assert_not_called()
+        surface.set_accepts_focus(True)
+        assert flags.call_count == 1
+        surface.set_accepts_focus(True)
+        assert flags.call_count == 1
+
+
 @pytest.mark.parametrize('area', [Rect(0, 0, 1920, 1040), Rect(-1536, -200, 1536, 824),
                                  Rect(1920, 0, 1280, 720), Rect(-800, 100, 800, 600)])
 def test_pill_placement_uses_monitor_logical_workarea(area):

@@ -1,5 +1,10 @@
 # Status and Windows-validation queue
 
+Latest checkpoint: **F5 Windows renderer mitigation (2026-10-27)**. Native
+source D3D11 presentation failure reproduced; OpenGL preferred for Windows Quick
+while honoring explicit settings. See F5_RENDERER_RELIABILITY.md and the final
+F5 checkpoint below. Earlier Linux-only packaging statements are historical.
+
 Updated: 2026-10-26
 Current checkpoint: G9–G12 source implementation and available Linux checks
 complete. G9-A/B are WINDOWS-VERIFIED by the user's latest report. G10 tray and
@@ -1550,3 +1555,51 @@ original intermittent transition event is not reproduced or declared definitivel
 resolved. No Windows EXE was built or executed here. PACKAGING.md gives exact
 PowerShell rebuild/optional bundle/self-test commands; NEXT_TASK.md is now the
 native acceptance handoff. No push was performed.
+
+## F5 — Windows rendering backend reliability (2026-10-27)
+
+Native evidence now distinguishes all four configurations on Windows 11 Pro
+10.0.26200, Python 3.14.5, Qt/PySide6 6.12.0, Intel Arc B580 driver32.0.101.9033.
+Initial fresh-process default and explicit D3D11 runs lost desktop pill pixels
+on cycle6. Frozen D3D11 later failed on66. At the captured failures Qt reported
+visible/exposed/full opacity, with an intact grabWindow render and no scenegraph
+invalidation. This supports a native presentation/backend interaction; no specific
+Qt, Direct3D or driver defect is proved. Historical user runs had no API/PID logs.
+
+Windows Quick now prefers OpenGL RHI before Qt initialization, preserving explicit
+Qt settings. FILEWHEEL_QUICK_RHI=default allows the genuine Qt default. Widgets
+remains available and the overall default. The only lifecycle correction avoids
+redundant progress focus-flag writes; it did not fix D3D11. No converters, QML,
+navigation or recovery timers changed. Opt-in FILEWHEEL_UI_TRACE=1 adds bounded,
+filename-free lifecycle evidence and a tray snapshot action without restarting.
+
+Actual native results: source OpenGL100 and software100 passed; frozen preferred
+OpenGL100 and software100 passed. Source and final frozen untraced OpenGL each
+passed100, with zero selection reopens in the final classified frozen run. Tests
+include actual desktop animation pixels before render-target grabs, state,
+cancellation/retry, morph/completion, focus changes, expiry and surface reuse.
+Two earlier untraced trials (0 and89 cycles) remain recorded as incomplete;
+their old generic wait did not classify the exact cause. The harness now names
+waits, records failure state and bounds selection-only reopen attempts. It never
+retries a job or missing pill. Only a primary-screen controlled UI was tested.
+
+PyInstaller produced artifacts/f5/frozen/Filewheel with exit0; existing dist
+preserved. Packaged Quick self-test passed33 checks/26 real conversion pairs
+with system Pandoc3.13/LibreOffice. OpenGL DLLs, Windows plugin and QML resources
+are present. Package-directory launch without PYTHONPATH was tested, not relocation
+to another machine. Native resource/CPU observations, captures, executable hash
+and per-run summary: F5_RENDERER_RELIABILITY.md and docs/f5/native-results.json.
+
+Automated checks:45 focused tests passed without warnings; scoped Ruff,
+compilation and git diff whitespace checks passed. Full Windows suite:650 passed,
+407 subtests passed,11 skipped,6 failed. All6 reproduce in unmodified HEAD in an
+isolated checkout: Windows path separators, POSIX env expectations, ZIP backslash
+normalization, locale decoding and offscreen monitor matching. Full suite is not
+green; unrelated failures were preserved.
+
+WINDOWS_VALIDATION_REQUIRED: user's50 normal conversions in one OpenGL tray
+session; actual first-conversion pointer latency, mixed DPI/monitors, other GPUs
+and older drivers, sleep/resume and longer resource observation. Software circle
+artifact/first-use lag remain user-reported and unproved. OpenGL is the practical
+mitigation, not a guarantee across all hardware. Earlier Mouse3/Send to/optional
+bundle queues remain pending. Stop after F5; no automatic push.

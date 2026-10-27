@@ -1,47 +1,29 @@
-# Next: native Windows acceptance of the completed Phase 2 build
+﻿# F5 implementation complete — stop feature development
 
-Implementation checkpoints are complete: A `4329317` (independent jobs/glass
-progress pill), B `5767151` (To MD / From MD), C `116f5c2` (bounded offline
-Markdown inputs), F `67c96cd` (selection motion/lifecycle recovery), and D
-`2409f61` (real Pandoc writers/staged PDF). E adds optional native-tool packaging,
-artifact hashes, expanded smoke tests and the final conversion matrix. Do not
-repeat those implementations or restart the approved design. Nothing was pushed.
+Only the requested F5 renderer investigation is authorized in this task. Do not
+resume converters, formats, redesign, Phase 2 work or another milestone. Do not push.
 
-Final Linux evidence: **656 tests / 408 subtests passed** with actual Pandoc
-3.12.1 and LibreOffice. Source and separately installed Python-wheel Quick smoke
-each passed **32 checks / 26 real conversion pairs**, including wheel/pill renders.
-Changed Python files pass Ruff; repository-wide Ruff retains 25 findings in
-unchanged files. Compilation, spec syntax, wheel resources and diff checks pass.
-This does not establish native Windows or frozen-EXE success.
+Windows Quick now prefers OpenGL RHI before Qt initialization, while explicit
+Qt backend settings and Widgets remain available. Native source D3D11 failed at
+cycle 6, frozen D3D11 at 66; both showed absent desktop pixels with an intact pill
+render target. Source and frozen OpenGL each passed 100 cycles, as did software.
+This is evidence for a practical mitigation, not a universal Qt/driver diagnosis.
+Final source and frozen OpenGL runs also passed 100 cycles with tracing disabled;
+the final frozen run needed zero selection reopens. Packaged self-test: 33 checks
+and 26 real conversion pairs passed. Raw summaries include earlier incomplete
+trials rather than treating every test process as a success.
 
-## Single next job
+The next user acceptance step is at least 50 normal conversions in one OpenGL
+tray session, including cancel/retry, focus changes and first-conversion pointer
+responsiveness. Use the exact startup, override, trace-snapshot and regression
+commands in [F5_RENDERER_RELIABILITY.md](F5_RENDERER_RELIABILITY.md). Fully quit the
+old tray owner before changing settings. Retain the complete isolated onedir in
+artifacts/f5/frozen/Filewheel, or rebuild dist/Filewheel using the existing
+build script. If feedback disappears, use the opt-in tray trace snapshot before
+restarting. Record effective API, PID and sequence.
 
-On Windows 11, quit the old tray owner, rebuild and run the new onedir through
-the acceptance procedures in [PACKAGING.md](PACKAGING.md),
-[UI_LIFECYCLE_POLISH.md](UI_LIFECYCLE_POLISH.md), [PROGRESS_UX.md](PROGRESS_UX.md)
-and [PANDOC.md](PANDOC.md). No additional user approval gate blocks this testing.
-
-1. Verify repeated conversions in one tray session: collapse → expand → collapse,
-   completion/cancel during morph, failure details, success expiry, same-file
-   retry, repeated Send to and tray Quit while busy. The eight baseline progress
-   checks already passed per user report; the original intermittent missing
-   transition has no reliable reproduction and is **not declared resolved**.
-2. Check selection entrance 140 ms / leave exit 110 ms, leave tolerance r118 with
-   100 ms debounce while actual sector hits stay r110, short PDF JPG/PNG labels,
-   reduced/low effects and mixed-DPI/negative-coordinate placement.
-3. Exercise new To MD inputs TXT/CSV/JSON/XML/HTM/EPUB/text-only ZIP, and From MD
-   DOCX/HTML/TXT/RTF/ODT/EPUB/PPTX with actual Pandoc. PDF additionally requires
-   LibreOffice. Verify useful content, Unicode paths, collisions, cancellation,
-   source hashes and no intermediate/staging leaks. XLS/MSG/OCR/audio/general
-   recursive ZIP remain unimplemented; do not enable them from upstream claims.
-4. Test optional complete Pandoc/LibreOffice bundles, missing tools, moved onedir
-   outside checkout/venv, and packaged source/output separation checks. Confirm
-   `pandoc_source: bundled` when intended. Run Quick self-test and inspect its
-   JSON rather than assuming launch implies successful conversion.
-5. Recheck physical Mouse3, opted-in touchpad confirmation, Send to and direct
-   invocation through the shared host. Preserve all provenance/validation rules.
-
-Record actual Windows findings in STATUS.md. If the intermittent transition
-recurs, capture the exact lifecycle sequence and local error details before
-making another targeted fix; do not assume a GPU/worker cause or add telemetry.
-Use `--ui-backend widgets` as the existing fallback. Do not push automatically.
+Keep WINDOWS_VALIDATION_REQUIRED for mixed DPI/monitors, other GPUs/drivers,
+sleep/resume, actual pointer latency and long real conversion sessions. Older
+Mouse3/Send to/optional-tool acceptance queues in STATUS.md are preserved, not
+claimed completed by this UI-only harness. Full-suite Windows baseline failures
+are documented separately; do not silently broaden F5 to fix unrelated engines.
