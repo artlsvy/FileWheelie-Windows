@@ -29,7 +29,7 @@ Or supply the complete folders explicitly:
   --pandoc "$env:LOCALAPPDATA\Pandoc"
 ```
 
-Output: **`dist/standalone/Filewheel.exe`**. Give family members that EXE alone.
+Output: **`releases/Filewheel.exe`**, versioned through Git LFS. Give family members that EXE alone.
 `BUILD-INFO.json` beside it records its SHA256 and size; it is not a runtime
 dependency. The existing `dist/Filewheel` diagnostic build is preserved.
 The build log is `build/single-exe-build.log`.
@@ -49,18 +49,18 @@ Shortcuts and Send to must point to the real EXE, never its temporary unpacked
 folder. Remove/reinstall integrations if you move the EXE. They are opt-in:
 
 ```powershell
-& .\dist\standalone\Filewheel.exe --sendto install
-& .\dist\standalone\Filewheel.exe --startup install
+& .\releases\Filewheel.exe --sendto install
+& .\releases\Filewheel.exe --startup install
 ```
 
 ## Verify the packaged file
 
 ```powershell
 $env:FILEWHEEL_LOG_DIR = "$PWD\artifacts\single-exe\manual"
-& .\dist\standalone\Filewheel.exe --self-test --ui-backend quick
+& .\releases\Filewheel.exe --self-test --ui-backend quick
 Get-Content "$env:FILEWHEEL_LOG_DIR\self-test.json"
 .\.venv-build314\Scripts\python.exe scripts/compare_quick_windows.py `
-  --executable dist/standalone/Filewheel.exe --cycles 100 `
+  --executable releases/Filewheel.exe --cycles 100 `
   --output artifacts/single-exe/ui --backends preferred --no-trace
 ```
 

@@ -1,9 +1,8 @@
 # Actual local conversion matrix
 
-Implemented means real engines and Linux output-content/structure fixtures, not
-Windows certification. Options are generated only from available codecs/tools.
-The [captured Linux registry](conversion-capabilities-linux.json) contains 42
-pairs in the full tested environment; another installation may expose fewer.
+The registry exposes only available engines. The Windows onefile embeds its
+native tools; prior native evidence is in standalone/verification.json. This
+cleanup/review pass runs no tests and does not renew those historical results.
 
 | Input | Outputs | Engine | Availability / limitations |
 |---|---|---|---|

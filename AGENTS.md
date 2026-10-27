@@ -4,19 +4,16 @@
 Build a **private, local-first Windows 11 file-conversion utility**. The primary UX is **middle-click on a file in Windows Explorer → cursor-centered radial menu → output category → concrete format → convert**. No accounts, cloud services, telemetry, monetization, or distribution infrastructure.
 
 ## Current milestone / source of truth
-Latest user update: large-folder Mouse3 is user-reported Windows-verified. Direct
-experimental wheel activation without per-file confirmation is now authorized
-(D-016). Keep all evidence/freshness/path checks and experimental provenance;
-never promote this route to trusted hover identity. Per-file confirmation is an
-optional tray preference. Current UI task: compact 170px forest/ivory/brass wheel and grouped-folder support,
-larger labels, small Esc/Back center and circular conversion feedback. Latest UI
-request: short progress labels and persistent topmost conversion/results (D-018);
-selection menus retain outside/focus dismissal. Latest follow-up (D-019):
-production conversions run in a spawned child to isolate hook/UI GIL; retain
-cooperative transaction cleanup. Curved labels, surface-only transparency and
-short No formats state are current. Native cursor responsiveness remains pending.
+Read docs/STATUS.md and docs/NEXT_TASK.md first. Current user priority is a clean
+committed repository including the standalone EXE, integrated with origin/main.
+Then add bounded useful offline conversions if feasible. No tests/benchmarks or
+interactive automation in this review pass. Assess C from source/context only;
+do not start a rewrite. Current task state is docs/plans/cleanup-main.md.
 
-Read `docs/STATUS.md` and `docs/NEXT_TASK.md` first, then `docs/ROADMAP.md`, `docs/DECISIONS.md`, and task-specific specifications. **CURRENT PRIORITY (user update 2026-10-25): G9–G12 authorized sequentially: rendering/backend diagnostics, unified Python3.14, opt-in Mouse3 candidate confirmation/tray runtime, Windows onedir packaging and portable LibreOffice integration. Preserve trusted-target boundaries and Send to.** D-011 selects the fallback while Mouse3 remains desired but experimental. Preserve all Mouse3 code; expand diagnostics only for a specific blocking issue. Complete the authorized G9–G12 milestones; preserve diagnostics and record native verification limits. Current authorized task: Windows-only cleanup and one EXE embedding all dependencies. Preserve the accepted OpenGL glass UI and cancellation.
+Preserve the accepted Quick/OpenGL glass UI, durable progress and cancellation.
+Mouse3 remains experimental: all provenance/freshness/path checks and injected
+input consent remain mandatory. No trusted-hover promotion. Keep Send to.
+Family EXE/resources and checksums live in releases; EXE uses Git LFS.
 
 ## Development environment
 - Filewheel targets Windows 11 amd64 only. Codex now runs directly on Windows.

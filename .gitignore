@@ -19,3 +19,7 @@ logs/
 .venv-build314/
 packaging/vendor/
 artifacts/
+
+# Machine-local assistant state
+.serena/
+.unsnooze/

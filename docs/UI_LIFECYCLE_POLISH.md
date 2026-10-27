@@ -38,15 +38,9 @@ PDF image labels are now **JPG** and **PNG**. Capability descriptions/tooltips s
 actual output filenames are unchanged. Use short format labels, keeping detailed
 behavior in metadata/tooltips rather than squeezing prose into sectors.
 
-[Actual rendered proof](ui-polish/ui-polish-proof.png) and individual RGBA images
-in docs/ui-polish show opening, selection, formats, dismissal, compact progress
-and completion. They were visually inspected. They use Linux Quick software
-rendering and a controlled preview worker, not Windows screenshots.
-
-```bash
-QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software PYTHONPATH=src \
-  .venv-ui/bin/python scripts/render_ui_polish.py --output-dir /tmp/ui-polish
-```
+Current native rendering evidence is in F5_RENDERER_RELIABILITY.md and
+standalone/verification.json. Obsolete prototype captures are available in Git
+history; they are not new native acceptance.
 
 From an updated Windows checkout, quit the existing tray owner first:
 

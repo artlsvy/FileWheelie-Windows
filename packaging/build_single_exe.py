@@ -24,7 +24,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--libreoffice', type=Path)
     parser.add_argument('--pandoc', type=Path)
-    parser.add_argument('--output', type=Path, default=ROOT / 'dist/standalone')
+    parser.add_argument('--output', type=Path, default=ROOT / 'releases')
     args = parser.parse_args()
     office = args.libreoffice
     if office is None:

@@ -37,18 +37,11 @@ immediate transitions. QWidget keeps simpler persistent feedback and restores it
 if a native hide occurs. A recoverable pill-QML load failure logs and restores
 the persistent wheel, with no job cancellation.
 
-## Rendered evidence
+## Rendering evidence
 
-[Actual Quick state board](progress-pill/progress-proof.png) includes expanded,
-transitioning wheel/pill, compact, converted and failed details. Raw RGBA images
-are in docs/progress-pill. These use a controlled preview worker and Linux
-software scenegraph; no real input/output files are converted by the renderer
-script. They were visually inspected, not inferred from unit tests.
-
-```bash
-QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software PYTHONPATH=src \
-  .venv-ui/bin/python scripts/render_progress_pill.py --output-dir /tmp/progress-proof
-```
+Current native evidence is in [F5_RENDERER_RELIABILITY.md](F5_RENDERER_RELIABILITY.md)
+and [standalone/verification.json](standalone/verification.json). Earlier prototype
+screenshots are retained in Git history rather than the active tree.
 
 ## Windows acceptance
 

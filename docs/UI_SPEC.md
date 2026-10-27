@@ -147,7 +147,7 @@ usable. Progress/results remain persistent; no new global hook is installed.
 
 The user subsequently approved Phase 1 and authorized Phase 2 progress UX and
 Markdown expansion. The earlier hold is satisfied (see STATUS.md).
-See GLASS_UI_PHASE1.md for real rendered before/after evidence and native checks.
+See GLASS_UI.md for real rendered before/after evidence and native checks.
 
 ## Phase 2 A — wheel to compact progress
 
