@@ -1,6 +1,7 @@
-"""Optional LibreOffice DOCX rendering in a bounded isolated local subprocess."""
+"""Offline Office-to-PDF rendering in a bounded isolated local subprocess."""
 
 import os
+import re
 import shutil
 import subprocess
 from importlib.util import find_spec
@@ -18,6 +19,12 @@ from filewheel.converters.base import (
     check_cancel,
 )
 from filewheel.libreoffice_bundle import external_tool_environment, find_libreoffice
+
+_PDF_INPUTS = {
+    '.docx': ('word/document.xml', 'writer_pdf_Export'),
+    '.pptx': ('ppt/presentation.xml', 'impress_pdf_Export'),
+    '.xlsx': ('xl/workbook.xml', 'calc_pdf_Export'),
+}
 
 
 def _stop_office_tree(process, environment):
@@ -91,7 +98,8 @@ def run_office(arguments, *, workdir, timeout, cancel=None):
 
 class LibreOfficeEngine:
     engine_id = "libreoffice"
-    capabilities = (Capability(".docx", "Document", ".pdf", "PDF", engine_id),)
+    capabilities = tuple(Capability(extension, 'Document', '.pdf', 'PDF', 'libreoffice')
+                         for extension in _PDF_INPUTS)
 
     def __init__(self, *, timeout=90):
         if not isinstance(timeout, (int, float)) or not 0 < timeout <= 600:
@@ -112,17 +120,36 @@ class LibreOfficeEngine:
         check_cancel(cancel)
         executable = self.executable()
         if not executable:
-            raise ConversionError("Install LibreOffice to convert DOCX to PDF")
-        if source.suffix.lower() != ".docx" or extension != ".pdf":
+            raise ConversionError("LibreOffice is required for Office-to-PDF conversion")
+        source_extension = source.suffix.lower()
+        if source_extension not in _PDF_INPUTS or extension != ".pdf":
             raise ConversionError("Unsupported Office conversion")
+        required_part, pdf_filter = _PDF_INPUTS[source_extension]
         if source.stat().st_size > 50 * 1024 * 1024:
             raise ConversionError("Office input exceeds the 50 MiB limit")
         try:
             with ZipFile(source) as archive:
                 if sum(item.file_size for item in archive.infolist()) > 200 * 1024 * 1024:
                     raise ConversionError("Expanded Office document exceeds the size limit")
-                if any("vbaProject" in name for name in archive.namelist()):
+                if any("vbaproject" in name.lower() for name in archive.namelist()):
                     raise ConversionError("Macro-containing documents are not supported")
+                if source_extension == '.xlsx':
+                    for name in archive.namelist():
+                        lowered = name.lower()
+                        if (lowered == 'xl/connections.xml' or lowered.startswith(
+                                ('xl/externallinks/', 'xl/querytables/', 'xl/macrosheets/'))):
+                            raise ConversionError('External spreadsheet data and macro sheets are unsupported')
+                        if lowered == 'xl/workbook.xml' or (
+                                lowered.startswith('xl/worksheets/') and lowered.endswith('.xml')):
+                            sheet = ElementTree.fromstring(archive.read(name))
+                            for element in sheet.iter():
+                                if element.tag.rsplit('}', 1)[-1] not in ('f', 'definedName'):
+                                    continue
+                                formula = element.text or ''
+                                if ('|' in formula or '://' in formula or re.search(
+                                    r'\b(?:WEBSERVICE|DDE|RTD|IMAGE|HYPERLINK|CALL|REGISTER|EXEC)\s*\(',
+                                        formula, re.IGNORECASE)):
+                                    raise ConversionError('Network or active spreadsheet formulas are unsupported')
                 for name in archive.namelist():
                     if name.endswith(".rels"):
                         relations = ElementTree.fromstring(archive.read(name))
@@ -131,13 +158,13 @@ class LibreOfficeEngine:
                                 "Type", ""
                             ).endswith("/hyperlink"):
                                 raise ConversionError("External document resources are unsupported")
-                if "word/document.xml" not in archive.namelist() or archive.testzip():
-                    raise ConversionError("The input is not a readable DOCX")
+                if required_part not in archive.namelist() or archive.testzip():
+                    raise ConversionError("The input is not a readable Office document")
         except (BadZipFile, ElementTree.ParseError) as error:
-            raise ConversionError("The input is not a readable DOCX") from error
+            raise ConversionError("The input is not a readable Office document") from error
         # Copy only to our private directory. Fixed local input name avoids CLI
         # option/URI interpretation and path-dependent exporter names.
-        local = workdir / "input.docx"
+        local = workdir / ('input' + source_extension)
         shutil.copyfile(source, local)
         output_dir = workdir / "rendered"
         output_dir.mkdir()
@@ -152,7 +179,7 @@ class LibreOfficeEngine:
                 "--nodefault",
                 "--norestore",
                 "--convert-to",
-                "pdf:writer_pdf_Export",
+                'pdf:' + pdf_filter,
                 "--outdir",
                 str(output_dir),
                 str(local),

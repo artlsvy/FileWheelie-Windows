@@ -184,11 +184,14 @@ def run(*, include_quick=False):
                                 'workers': len(worker_ids), 'ok': True})
             if list(root.glob('.filewheel-*')):
                 raise RuntimeError('Conversion smoke leaked staging files')
-            if any(c.input_extension == '.docx'  and c.output_extension == '.pdf' for c in manager.registry.capabilities):
-                result = manager.convert(docx, '.pdf')
-                results.append({'pair': '.docx->.pdf', 'engine': result.engine_id, 'ok': True})
-            else:
-                results.append({'pair': '.docx->.pdf', 'skipped': 'LibreOffice not installed/bundled'})
+            for office_source in (docx, pptx, xlsx):
+                pair = office_source.suffix + '->.pdf'
+                if any(c.input_extension == office_source.suffix and c.output_extension == '.pdf'
+                       for c in manager.registry.capabilities):
+                    result = manager.convert(office_source, '.pdf')
+                    results.append({'pair': pair, 'engine': result.engine_id, 'ok': True})
+                else:
+                    results.append({'pair': pair, 'skipped': 'LibreOffice not installed/bundled'})
         report = {'ok': True, 'results': results}
         code = 0
     except Exception as error:  # noqa: BLE001 - frozen diagnostic entry

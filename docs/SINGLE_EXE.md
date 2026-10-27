@@ -77,19 +77,32 @@ local isolation test is not equivalent to a second clean Windows machine.
 See STATUS.md and the task plan for actual build/test results. Historical Linux
 measurements elsewhere in the repository do not imply a supported Unix target.
 
-## Delivered build (2026-10-27)
+## Build records and current verification limit
 
-- EXE size:668,358,672 bytes (about637MiB).
-- SHA256:`4a46099d87b9d67f65aefa956801dee0b682cfedff83f64c3d0bdc70b01b131c`.
-- Full Windows suite:660 tests and407 subtests passed;4 skips, no failures.
-- Copied EXE alone outside the checkout, with Python variables and installed
-  tool paths removed:34 self-test checks/26 conversion pairs passed. Pandoc3.13
-  and LibreOffice report bundled. Three real frozen children converted,
-  cancelled and retried successfully. The self-test extraction folder cleaned up.
-- Native OpenGL UI:46 completed cycles, then user interrupted to use the PC.
-  The planned100-cycle check is incomplete. No further interactive tests may run
-  until the user authorizes them. The previous F5 build's100-cycle evidence is
-  historical and is not substituted for this new artifact's result.
+The baseline EXE with SHA256
+`4a46099d87b9d67f65aefa956801dee0b682cfedff83f64c3d0bdc70b01b131c`
+was natively checked:34 checks/26 pairs and real worker cancellation/retry passed.
+Its UI trial completed46 cycles before user interruption. Its source suite had
+660 tests/407 subtests passed,4 skips. Those are historical results for that build.
+The exact baseline is recoverable from the b9b77a3 commit through Git LFS.
 
-[Machine-readable verification](standalone/verification.json) preserves this limit.
-The existing installed/tray build and unrelated local files were left untouched.
+The current cleanup/converter review adds PPTX/XLSX-to-PDF. Per user instruction,
+no tests, native tool probes, benchmarks or desktop automation are being run.
+The new EXE is rebuilt with `--skip-tool-probes`; compilation success does not
+renew the previous native acceptance. Check the current SHA256 and build metadata
+in releases/SHA256SUMS.txt and releases/BUILD-INFO.json.
+
+For a test-free rebuild matching this pass:
+
+```powershell
+.\.venv-build314\Scripts\python.exe packaging/build_single_exe.py --skip-tool-probes
+```
+
+Read [CONVERTER_REVIEW.md](CONVERTER_REVIEW.md) for scope and restrictions. Existing
+[baseline verification](standalone/verification.json) remains explicitly historical.
+Do not restart the interrupted UI automation without the user's request.
+
+Current compiled artifact: SHA256
+`a0bf33614ee5eb24269add1b871a7c28c9470fcc7c2a293eccc41f77ef37feb1`.
+Build/probe status is in [cleanup-build.json](standalone/cleanup-build.json).
+No current runtime test result is implied by successful compilation.

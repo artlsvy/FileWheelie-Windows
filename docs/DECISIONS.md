@@ -382,3 +382,15 @@ Require bundled-tool discovery in the family build rather than silently relying
 on installed programs. Real frozen worker/cancel/retry checks complement direct
 conversion smoke tests. Interactive verification is paused when user needs PC;
 do not restart UI automation without their request. See SINGLE_EXE.md.
+
+## D-027 — Cleanup/main priority, bounded offline extensions, no C rewrite
+
+User explicitly prioritizes a clean committed main including the standalone EXE.
+Use Git LFS for the EXE (normal GitHub files must be <=100MiB); retain source,
+useful tests, build recipes and current safety evidence, recover obsolete tracked
+prototypes through history, and preserve personal/local files in an external backup.
+The current pass runs no tests/benchmarks/desktop automation. New PPTX/XLSX PDF
+routes reuse bundled LO and conservative offline guards; mark them unverified until
+future runtime acceptance. MarkItDown Google speech transcription is excluded.
+Current source/context does not justify a C rewrite; do not start one. No force-push
+or branch-history rewrite is required to integrate main.

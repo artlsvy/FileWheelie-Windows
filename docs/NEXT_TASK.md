@@ -1,14 +1,20 @@
-﻿# Cleanup/main integration in progress
+﻿# Current handoff
 
-Priority1 is the clean commit/main integration. The stable Windows onefile is
-now tracked through Git LFS at releases/Filewheel.exe with a SHA256 sidecar.
-Historical verification belongs to standalone/verification.json; no tests or
-interactive automation are being run in the current review pass.
+Cleanup/main integration completed in b9b77a3; remote main was verified at that
+checkpoint, including the baseline standalone EXE through Git LFS. Obsolete
+prototype files/local fixtures were preserved outside checkout, not discarded.
+Current source adds PPTX/XLSX-to-PDF using bundled LibreOffice and conservative
+spreadsheet offline guards. No tests/benchmarks/UI automation ran in this pass.
 
-After this cleanup checkpoint, add only bounded PPTX/XLSX-to-PDF routes through
-already-bundled LibreOffice, rebuild the EXE without running validation probes,
-and document that those additions have not been runtime-tested in this pass.
-MarkItDown speech transcription calls online Google recognition and remains off.
-C source/context review says no rewrite is currently justified.
+New EXE: releases/Filewheel.exe. SHA256:
+a0bf33614ee5eb24269add1b871a7c28c9470fcc7c2a293eccc41f77ef37feb1.
+Compilation succeeded; new converter/runtime acceptance is pending. Do not apply
+the baseline native checks to this different artifact. Checksums/build metadata
+are in releases; review/limits in CONVERTER_REVIEW.md and standalone/cleanup-build.json.
 
-Current state: plans/cleanup-main.md. Do not restart the interrupted desktop test.
+MarkItDown audio/video transcription calls online speech recognition, so it remains
+disabled. C assessment finds no reason for a rewrite. No C implementation started.
+
+Next only when requested: run the unexecuted Office-route checks and native/family
+acceptance, including the interrupted UI stress test. Do not reopen desktop tests
+while the user needs the PC. No additional feature work is pending from this task.

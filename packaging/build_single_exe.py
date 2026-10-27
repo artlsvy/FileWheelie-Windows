@@ -25,6 +25,8 @@ def main():
     parser.add_argument('--libreoffice', type=Path)
     parser.add_argument('--pandoc', type=Path)
     parser.add_argument('--output', type=Path, default=ROOT / 'releases')
+    parser.add_argument('--skip-tool-probes', action='store_true',
+                        help='structure-only native tool checks; do not run conversion probes')
     args = parser.parse_args()
     office = args.libreoffice
     if office is None:
@@ -41,7 +43,7 @@ def main():
     office = ensure_separate_tool_source(office, args.output)
     pandoc = ensure_separate_tool_source(pandoc, args.output)
     validate_office(office)
-    pandoc_info = validate_pandoc(pandoc)
+    pandoc_info = validate_pandoc(pandoc, execute=not args.skip_tool_probes)
     (ROOT / 'build').mkdir(exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix='single-exe-tools-', dir=ROOT / 'build'))
     copied_office = stage / 'libreoffice'
@@ -75,7 +77,7 @@ def main():
     manifest = {'file': executable.name, 'sha256': digest,
                 'bytes': executable.stat().st_size, 'python': sys.version,
                 'pandoc': pandoc_info.version, 'embedded_tools': ['LibreOffice', 'Pandoc'],
-                'build_log': str(log_path)}
+                'build_log': str(log_path.relative_to(ROOT)), 'tool_probes_run': not args.skip_tool_probes}
     (args.output / 'BUILD-INFO.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
     print('Built:', executable, '\nSHA256:', digest, flush=True)
     return 0

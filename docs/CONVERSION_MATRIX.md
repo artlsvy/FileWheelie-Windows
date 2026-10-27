@@ -10,7 +10,7 @@ cleanup/review pass runs no tests and does not renew those historical results.
 | HEIC/HEIF | JPEG, PNG, WebP, PDF | Pillow + pillow-heif | Optional working HEIF codec; single frame |
 | PDF | DOCX | pdf2docx | Editable text/layout best effort; scanned PDFs require OCR |
 | PDF | JPG, PNG | PyMuPDF | Every page exported separately; short labels, all-pages tooltips |
-| DOCX | PDF | LibreOffice | Optional installed or complete portable engine; fonts/layout vary |
+| DOCX, PPTX, XLSX | PDF | LibreOffice | Complete embedded engine in family EXE; fonts/layout/print areas vary. New PPTX/XLSX routes are source-reviewed, not runtime-tested in this pass |
 | DOCX, PDF, PPTX, XLSX, HTML, HTM | MD | MarkItDown 0.1.9 Python API | Local content extraction, lossy layout; no plugins/cloud/OCR |
 | TXT | MD | structured-markdown | Fenced text; UTF-8 or BOM UTF-16 |
 | CSV | MD | structured-markdown | Escaped table, bounded consistent rows/columns |
@@ -27,7 +27,7 @@ sole output); MD input uses **From MD** then an available target format.
 
 These are **not implemented/exposed**: legacy XLS→MD, Outlook MSG→MD, general
 recursive/binary ZIP conversion, image OCR/vision, audio transcription, cloud
-APIs/Azure/YouTube, new audio/video transcoders, PPTX/XLSX→PDF and CSV→XLSX.
+APIs/Azure/YouTube, new audio/video transcoders and CSV→XLSX.
 Upstream library support alone is not an installed Filewheel capability.
 
 All source files remain unchanged, outputs use collision-safe names and manager

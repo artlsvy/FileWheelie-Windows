@@ -14,12 +14,20 @@ claim new native validation. Preserve OpenGL, trusted-target boundaries, worker
 cancellation and source/output transactions. No C rewrite.
 
 Milestones:
-1. Active: cleanup, include existing stable EXE with LFS, commit and integrate main.
-2. Pending: bounded PPTX/XLSX-to-PDF using existing LibreOffice, rebuild EXE if changed.
-3. Pending: document converter/audio/C findings, final commit/remote integration.
+1. Complete: cleanup/LFS EXE committed b9b77a3, main fast-forwarded and pushed;
+   remote refs/heads/main verified equal to b9b77a3. Old native EXE preserved in Git.
+2. Complete: bounded PPTX/XLSX-to-PDF, offline workbook guards and unrun regression
+   cases added. EXE rebuilt successfully with --skip-tool-probes, no test runs.
+3. Active: document converter/audio/C findings, final commit/remote integration.
 
 Evidence: origin/main is an ancestor of HEAD; branch contains two later commits
 (F5/OpenGL and Windows onefile). Git LFS3.3.0 available. Existing EXE668358672 bytes.
 Current untracked report.pdf/report.txt/unicode.txt/tests/a.txt/tests/b.txt appear
 manual fixtures; preserve via external backup instead of deleting personal files.
-Next: inventory references and remove obsolete tracked artifacts; stage LFS EXE.
+Cleanup removed77 files' obsolete material (4062 lines), retained current safety
+contracts and useful tests/build tooling. Local backups are outside checkout;
+the user's running artifacts/f5 instance is untouched. LFS upload completed.
+Current artifact SHA256a0bf33614ee5eb24269add1b871a7c28c9470fcc7c2a293eccc41f77ef37feb1.
+MarkItDown speech helper calls online Google recognition; excluded. C review finds
+no need for a rewrite; no implementation started. No tests/benchmarks/UI automation.
+Next: commit current source/binary/metadata and verify origin/main after push.

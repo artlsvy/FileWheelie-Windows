@@ -22,3 +22,8 @@ See [conversion capabilities](docs/CONVERSION_MATRIX.md),
 [status](docs/STATUS.md), [next task](docs/NEXT_TASK.md) and
 [decisions](docs/DECISIONS.md). Windows 11 amd64 is the only supported target.
 Obsolete prototype captures and setup instructions remain available in Git history.
+
+The latest build adds **PPTX → PDF** and **XLSX → PDF** through bundled LibreOffice.
+These additions were source-reviewed and compiled without running tests, per the
+current request. [Converter review](docs/CONVERTER_REVIEW.md) records restrictions,
+the offline-only audio decision and why a C rewrite is not needed.

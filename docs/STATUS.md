@@ -44,3 +44,25 @@ removed. Source/build/test/safety contracts and current native evidence remain.
 Manual files, duplicate inactive venvs, old distributions and obsolete assets
 are backed up outside the checkout. Running artifacts/f5 remains untouched.
 Stable EXE4a46099d87 is tracked through Git LFS in releases. No tests were run.
+
+## Offline Office PDF additions and source review
+
+Added PPTX/PDF and XLSX/PDF using existing LibreOffice filters; no new dependency
+or approved UI change. Reused private input/profile, cancellation, output checks
+and no-overwrite publication. Spreadsheet connections/external links/query tables,
+macro sheets and active/network formulas reject before LO starts. Future regression
+cases added in test_office_pdf_routes.py, not executed. Self-test coverage extended
+for future native runs, but no self-test was run now.
+
+MarkItDown0.1.9's speech helper calls recognize_google; its audio/MP4 transcription
+therefore fails the offline requirement and stays absent. Popularity findings are
+qualified converter-operator lists, not a global ranking. C review from code/context
+finds no need for a rewrite: coordination is Python, expensive engines already native,
+and preserving QML/MarkItDown would still need Qt C++/Python or major replacements.
+
+Rebuilt releases/Filewheel.exe without native tool probes:668357057 bytes, SHA256
+a0bf33614ee5eb24269add1b871a7c28c9470fcc7c2a293eccc41f77ef37feb1.
+No tests, benchmarks or UI automation ran. Compilation is not runtime acceptance.
+The last natively checked baseline4a46099d87 remains recoverable from b9b77a3 via
+Git LFS. Current artifact metadata is in releases and standalone/cleanup-build.json.
+Remaining runtime/family checks require a new user request. No C implementation.
