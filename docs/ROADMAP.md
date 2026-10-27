@@ -137,3 +137,7 @@ are implemented/actual-fixture-tested (601 tests/406 subtests). Continue D/E.
 F1–F4: entrance/exit/tolerance, short PDF labels and progress lifecycle recovery
 implemented and portable-tested. Native intermittent root cause remains unproven.
 Continue preserved D Pandoc and E packaging; A–C are already complete.
+
+Phase 2 D: real probed Pandoc supplies seven Markdown writers plus staged PDF
+when LibreOffice is available.649tests/406subtests pass on Linux; native pending.
+Finish E packaging, expanded smoke and final regression.

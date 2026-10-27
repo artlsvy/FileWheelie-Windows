@@ -247,3 +247,13 @@ choice atomically and returns the existing selection DTO; both renderers consume
 it unchanged, including shared controller/progress ownership. From MD retains
 format selection. Actual capability.category/engine_id remain available for
 engine selection and semantic classification.
+
+### Pandoc engine boundary
+
+pandoc_tool owns explicit/bundled/PATH discovery, identity-cached runtime writer
+smokes, bounded no-shell process execution and frozen external-DLL isolation.
+The Pandoc engine owns GFM→AST sanitation, whitelisted raster embedding, streamed
+AST size enforcement, structural output validation and optional staged DOCX→PDF.
+No Qt objects, filters, remote APIs or tool downloads cross the converter boundary.
+Only final validated root-stage outputs enter normal atomic publication. Optional
+tool absence hides From MD capabilities. See PANDOC.md for limits/acceptance.

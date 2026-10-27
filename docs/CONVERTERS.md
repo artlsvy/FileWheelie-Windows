@@ -185,3 +185,13 @@ Legacy XLS and Outlook MSG remain unimplemented/unexposed: their optional
 xlrd/olefile dependencies and representative fixtures are not part of the locked
 runtime. MarkItDown's unrestricted recursive ZipConverter is not enabled. No new
 ML model, plugin, network service or markitdown[all] dependency is introduced.
+
+## Markdown publishing (Phase 2 D)
+
+A discovered, runtime-probed Pandoc executable supplies MD → DOCX/standalone
+HTML/TXT/RTF/ODT/EPUB/PPTX. MD → PDF additionally requires LibreOffice and runs
+staged DOCX/rendering under one manager transaction. Source/output safety and
+progress ownership are shared with every other engine. Unsupported tools/writers
+stay unavailable. PANDOC.md describes local resource restrictions, limits, known
+losses, discovery and exact Windows instructions. These outputs are actual
+Linux-fixture-tested; native Windows/frozen acceptance is still pending.

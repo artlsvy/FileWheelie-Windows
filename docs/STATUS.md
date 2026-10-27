@@ -1486,3 +1486,27 @@ Actual source Quick smoke **15 checks passed** including pill rendering and
 tested; final three expiry/reopen tests pass with no remaining material findings.
 Visually inspected actual Quick opening/selection/formats/dismissal/compact/
 completed frames in docs/ui-polish. Commands: UI_LIFECYCLE_POLISH.md.
+
+
+## Phase 2 D — actual local Pandoc publishing (2026-10-27)
+
+Registered MD -> DOCX/standalone HTML/TXT/RTF/ODT/EPUB/PPTX, and PDF when
+LibreOffice is available. Capability discovery probes actual executables and
+sandboxed writer outputs/reference data, cached by executable identity. Missing
+or broken writers remain hidden. Explicit/bundled/PATH discovery, fixed argv,
+bounded external processes/diagnostics and frozen DLL isolation are implemented.
+PDF is one staged Pandoc-DOCX-LibreOffice transaction with no intermediate output.
+
+Actual official Pandoc 3.12.1 Linux fixtures verify all formats, content/structure,
+Unicode/collisions, image embedding and no remote fetch, missing tools, cancellation
+between stages and staging cleanup. Real Quick/Widget jobs test To MD and From MD
+through the production supervisor. Focused review's repeated-image expansion
+finding was fixed with per-reference budgets and bounded streaming AST output;
+regressions prove it cannot build an unbounded JSON string. Review reports no
+remaining material findings in these paths.
+
+Full Linux suite with actual Pandoc **649 tests / 406 subtests passed**; scoped
+Ruff, compilation and diff checks pass. No native Windows/frozen Pandoc execution
+occurred. PANDOC.md records limits, optional tools and exact commands. Next: E
+portable build seams, expanded source/frozen smoke families, lock metadata and
+final regression/native handoff. F source/appearance is preserved.
