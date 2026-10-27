@@ -1,29 +1,19 @@
-# Release v0.2
+# Release v0.2 ? complete
 
-Goal: clean main and a simple public-facing README; publish only the installer.
-Acceptance: outdated docs removed without rereading, no portable EXE on main,
-version0.2.0 in app/setup, installer checksum matches release asset, main pushed,
-GitHub releasev0.2 published with short installer/login notes.
+Goal: clean main, a readable README and an installer-only GitHub release.
 
-Constraints: no tests or desktop automation, no feature work/history rewrite,
-keep source/tests/build recipes and input/conversion safeguards. Old docs and
-portable binaries remain recoverable from Git history; no history purge requested.
+1. Complete: removed35 obsolete docs/captures without rereading them; removed the
+   portable EXE/build record from main. Kept current installer/status/task docs.
+2. Complete: rebuilt app/setup0.2.0; compiler/static checks passed. No tests,
+   installer execution, login changes, conversion probes or desktop automation.
+3. Complete: main pushed and releasev0.2 published with two short installer/login
+   notes and one attached installer. GitHub asset size and SHA256 verified.
 
-1. Complete: removed35 obsolete docs/captures by path and the portable EXE/build
-   record. Rewrote README/current guides; no obsolete document contents read.
-2. Complete: app/setup0.2.0, installer compilation and static artifact checks.
-3. Active: commit/push main, publish and verify release asset, stop.
-
-Decision: retain INSTALLER, STATUS, NEXT_TASK and this plan as current docs.
-The release asset is the real EXE; repository copy uses Git LFS. Release notes:
-"Added a Windows installer and optional start on login."
-
-Preflight: origin fetched; main has the unpushed installer commit only. GitHub
-authentication has push access; v0.2 does not exist. Release upload API is used
-because the connector has no release-upload endpoint. No tests/UI automation.
-
-Build evidence:75 Python source/build files compile; ten packaged runtime sources
-match. All17753 payload files included exactly once. Setup compilation234.922s.
-Installer SHA256:
+Release: https://github.com/artlsvy/fileconverter/releases/tag/v0.2
+Release target:c745f8806433a3647988791da99d5bf4a763a961.
+Installer:415407573 bytes; SHA256
 0d04e761c680ad0a8addc54924841a82282df39520ac42a637f1e77425f0ba31.
-No installer execution, login changes, conversions or desktop tests ran.
+Static evidence:75 Python files compile, ten packaged sources match, all17753
+payload files included once. Runtime acceptance remains deferred by the user.
+Old files remain recoverable through Git history; no history purge performed.
+Next: stop. No other feature development authorized by this release request.

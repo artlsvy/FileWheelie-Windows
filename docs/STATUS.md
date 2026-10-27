@@ -1,17 +1,15 @@
 # Current status
 
-Filewheel targets Windows 11 x64. Release v0.2 is built with an
-offline installer, optional start on login and a three-entry tray menu.
+Filewheel v0.2 (app/setup 0.2.0) is published for Windows 11 x64:
+https://github.com/artlsvy/fileconverter/releases/tag/v0.2
 
-Outdated documentation and old captures are removed without rereading them.
-Only the installer remains in releases; the portable EXE is removed from main.
-Current task state: plans/release-v0.2.md. Installer details: INSTALLER.md.
-App/setup metadata:0.2.0. Static checks:75 Python files, ten packaged sources,
-17753 installer payload entries. SHA256:
-0d04e761c680ad0a8addc54924841a82282df39520ac42a637f1e77425f0ba31.
-Build details and checksum are in releases. Push/release publication is next.
+Only FilewheelSetup.exe is attached. GitHub's asset checksum matches the local
+installer:0d04e761c680ad0a8addc54924841a82282df39520ac42a637f1e77425f0ba31.
+The current tree excludes the portable EXE and 35 obsolete docs/captures. README
+uses plain installation/use instructions. Main and release publication succeeded.
 
-No tests, installer execution, conversion probes or desktop automation are run
-in this pass. Earlier user acceptance of progress/cancellation remains valid for
-the tested version; clean-machine install/login/upgrade/uninstall checks remain
-pending. Keep provenance/path checks and injected-input confirmation unchanged.
+Build/static checks:75 Python source/build files compiled; ten packaged runtime
+sources match; all17753 payload files included. Full record is in releases.
+No tests, installer execution, login changes, conversion probes or desktop
+automation ran. Clean-machine install/login/upgrade/uninstall checks remain
+pending. Preserve input/path safeguards and injected-input confirmation.
