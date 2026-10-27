@@ -369,3 +369,16 @@ do not rewrite lifecycle state or add timers. Bounded optional local tracing can
 capture current state from the tray without restart. Details, measurements,
 packaging evidence and real-world50-conversion acceptance: F5_RENDERER_RELIABILITY.md.
 Stop after F5; no unrelated development or automatic push.
+
+## D-026 — Windows-only family onefile delivery
+
+The user's Windows migration supersedes Unix host/support instructions. Maintain
+Windows11 amd64/Python3.14 only; retain historical measurements as evidence and
+POSIX ZIP/EPUB path semantics as file-format rules. Family delivery is one EXE
+embedding Python/Qt/converters plus complete Pandoc/LibreOffice and their native
+runtime requirements. Resolve embedded tools from extraction resources, but keep
+shortcuts on the real EXE. Prefer Quick/OpenGL and preserve explicit overrides.
+Require bundled-tool discovery in the family build rather than silently relying
+on installed programs. Real frozen worker/cancel/retry checks complement direct
+conversion smoke tests. Interactive verification is paused when user needs PC;
+do not restart UI automation without their request. See SINGLE_EXE.md.

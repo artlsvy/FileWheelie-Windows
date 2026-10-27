@@ -21,6 +21,7 @@ from PyInstaller.utils.hooks import (
 )
 
 root = Path(SPECPATH).resolve().parent
+onefile = os.environ.get('FILEWHEEL_BUILD_ONEFILE') == '1'
 binaries = []
 datas = [(str(root / "src/filewheel/platforms/windows/sendto_shortcut.ps1"),
           "filewheel/platforms/windows")]
@@ -28,6 +29,13 @@ datas = [(str(root / "src/filewheel/platforms/windows/sendto_shortcut.ps1"),
 # local relative QML path used by GlassPopup, including its Lens component.
 datas += [(str(path), "filewheel/ui/qml") for path in (root / "src/filewheel/ui/qml").glob("*.qml")]
 hiddenimports = collect_submodules("filewheel")
+if onefile:
+    # Include the COMPLETE native tools in the archive, not external siblings.
+    for tool in ('libreoffice', 'pandoc'):
+        source = Path(os.environ['FILEWHEEL_BUNDLE_' + tool.upper()])
+        if not source.is_dir():
+            raise SystemExit('Complete bundled tool directory required: ' + tool)
+        datas.append((str(source), 'tools/' + tool))
 # QtQml's pinned PyInstaller hook collects the installed Essentials QML plugin
 # tree; QML-only imports such as QtQuick.Shapes are not Python module names.
 hiddenimports += ["PySide6.QtQuick", "PySide6.QtQml"]
@@ -72,8 +80,9 @@ analysis = Analysis(
 )
 pyz = PYZ(analysis.pure)
 exe = EXE(
-    pyz, analysis.scripts, [],
-    exclude_binaries=True,
+    pyz, analysis.scripts,
+    *([analysis.binaries, analysis.datas] if onefile else [[]]),
+    exclude_binaries=not onefile,
     name="Filewheel",
     debug=False,
     bootloader_ignore_signals=False,
@@ -83,5 +92,6 @@ exe = EXE(
     disable_windowed_traceback=False,
     contents_directory="_internal",
 )
-collection = COLLECT(exe, analysis.binaries, analysis.datas,
-                     strip=False, upx=False, name="Filewheel")
+if not onefile:
+    collection = COLLECT(exe, analysis.binaries, analysis.datas,
+                         strip=False, upx=False, name="Filewheel")

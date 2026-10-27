@@ -2,6 +2,11 @@
 
 ## Decision and evidence (2026-10-27)
 
+User acceptance follow-up: the user tested the F5 version and reports all good,
+with no disappearing pill observed. They also report pushing this version to Git.
+Treat F5 as user-reported Windows-passed on this machine; exact conversion count,
+edge-case coverage and remote push status were not independently verified.
+
 Prefer **OpenGL RHI for Windows Quick**, configured before Qt imports/application
 creation in `app.main`. Widgets remains the overall default and escape route.
 Explicit Qt graphics environment settings are preserved, including empty values;

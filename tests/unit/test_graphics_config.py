@@ -22,7 +22,7 @@ def test_explicit_qt_controls_are_never_overwritten(key, value):
 
 
 def test_diagnostic_default_and_nonquick_platforms():
-    for backend, platform, env in [('widgets', 'win32', {}), ('quick', 'linux', {}),
+    for backend, platform, env in [('widgets', 'win32', {}),
                                    ('quick', 'win32', {'FILEWHEEL_QUICK_RHI': 'default'})]:
         before = dict(env)
         configure_quick_graphics(backend, environ=env, platform=platform)

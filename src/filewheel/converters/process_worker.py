@@ -11,7 +11,6 @@ import math
 import multiprocessing
 import os
 import shutil
-import signal
 import subprocess
 import sys
 import tempfile
@@ -45,18 +44,14 @@ def configure_child():
     # Native libraries have additional private pools; this is not a guarantee
     # that every third-party library uses exactly one thread.
     try:
-        if sys.platform == 'win32':
-            import ctypes as c
-            from ctypes import wintypes as w
-            kernel = c.WinDLL('kernel32', use_last_error=True)
-            kernel.GetCurrentProcess.argtypes = []
-            kernel.GetCurrentProcess.restype = w.HANDLE
-            kernel.SetPriorityClass.argtypes = [w.HANDLE, w.DWORD]
-            kernel.SetPriorityClass.restype = w.BOOL
-            kernel.SetPriorityClass(kernel.GetCurrentProcess(), 0x4000)  # BELOW_NORMAL
-        else:
-            os.setsid()  # An owned group for cancellation, never the tray/UI group.
-            os.nice(5)
+        import ctypes as c
+        from ctypes import wintypes as w
+        kernel = c.WinDLL('kernel32', use_last_error=True)
+        kernel.GetCurrentProcess.argtypes = []
+        kernel.GetCurrentProcess.restype = w.HANDLE
+        kernel.SetPriorityClass.argtypes = [w.HANDLE, w.DWORD]
+        kernel.SetPriorityClass.restype = w.BOOL
+        kernel.SetPriorityClass(kernel.GetCurrentProcess(), 0x4000)  # BELOW_NORMAL
     except OSError:
         pass  # Best-effort scheduling; isolation remains effective without it.
     if sys.stdout is None:
@@ -231,21 +226,14 @@ def _stop_owned_worker(process):
     """Stop this still-owned child's tree before publication; never by image name."""
     if not process.is_alive():
         return
-    if sys.platform == 'win32':
-        executable = Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32' / 'taskkill.exe'
-        try:
-            subprocess.run([str(executable), '/PID', str(process.pid), '/T', '/F'],
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                           timeout=2, check=False,
-                           creationflags=subprocess.CREATE_NO_WINDOW)
-        except (OSError, subprocess.TimeoutExpired):
-            pass
-    else:
-        try:
-            # The child calls setsid before importing any conversion engine.
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass  # Cancellation during startup, before setsid.
+    executable = Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32' / 'taskkill.exe'
+    try:
+        subprocess.run([str(executable), '/PID', str(process.pid), '/T', '/F'],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       timeout=2, check=False,
+                       creationflags=subprocess.CREATE_NO_WINDOW)
+    except (OSError, subprocess.TimeoutExpired):
+        pass
     if process.is_alive():
         process.kill()
     process.join(3)

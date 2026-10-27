@@ -16,15 +16,16 @@ production conversions run in a spawned child to isolate hook/UI GIL; retain
 cooperative transaction cleanup. Curved labels, surface-only transparency and
 short No formats state are current. Native cursor responsiveness remains pending.
 
-Read `docs/STATUS.md` and `docs/NEXT_TASK.md` first, then `docs/ROADMAP.md`, `docs/DECISIONS.md`, and task-specific specifications. **CURRENT PRIORITY (user update 2026-10-25): G9–G12 authorized sequentially: rendering/backend diagnostics, unified Python3.14, opt-in Mouse3 candidate confirmation/tray runtime, Windows onedir packaging and portable LibreOffice integration. Preserve trusted-target boundaries and Send to.** D-011 selects the fallback while Mouse3 remains desired but experimental. Preserve all Mouse3 code; expand diagnostics only for a specific blocking issue. Complete the authorized G9–G12 milestones; preserve diagnostics and record native verification limits. Keep Windows fallback/UI validation queued honestly; do not block independent Linux GUI work on an offline host.
+Read `docs/STATUS.md` and `docs/NEXT_TASK.md` first, then `docs/ROADMAP.md`, `docs/DECISIONS.md`, and task-specific specifications. **CURRENT PRIORITY (user update 2026-10-25): G9–G12 authorized sequentially: rendering/backend diagnostics, unified Python3.14, opt-in Mouse3 candidate confirmation/tray runtime, Windows onedir packaging and portable LibreOffice integration. Preserve trusted-target boundaries and Send to.** D-011 selects the fallback while Mouse3 remains desired but experimental. Preserve all Mouse3 code; expand diagnostics only for a specific blocking issue. Complete the authorized G9–G12 milestones; preserve diagnostics and record native verification limits. Current authorized task: Windows-only cleanup and one EXE embedding all dependencies. Preserve the accepted OpenGL glass UI and cancellation.
 
 ## Development environment
-- Codex runs on Kubuntu over SSH, including when the Windows 11 tower is off at night.
-- Target environment is Windows 11 Explorer with an interactive desktop.
-- On Linux, implement platform-independent interfaces, fakes, pure tests, contracts, logging, and Windows code behind guards. **Linux tests cannot prove Windows integration**.
-- Windows-MCP is optional and ONLY available when the Windows machine is awake, unlocked, the server and SSH tunnel are running, and the MCP connection has been explicitly enabled.
-- Never block Linux progress awaiting an offline Windows host. Move to independently testable subtasks; log a `WINDOWS_VALIDATION_REQUIRED` item in `docs/STATUS.md`.
-- Never mark a Windows-dependent milestone verified based on mocks or Linux tests alone.
+- Filewheel targets Windows 11 amd64 only. Codex now runs directly on Windows.
+- Use Windows CPython 3.14 and PowerShell; .venv-build314 is the build environment.
+- Do not maintain Unix host branches, shell wrappers or Unix-only test jobs.
+- Keep pure logic tests and fakes, but distinguish them from native Windows checks.
+- ZIP/EPUB paths use forward slashes by format specification, not Unix support.
+- Historical Linux measurements are retained as evidence, not current setup advice.
+- Validate packaged UI, child processes, cancellation and tools on native Windows.
 
 ## Immediate architecture
 - Python3.14 (>=3.14,<3.15). Windows API adapter isolated from Qt UI and future converters.
@@ -50,7 +51,7 @@ Read `docs/STATUS.md` and `docs/NEXT_TASK.md` first, then `docs/ROADMAP.md`, `do
 
 ## Persistence / resume discipline
 - Before ending a task update `docs/STATUS.md` with evidence, blockers, test results, and next steps; update `docs/NEXT_TASK.md` so resumed Codex has a single actionable next job.
-- Keep Windows-only validation tasks listed even if other Linux work continues. Never conflate `implemented`, `mock-tested`, and `Windows-verified`.
+- Keep unverified Windows acceptance tasks listed while independent work continues. Never conflate `implemented`, `mock-tested`, and `Windows-verified`.
 - Avoid unbounded refactors, speculative feature expansion, and repetitive documentation rewrites.
 - Do not modify the user's unrelated files. Do not run destructive or privileged system commands without explicit reason and scope.
 

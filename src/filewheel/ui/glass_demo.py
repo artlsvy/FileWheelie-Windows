@@ -1,4 +1,4 @@
-"""Separate Quick prototype: preview on Linux, validated explicit file on Windows."""
+"""Separate Windows Quick preview and validated explicit file invocation."""
 import argparse
 import os
 import sys

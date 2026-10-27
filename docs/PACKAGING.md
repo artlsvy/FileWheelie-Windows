@@ -1,10 +1,10 @@
 # Windows application bundle — G11
 
-The source includes a Windows-only PyInstaller onedir build recipe. It has been
-statically checked and its portable contract tests run on Kubuntu; **no Windows
-EXE has been built or executed here**. Native DLL/plugin/model completeness,
-Microsoft Defender behavior and clean-machine operation remain acceptance items.
-A Linux build is not a Windows cross-build.
+The application and build target Windows 11 amd64 only. A native onedir build
+and its real conversion/UI tests have passed (F5). The current family delivery
+is a single EXE with complete embedded tools; see [SINGLE_EXE.md](SINGLE_EXE.md).
+The onedir recipe below remains useful for diagnostics. Older Linux measurements
+in historical documents are not Windows runtime acceptance.
 
 ## Supported build interpreter
 

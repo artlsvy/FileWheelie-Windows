@@ -21,7 +21,7 @@ from filewheel.converters.base import (
 )
 from filewheel.converters.office import _stop_office_tree
 from filewheel.libreoffice_bundle import external_tool_environment
-from filewheel.paths import application_root, ensure_separate_tool_source
+from filewheel.paths import bundled_tool_root, ensure_separate_tool_source
 
 PUBLISH_WRITERS = {'.docx': 'docx', '.html': 'html5', '.txt': 'plain', '.rtf': 'rtf',
                    '.odt': 'odt', '.epub': 'epub3', '.pptx': 'pptx'}
@@ -48,7 +48,6 @@ def _invoke(executable, arguments, *, workdir, timeout, cancel=None):
             with external_tool_environment() as environment:
                 process = subprocess.Popen([str(executable), *arguments], shell=False, cwd=workdir,
                                            stdout=stdout, stderr=stderr, env=environment,
-                                           start_new_session=os.name != 'nt',
                                            creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
         except OSError as error:
             if process is not None:
@@ -147,8 +146,6 @@ def _location(path, source):
         return None
     if sys.platform == 'win32' and path.suffix.lower() != '.exe':
         return None
-    if os.name != 'nt' and not os.access(path, os.X_OK):
-        return None
     path = path.resolve()
     info = path.stat()
     result = _probe(str(path), info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns)
@@ -165,7 +162,7 @@ def validate_bundle(directory, *, platform=None, execute=True, output_root=None)
             if (member.is_symlink() or member.is_junction() or not member.is_file()):
                 raise ValueError('Portable Pandoc must be a flat release without filesystem aliases')
     platform = sys.platform if platform is None else platform
-    executable = directory / ('pandoc.exe' if platform == 'win32' else 'pandoc')
+    executable = directory / 'pandoc.exe'
     licenses = ('COPYRIGHT.txt', 'COPYRIGHT')
     copying = ('COPYING.rtf', 'COPYING', 'LICENSE')
     if (not directory.is_dir() or directory.is_symlink() or directory.is_junction() or not executable.is_file()
@@ -186,11 +183,12 @@ def find_pandoc(executable=None, *, app_root=None):
     try:
         if explicit is not None:
             return _location(explicit, 'explicit')
-        root = application_root() if app_root is None else Path(app_root)
+        root = bundled_tool_root() if app_root is None else Path(app_root)
         try:
             return validate_bundle(root / 'tools/pandoc')
         except (ValueError, OSError):
-            pass
+            if os.getenv('FILEWHEEL_BUNDLED_TOOLS_ONLY') == '1':
+                return None
         installed = shutil.which('pandoc')
         return _location(Path(installed).absolute(), 'system') if installed else None
     except (OSError, ValueError):

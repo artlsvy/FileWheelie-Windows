@@ -1,12 +1,25 @@
 import unittest
-from pathlib import PureWindowsPath
+from pathlib import Path, PureWindowsPath
 from unittest.mock import patch
 
-from filewheel.paths import application_root, launch_command
+from filewheel.paths import application_root, bundled_tool_root, launch_command
 from filewheel.platforms.windows.sendto import shortcut_plan
 
 
 class FrozenIntegrationTests(unittest.TestCase):
+    def test_onefile_tools_use_extraction_but_shortcuts_use_real_exe(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            extracted = root / 'unpacked'
+            (extracted / 'tools').mkdir(parents=True)
+            with (patch('filewheel.paths.sys.frozen', True, create=True),
+                  patch('filewheel.paths.sys._MEIPASS', str(extracted), create=True),
+                  patch('filewheel.paths.sys.executable', str(root / 'Filewheel.exe'))):
+                self.assertEqual(bundled_tool_root(), extracted)
+                self.assertEqual(application_root(), root)
+                self.assertEqual(launch_command('--tray'), [str(root / 'Filewheel.exe'), '--tray'])
+
     def test_frozen_executable_never_receives_python_module_arguments(self):
         root = PureWindowsPath('C:/Filewheel personal')
         for mode in ('gui','diagnostic'):
@@ -23,7 +36,7 @@ class FrozenIntegrationTests(unittest.TestCase):
 
     def test_application_root_is_executable_sibling_not_internal(self):
         with (patch('filewheel.paths.sys.frozen', True, create=True),
-              patch('filewheel.paths.sys.executable', '/tmp/Filewheel/Filewheel.exe'),
-              patch('filewheel.paths.sys._MEIPASS', '/tmp/Filewheel/_internal', create=True)):
-            self.assertEqual(str(application_root()), '/tmp/Filewheel')
-            self.assertEqual(launch_command('--tray'), ['/tmp/Filewheel/Filewheel.exe','--tray'])
+              patch('filewheel.paths.sys.executable', 'C:/Filewheel/Filewheel.exe'),
+              patch('filewheel.paths.sys._MEIPASS', 'C:/Filewheel/_internal', create=True)):
+            self.assertEqual(application_root(), Path('C:/Filewheel'))
+            self.assertEqual(launch_command('--tray'), ['C:/Filewheel/Filewheel.exe','--tray'])

@@ -121,7 +121,12 @@ def test_actual_htm_and_epub_content_spine_order(manager, tmp_path):
 def zip_fixture(path, members, compression=ZIP_STORED):
     with ZipFile(path, 'w', compression=compression) as z:
         for name, value in members:
-            z.writestr(name, value)
+            # ZipInfo normalizes Windows separators in its constructor. Preserve
+            # exact raw member spelling so unsafe-name tests exercise the reader.
+            info = ZipInfo(name)
+            info.filename = name
+            info.compress_type = compression
+            z.writestr(info, value)
 
 
 def test_actual_text_archive_preserves_member_content_without_extraction(manager, tmp_path):

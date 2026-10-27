@@ -9,6 +9,15 @@ def application_root():
     return Path(__file__).resolve().parents[2]
 
 
+def bundled_tool_root():
+    """Embedded onefile resources differ from the stable shortcut/EXE folder."""
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        extracted = Path(sys._MEIPASS)
+        if (extracted / 'tools').is_dir():
+            return extracted
+    return application_root()
+
+
 def launch_command(*arguments):
     if getattr(sys, 'frozen', False):
         return [sys.executable, *arguments]

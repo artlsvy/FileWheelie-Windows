@@ -1,4 +1,5 @@
 """Actual tool discovery/process bounds; no Windows build is inferred."""
+import shutil
 import sys
 from pathlib import Path
 from threading import Event, Timer
@@ -17,7 +18,7 @@ from filewheel.pandoc_tool import (
     validate_bundle,
 )
 
-TOOL = Path('/tmp/filewheel-pandoc-3.12.1/pandoc')
+TOOL = Path(shutil.which('pandoc') or 'C:/missing/pandoc.exe')
 
 
 def test_absent_and_relative_explicit_tool_do_not_fall_back(monkeypatch, tmp_path):
@@ -86,7 +87,7 @@ def test_real_process_argv_and_cwd_preserve_spaces_unicode_without_shell(tmp_pat
     path = tmp_path/'Résumé space'
     path.mkdir()
     value = 'plain $(not-a-shell) `value` æøå'
-    output = _invoke(sys.executable, ['-c', 'import sys;print(sys.argv[1])', value],
+    output = _invoke(sys.executable, ['-X', 'utf8', '-c', 'import sys;print(sys.argv[1])', value],
                      workdir=path, timeout=5)
     assert output.strip() == value
 
@@ -109,7 +110,7 @@ def test_frozen_root_discovery_and_explicit_override_priority(monkeypatch, tmp_p
     binary.chmod(0o755)
     (portable/'COPYRIGHT.txt').write_text('copyright')
     (portable/'COPYING.rtf').write_text('GPL')
-    monkeypatch.setattr(pandoc_tool, 'application_root', lambda: root)
+    monkeypatch.setattr(pandoc_tool, 'bundled_tool_root', lambda: root)
     with patch.object(pandoc_tool, '_probe', return_value=('3.12.1', ('gfm','json'), ('json','docx'))):
         found = find_pandoc()
         assert found.executable == binary.resolve()

@@ -33,5 +33,10 @@ Verification: final focused45 tests and scoped Ruff pass. Full suite650 passed,
 monitor matching). Separate onedir built with PyInstaller exit0. Initial untraced
 trials of0 and89 cycles remain recorded as incomplete; final harness classifies
 wait failures and never retries jobs/pills. Source untraced100 also passes.
-Next: local F5 commit, then STOP. User's50-real-conversion acceptance and broader
-GPU/DPI/sleep/latency checks remain WINDOWS_VALIDATION_REQUIRED. No push.
+Source committed as 00dfbb14c553f7fd7fbc1829a48fdce4bccec70b. User subsequently
+reports successful Windows testing with no pill disappearance and pushing this
+version to Git. They also report cancellation working without unusual behavior.
+F5 and the tested cancellation path are user-accepted; exact conversion count and
+whether cancellation covered the original large-PDF case were not supplied.
+Next: STOP. No active implementation task. Broader GPU/DPI/sleep/latency and
+previous Windows acceptance queues remain unverified unless separately reported.

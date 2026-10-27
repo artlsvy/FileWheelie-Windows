@@ -7,6 +7,10 @@ from pathlib import Path
 os.environ["ORT_DISABLE_TELEMETRY"] = "1"
 
 if getattr(sys, "frozen", False) and sys.platform == "win32":
+    if (Path(sys._MEIPASS) / 'tools/libreoffice').is_dir():
+        # Family onefile: never silently depend on an installed office tool.
+        os.environ.setdefault('FILEWHEEL_BUNDLED_TOOLS_ONLY', '1')
+        os.environ.setdefault('FILEWHEEL_UI_BACKEND', 'quick')
     # The COM worker consumes this after its owning-thread initialization. Do
     # not import comtypes here: doing so would initialize COM on the GUI thread.
     local = os.environ.get("LOCALAPPDATA")

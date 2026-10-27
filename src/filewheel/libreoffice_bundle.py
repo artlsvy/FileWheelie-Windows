@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
 
-from filewheel.paths import application_root, ensure_separate_tool_source
+from filewheel.paths import bundled_tool_root, ensure_separate_tool_source
 
 _DLL_LOCK = Lock()
 
@@ -44,15 +44,15 @@ def validate_bundle(root: Path, *, platform: str | None = None) -> LibreOfficeLo
     failures = []
     for layout, installation in (("flat", root), ("portableapps", root / "App/libreoffice")):
         program = installation / "program"
-        names = ("soffice.com", "soffice.exe") if platform == "win32" else ("soffice",)
+        names = ("soffice.com", "soffice.exe")
         executable = next(
             (program / name for name in names if _nonempty_file(program / name)), None
         )
         if executable is None:
             continue
-        bootstrap = program / ("bootstrap.ini" if platform == "win32" else "bootstraprc")
-        fundamental = program / ("fundamental.ini" if platform == "win32" else "fundamentalrc")
-        libraries = tuple(program.glob("*.dll" if platform == "win32" else "*.so"))
+        bootstrap = program / "bootstrap.ini"
+        fundamental = program / "fundamental.ini"
+        libraries = tuple(program.glob("*.dll"))
         license_files = [
             path
             for path in installation.iterdir()
@@ -92,11 +92,7 @@ def _system_location(platform, excluded_root):
     def excluded(path):
         return path.resolve().is_relative_to(excluded_root)
 
-    names = (
-        ("soffice.com", "libreoffice", "soffice")
-        if platform == "win32"
-        else ("libreoffice", "soffice")
-    )
+    names = ("soffice.com", "soffice.exe")
     for name in names:
         candidate = shutil.which(name)
         if candidate:
@@ -116,10 +112,12 @@ def _system_location(platform, excluded_root):
 
 def find_libreoffice(*, app_root: Path | None = None, platform: str | None = None):
     platform = sys.platform if platform is None else platform
-    bundle = (application_root() if app_root is None else Path(app_root)) / "tools/libreoffice"
+    bundle = (bundled_tool_root() if app_root is None else Path(app_root)) / "tools/libreoffice"
     try:
         return validate_bundle(bundle, platform=platform)
     except OSError, ValueError:
+        if os.getenv('FILEWHEEL_BUNDLED_TOOLS_ONLY') == '1':
+            return None
         # Never attempt an incomplete bundled executable. An independently
         # installed engine may still satisfy this optional capability.
         return _system_location(platform, bundle)
@@ -154,7 +152,7 @@ class _WindowsDllSearch:
 
 
 def _outside_bundle_paths(value, bundle, separator, windows):
-    path_module = ntpath if windows else os.path
+    path_module = ntpath
     anchor = path_module.normcase(path_module.normpath(bundle))
     prefix = anchor.rstrip("\\/") + ("\\" if windows else "/")
     return separator.join(
@@ -179,10 +177,9 @@ def external_tool_environment(*, _windows_backend=None):
     if not getattr(sys, "frozen", False):
         yield environment
         return
-    windows = sys.platform == "win32"
     bundle = getattr(sys, "_MEIPASS", None)
     if bundle:
-        separator = ";" if windows else os.pathsep
+        separator = ";"
         for variable in (
             "PATH",
             "QT_PLUGIN_PATH",
@@ -191,22 +188,12 @@ def external_tool_environment(*, _windows_backend=None):
         ):
             if variable in environment:
                 cleaned = _outside_bundle_paths(
-                    environment[variable], str(bundle), separator, windows
+                    environment[variable], str(bundle), separator, True
                 )
                 if cleaned:
                     environment[variable] = cleaned
                 else:
                     environment.pop(variable, None)
-    if not windows:
-        if "LD_LIBRARY_PATH_ORIG" in environment:
-            if environment["LD_LIBRARY_PATH_ORIG"]:
-                environment["LD_LIBRARY_PATH"] = environment["LD_LIBRARY_PATH_ORIG"]
-            else:
-                environment.pop("LD_LIBRARY_PATH", None)
-        else:
-            environment.pop("LD_LIBRARY_PATH", None)
-        yield environment
-        return
     with _DLL_LOCK:
         backend = _WindowsDllSearch() if _windows_backend is None else _windows_backend
         previous = backend.current_directory()

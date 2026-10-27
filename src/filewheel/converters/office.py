@@ -2,7 +2,6 @@
 
 import os
 import shutil
-import signal
 import subprocess
 from importlib.util import find_spec
 from pathlib import Path
@@ -22,24 +21,15 @@ from filewheel.libreoffice_bundle import external_tool_environment, find_libreof
 
 
 def _stop_office_tree(process, environment):
-    if os.name == "nt":
-        try:
-            subprocess.run(
-                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                shell=False,
-                capture_output=True,
-                timeout=10,
-                check=False,
-                env=environment,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-            )
-        except OSError, subprocess.TimeoutExpired:
-            process.kill()
-    else:
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
+    executable = Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32/taskkill.exe'
+    try:
+        subprocess.run(
+            [str(executable), '/PID', str(process.pid), '/T', '/F'],
+            shell=False, capture_output=True, timeout=10, check=False,
+            env=environment, creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        process.kill()
     try:
         process.communicate(timeout=5)
     except subprocess.TimeoutExpired:
@@ -70,7 +60,6 @@ def run_office(arguments, *, workdir, timeout, cancel=None):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=environment,
-                start_new_session=os.name != "nt",
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
     except OSError:

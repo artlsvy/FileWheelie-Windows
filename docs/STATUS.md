@@ -1603,3 +1603,63 @@ and older drivers, sleep/resume and longer resource observation. Software circle
 artifact/first-use lag remain user-reported and unproved. OpenGL is the practical
 mitigation, not a guarantee across all hardware. Earlier Mouse3/Send to/optional
 bundle queues remain pending. Stop after F5; no automatic push.
+
+## F5 user acceptance follow-up (2026-10-27)
+
+The user tested the F5 version and reports all good, with no disappearing pill
+observed. Record F5 as user-reported Windows-passed on their machine. Exact
+conversion count and edge-case coverage were not supplied; no universal backend
+or driver guarantee is inferred. User also reports pushing this version to Git;
+remote state was not independently checked. Source milestone commit: 00dfbb1.
+
+No active F5 implementation remains. Remaining backlog: the six pre-existing
+Windows test failures; moved/clean-machine packaging and optional complete tool
+bundles; and Windows edge cases such as mixed DPI, other GPUs/drivers,
+sleep/resume, large-PDF Cancel/retry/Quit and Precision Touchpad behavior where
+not already separately accepted. Do not resume this work without a new task.
+
+### Cancellation acceptance follow-up (2026-10-27)
+
+User reports testing cancellation: works properly, with no strange behavior.
+Record user-reported Windows acceptance for the tested cancellation path. File
+size/type, original large-PDF coverage and tray-Quit coverage were not specified;
+do not claim those separate cases verified. No runtime changes or new tests were
+made for this documentation update.
+
+## Windows-only self-contained EXE (2026-10-27)
+
+User moved development to Windows and authorized removing active Unix support,
+resolving remaining test failures and producing one EXE with all dependencies.
+Removed Unix process-group/library-path branches, Unix-only tests and stale
+current host/setup guidance. Historical measurements and ZIP/EPUB format path
+semantics remain. No conversion formats or approved QML appearance changed.
+
+The six earlier failures are resolved: Windows path comparisons, the obsolete
+POSIX environment test, raw ZIP-name fixture preservation, UTF8 subprocess fixture
+and offscreen monitor mapping. Linux process inspection was replaced with real
+Windows process-tree timeout/cancellation checks. Full Windows suite now passes
+660 tests/407 subtests,4 skips. Scoped Ruff, syntax and whitespace checks pass.
+
+The family onefile build embeds complete Pandoc3.13 and LibreOffice trees plus
+adjacent MSVC runtime DLLs. Runtime tool lookup uses the extraction root while
+shortcuts keep the stable EXE path. Bundled-only mode prevents installed copies
+from masking absent tools. Family launch defaults to Quick/OpenGL with explicit
+backend overrides and Widgets preserved. Existing onedir builds remain intact.
+
+Delivered: dist/standalone/Filewheel.exe,668358672 bytes. SHA256:
+4a46099d87b9d67f65aefa956801dee0b682cfedff83f64c3d0bdc70b01b131c.
+Copied EXE alone outside checkout with Python/tool paths disabled passed34 checks
+and26 real conversion pairs, both tools reported bundled, and three real frozen
+workers converted/cancelled/retried. Strict unpack cleanup passed for self-test.
+Initial verification over-counted auxiliary native-tool temporary files as bundle
+leaks; checker now verifies _MEI cleanup and records auxiliary entries separately.
+
+USER-INTERRUPTED native UI run:46 cycles completed, then selection exposure failed
+while the user needed the PC and interrupted testing. Do not interpret this as
+completed100-cycle acceptance or establish a renderer defect from that trial.
+All owned UI test processes are stopped. Do not resume interactive testing until
+requested. The EXE is available now; finishing100-cycle/family-machine validation
+remains pending. Prior F5 user acceptance is preserved separately.
+
+SINGLE_EXE.md, docs/standalone/verification.json and the Windows task plan contain
+build commands/evidence. No source push or unrelated file modification performed.

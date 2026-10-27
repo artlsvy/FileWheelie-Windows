@@ -151,3 +151,9 @@ is complete as far as this environment permits. Next is native Windows long-sess
 UI, new-format and moved-onedir acceptance (NEXT_TASK.md), not another rewrite.
 The baseline eight Windows progress checks passed per user; the later intermittent
 transition remains unproven. Native build/optional-tool claims stay pending.
+
+2026-10-27 Windows-only family delivery: single EXE with complete embedded tools
+built and isolated conversion/worker checks passed. Current source Windows suite:
+660 tests/407 subtests passed,4 skips. User interrupted UI verification after46
+cycles to use PC; do not resume interactive automation without a request. Delivery
+and remaining acceptance are in SINGLE_EXE.md/NEXT_TASK.md; no new feature phase.

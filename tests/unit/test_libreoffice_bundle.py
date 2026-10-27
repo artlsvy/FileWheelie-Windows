@@ -3,7 +3,6 @@
 import io
 import json
 import os
-import shutil
 import sys
 import tempfile
 import unittest
@@ -12,7 +11,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from filewheel import libreoffice_bundle as bundles
-from filewheel.converters import ConversionManager, Registry
 from filewheel.converters.office import LibreOfficeEngine, run_office
 
 
@@ -35,19 +33,8 @@ def full_tree(root, *, platform="win32", layout="flat", launcher=None):
                 "mergedlo.dll": b"DLL fixture, not a runnable Windows installation",
             }
         )
-    else:
-        files.update(
-            {
-                "soffice": (launcher or "#!/bin/sh\nexit 0\n").encode(),
-                "bootstraprc": b"bootstrap fixture",
-                "fundamentalrc": b"fundamental fixture",
-                "libmergedlo.so": b"library fixture",
-            }
-        )
     for name, data in files.items():
         (program / name).write_bytes(data)
-    if platform != "win32":
-        (program / "soffice").chmod(0o755)
     (program / "resource").mkdir()
     (program / "resource/common").write_bytes(b"resource fixture")
     registry = installation / "share/registry"
@@ -111,7 +98,7 @@ class LibreOfficeBundleTests(unittest.TestCase):
             (installation / "program/bootstrap.ini").unlink()
             selected = bundles.find_libreoffice(app_root=app, platform="win32")
             self.assertEqual(selected.source, "system")
-            self.assertEqual(str(selected.executable), "C:/system/soffice.com")
+            self.assertEqual(selected.executable, Path("C:/system/soffice.com"))
 
     def test_incomplete_bundle_cannot_reenter_as_system_path_fallback(self):
         app = self.root / "application"
@@ -130,6 +117,11 @@ class LibreOfficeBundleTests(unittest.TestCase):
             ),
         ):
             self.assertIsNone(bundles.find_libreoffice(app_root=app, platform="win32"))
+
+    def test_self_contained_mode_never_hides_missing_bundle_with_system_tool(self):
+        with (patch.dict(os.environ, {'FILEWHEEL_BUNDLED_TOOLS_ONLY': '1'}),
+              patch('filewheel.libreoffice_bundle._system_location', side_effect=AssertionError('system tool'))):
+            self.assertIsNone(bundles.find_libreoffice(app_root=self.root))
 
     def test_frozen_root_uses_executable_siblings_not_internal(self):
         executable = self.root / "Filewheel.exe"
@@ -155,7 +147,7 @@ class LibreOfficeBundleTests(unittest.TestCase):
     def test_engine_exposes_selected_location_source_and_executable(self):
         app = self.root / "application"
         installation = full_tree(app / "tools/libreoffice", platform=sys.platform)
-        with patch("filewheel.libreoffice_bundle.application_root", return_value=app):
+        with patch("filewheel.libreoffice_bundle.bundled_tool_root", return_value=app):
             engine = LibreOfficeEngine()
             self.assertEqual(engine.location().source, "bundled")
             self.assertEqual(Path(engine.executable()).parent, installation / "program")
@@ -175,7 +167,7 @@ class ExternalEnvironmentTests(unittest.TestCase):
         with (
             patch.object(sys, "frozen", False, create=True),
             patch.dict(
-                os.environ, {"QT_PLUGIN_PATH": "/custom/plugins", "LD_LIBRARY_PATH": "/custom/lib"}
+                os.environ, {"QT_PLUGIN_PATH": "C:/custom/plugins"}
             ),
         ):
             before = os.environ.copy()
@@ -183,25 +175,6 @@ class ExternalEnvironmentTests(unittest.TestCase):
                 self.assertEqual(child, before)
                 child["ONLY_CHILD"] = "1"
             self.assertEqual(dict(os.environ), before)
-
-    def test_posix_frozen_restores_original_library_path_only_in_child(self):
-        with (
-            patch.object(sys, "frozen", True, create=True),
-            patch.object(sys, "platform", "linux"),
-            patch.object(sys, "_MEIPASS", "/app/_internal", create=True),
-            patch.dict(
-                os.environ,
-                {
-                    "LD_LIBRARY_PATH": "/app/_internal:/wrong",
-                    "LD_LIBRARY_PATH_ORIG": "/system/lib",
-                    "QT_PLUGIN_PATH": "/app/_internal/plugins:/user/plugins",
-                },
-            ),
-            bundles.external_tool_environment() as child,
-        ):
-            self.assertEqual(child["LD_LIBRARY_PATH"], "/system/lib")
-            self.assertEqual(child["QT_PLUGIN_PATH"], "/user/plugins")
-            self.assertEqual(os.environ["LD_LIBRARY_PATH"], "/app/_internal:/wrong")
 
     def test_windows_reset_restore_and_qt_path_filter_even_when_spawn_fails(self):
         backend = Mock()
@@ -305,39 +278,3 @@ class ExternalEnvironmentTests(unittest.TestCase):
             [call.args[0] for call in backend.set_directory.call_args_list],
             [None, r"C:\Filewheel\_internal", None, r"C:\Filewheel\_internal"],
         )
-
-
-class BundledOfficeIntegrationTests(unittest.TestCase):
-    def test_actual_linux_wrapper_selected_as_bundle_renders_valid_pdf(self):
-        if sys.platform != "linux" or shutil.which("libreoffice") is None:
-            self.skipTest("Installed Linux LibreOffice required for wrapper integration")
-        try:
-            import pymupdf
-            from docx import Document
-        except ImportError:
-            self.skipTest("PyMuPDF/python-docx fixture dependencies unavailable")
-        with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
-            app = root / "application"
-            executable = shutil.which("libreoffice")
-            # This fixture verifies discovery and process integration by
-            # delegating to installed LO; it is not a self-contained binary tree.
-            full_tree(
-                app / "tools/libreoffice",
-                platform="linux",
-                launcher=f'#!/bin/sh\nexec "{executable}" "$@"\n',
-            )
-            source = root / "Unicode æ fixture.docx"
-            document = Document()
-            document.add_heading("Portable selection fixture", 1)
-            document.add_paragraph("Actual editable text rendered through selected local engine")
-            document.save(source)
-            original = source.read_bytes()
-            with patch("filewheel.libreoffice_bundle.application_root", return_value=app):
-                engine = LibreOfficeEngine(timeout=30)
-                self.assertEqual(engine.location().source, "bundled")
-                result = ConversionManager(Registry((engine,))).convert(source, ".pdf")
-            with pymupdf.open(result.path) as pdf:
-                self.assertIn("Actual editable text", "".join(page.get_text() for page in pdf))
-            self.assertEqual(source.read_bytes(), original)
-            self.assertFalse(list(root.glob(".filewheel-*")))

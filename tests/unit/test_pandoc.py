@@ -1,4 +1,4 @@
-"""Actual installed Pandoc publishing/content checks; Windows remains separate."""
+"""Actual Windows Pandoc publishing/content checks."""
 import hashlib
 import importlib.util
 import os
@@ -19,8 +19,6 @@ from filewheel.converters.pandoc import PandocEngine
 from filewheel.pandoc_tool import find_pandoc
 
 TOOL = os.getenv('FILEWHEEL_PANDOC')
-if TOOL is None and Path('/tmp/filewheel-pandoc-3.12.1/pandoc').is_file():
-    TOOL = '/tmp/filewheel-pandoc-3.12.1/pandoc'
 AVAILABLE = find_pandoc(TOOL) is not None
 
 

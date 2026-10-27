@@ -111,7 +111,8 @@ class RadialPopupTests(unittest.TestCase):
             popup.dismiss()
 
         QTimer.singleShot(0, confirm_and_close)
-        result = run_popup(target())
+        with patch('filewheel.platforms.windows.qt_position.logical_point', side_effect=lambda point, screens: point):
+            result = run_popup(target())
         self.assertEqual(result.output_extension, ".jpg")
         self.assertEqual(self.app.quitOnLastWindowClosed(), previous)
         self.assertFalse(

@@ -41,7 +41,7 @@ class PandocPackagingTests(unittest.TestCase):
         self.assertIn("[PlatformID]::Win32NT", script)
         self.assertIn("sys.version_info[:2]==(3,14)", script)
         self.assertNotIn("Invoke-WebRequest", script)
-        self.assertNotIn("tools/pandoc", (PACKAGING / "Filewheel.spec").read_text())
+        self.assertIn("if onefile:", (PACKAGING / "Filewheel.spec").read_text())
 
     def test_artifact_metadata_pins_optional_official_native_releases(self):
         metadata = json.loads((PACKAGING / "pandoc-artifacts.json").read_text())

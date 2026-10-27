@@ -1,4 +1,4 @@
-"""Real spawned local conversions and bounded worker protocol tests on Linux."""
+"""Real spawned local conversions and bounded worker protocol tests on Windows."""
 import importlib.util
 import json
 import os

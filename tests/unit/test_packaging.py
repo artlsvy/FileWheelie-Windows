@@ -64,13 +64,13 @@ class PackagingTests(unittest.TestCase):
         exe = next(node for node in calls if node.func.id == "EXE")
         keywords = {keyword.arg: keyword.value for keyword in exe.keywords}
         self.assertFalse(ast.literal_eval(keywords["console"]))
-        self.assertTrue(ast.literal_eval(keywords["exclude_binaries"]))
+        self.assertEqual(ast.unparse(keywords["exclude_binaries"]), 'not onefile')
         self.assertEqual(ast.literal_eval(keywords["contents_directory"]), "_internal")
         self.assertTrue(any(node.func.id == "COLLECT" for node in calls))
         analysis = next(node for node in calls if node.func.id == "Analysis")
         excludes = next(keyword.value for keyword in analysis.keywords if keyword.arg == "excludes")
         self.assertIn("PySide6.QtWebEngineCore", ast.literal_eval(excludes))
-        self.assertNotIn("tools/libreoffice", text)  # G12 tree belongs beside executable.
+        self.assertIn("FILEWHEEL_BUNDLE_", text)
 
     def test_runtime_hook_sets_private_writable_cache_without_loading_com_or_qt(self):
         text = (PACKAGING / "runtime_hook.py").read_text(encoding="utf-8")
@@ -90,6 +90,7 @@ class PackagingTests(unittest.TestCase):
             tempfile.TemporaryDirectory() as folder,
             patch.dict(os.environ, {"LOCALAPPDATA": folder}),
             patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "_MEIPASS", folder, create=True),
             patch.object(sys, "platform", "win32"),
         ):
             runpy.run_path(str(PACKAGING / "runtime_hook.py"))

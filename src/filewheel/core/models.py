@@ -68,7 +68,7 @@ class TargetResolution:
     experimental_candidate is a provisional Mouse3 path revalidated for direct
     popup activation under the user's personal preference; no hover identity or
     per-file confirmation is claimed. All sources share the same UI consumer.
-    PureWindowsPath keeps Windows path semantics in Linux contract tests.
+    PureWindowsPath keeps Windows path semantics explicit in controller contracts.
     """
 
     path: PureWindowsPath

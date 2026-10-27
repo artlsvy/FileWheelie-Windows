@@ -149,6 +149,39 @@ def run(*, include_quick=False):
             if collision.path == first_jpeg or hashlib.sha256(first_jpeg.read_bytes()).digest() != first_hash:
                 raise RuntimeError('Collision smoke replaced a pre-existing output')
             results.append({'collision_safe': True, 'ok': True})
+            if getattr(sys, 'frozen', False):
+                # Exercise THIS frozen executable as a multiprocessing worker.
+                # Onefile children must reuse the parent's extraction directory.
+                from threading import Event
+
+                from filewheel.converters.base import ConversionCancelled
+                from filewheel.converters.process_worker import run_in_process
+
+                worker_ids = []
+                spawned = run_in_process(manager, image, '.jpg', progress=lambda *args: None,
+                                         cancel=Event(), on_started=worker_ids.append)
+                if not spawned.path.is_file() or not worker_ids:
+                    raise RuntimeError('Frozen conversion child produced no valid result')
+                before_cancel = set(root.iterdir())
+                cancelled = Event()
+                def cancel_started(pid):
+                    worker_ids.append(pid)
+                    cancelled.set()
+                try:
+                    run_in_process(manager, image, '.jpg', progress=lambda *args: None,
+                                   cancel=cancelled, on_started=cancel_started)
+                except ConversionCancelled:
+                    pass
+                else:
+                    raise RuntimeError('Frozen cancellation did not cancel')
+                if set(root.iterdir()) != before_cancel:
+                    raise RuntimeError('Frozen cancelled child leaked files or staging')
+                retry = run_in_process(manager, image, '.jpg', progress=lambda *args: None,
+                                       cancel=Event(), on_started=worker_ids.append)
+                if not retry.path.is_file():
+                    raise RuntimeError('Frozen cancellation retry failed')
+                results.append({'frozen_spawn_cancel_retry': True,
+                                'workers': len(worker_ids), 'ok': True})
             if list(root.glob('.filewheel-*')):
                 raise RuntimeError('Conversion smoke leaked staging files')
             if any(c.input_extension == '.docx'  and c.output_extension == '.pdf' for c in manager.registry.capabilities):
