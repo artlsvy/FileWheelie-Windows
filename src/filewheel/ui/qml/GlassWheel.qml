@@ -8,12 +8,17 @@ Item {
     width: 240
     height: 240
     focus: true
+    // Selection lifetime is independent from conversion-to-pill morphing.
+    property real selectionOpacity: 1
+    property bool morphingAllowed: true
     property bool collapsing: false
-    scale: collapsing ? 0.35 : 1
-    opacity: collapsing ? 0 : 1
+    property real morphOpacity: collapsing ? 0 : 1
+    property real morphScale: collapsing ? 0.35 : 1
+    scale: morphScale
+    opacity: selectionOpacity * morphOpacity
     transformOrigin: Item.Center
-    Behavior on scale { enabled: !wheel.reducedMotion && !wheel.lowEffects; NumberAnimation { duration: 210; easing.type: Easing.OutCubic } }
-    Behavior on opacity { enabled: !wheel.reducedMotion && !wheel.lowEffects; NumberAnimation { duration: 210; easing.type: Easing.OutCubic } }
+    Behavior on morphScale { enabled: root.morphingAllowed && !wheel.reducedMotion && !wheel.lowEffects; NumberAnimation { duration: 210; easing.type: Easing.OutCubic } }
+    Behavior on morphOpacity { enabled: root.morphingAllowed && !wheel.reducedMotion && !wheel.lowEffects; NumberAnimation { duration: 210; easing.type: Easing.OutCubic } }
     // MouseArea has its own wheel signal; resolve the context bridge here.
     readonly property var session: wheel
 

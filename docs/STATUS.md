@@ -1448,3 +1448,41 @@ cancellation and no-network paths are covered. Independent review reports no
 remaining material blockers; existing worker/cancel regressions independently
 pass. No native Windows new-format or frozen run occurred. Next is D Pandoc and
 Markdown output formats, then E packaging/regression validation.
+
+
+## Windows progress acceptance and F1–F4 steering
+
+User reports all eight native Windows progress-pill functional checks passed:
+start, outside movement/morph, persistent compact status after outside click,
+expand details, success, longer-job cancel, correct output and unchanged source.
+This is user-reported acceptance of the tested build, not a Kubuntu inference.
+A later intermittent absence of the transition was restored by restarting the
+app, without a repeatable sequence. Its cause remains unproven; no GPU/worker
+failure is assumed. Latest priority is bounded entrance/exit/tolerance/labels and
+transition-lifecycle recovery, committed separately before resuming D/E. A–C
+are already implemented; untracked Pandoc implementation/tests are preserved.
+
+
+## F1–F4 UI polish/recovery implemented (2026-10-27)
+
+Separate selection entrance140 ms / leave-exit110 ms fades preserve immediate
+hit testing and the approved lens. Leave tolerance r118/debounce100 ms does not
+enlarge r110 sectors. Reduced/low effects are immediate. PDF labels JPG/PNG
+retain all-pages descriptions/tooltips and unchanged filenames/page behavior.
+
+Portable tests reproduced intentional-hide/QML-exit recollapse, stale callback
+reuse, invisible stopped pill motion and expiry invalidation on surface recreation.
+Guards, idempotent collapse and finite recovery now cover those paths without
+cancelling work, polling the desktop or verbose logging. The user's original
+intermittent Windows event is still not reproducible/declared resolved. Baseline
+eight functional Windows checks are user-reported passed, while new F native
+long-session/mixed-DPI/frozen verification remains required.
+
+F regression suite: **615 tests / 406 subtests passed**, excluding only preserved
+unregistered D test_pandoc.py from this UI milestone; D previously passed its
+19 actual-tool tests and is integrated next. Scoped Ruff/compilation/diff pass.
+Actual source Quick smoke **15 checks passed** including pill rendering and
+11 converter pairs. Focused review's concrete findings were fixed/regression-
+tested; final three expiry/reopen tests pass with no remaining material findings.
+Visually inspected actual Quick opening/selection/formats/dismissal/compact/
+completed frames in docs/ui-polish. Commands: UI_LIFECYCLE_POLISH.md.

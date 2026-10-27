@@ -170,3 +170,14 @@ the same progress workflow. Image and Document categories remain distinct.
 Markdown input groups genuinely offered outputs under From MD and retains the
 second format step and Back. No installed capability means no category. Preview
 fixtures use the same navigation code but do not attest conversion engines.
+
+
+## F1–F4 selection motion / lifecycle correction
+
+Current selection uses opacity-only140 ms entrance/110 ms leave exit, immediate
+hit testing and r118/100 ms leave tolerance. Actual sectors stay r110. Selection
+callbacks are independent of progress morph; native popup dismissal wins when
+necessary. PDF formats use JPG/PNG with all-pages behavior in descriptions and
+tooltips. Invocation/motion tokens and finite endpoint/surface recovery preserve
+observable jobs through repeated operations. See UI_LIFECYCLE_POLISH.md for
+actual rendered states and the unresolved native intermittent acceptance item.

@@ -5,12 +5,19 @@ SIZE = 240
 CENTER = 120
 INNER = 40
 OUTER = 110
+DISMISS_OUTER = 118
 
 
 def inside_boundary(x, y):
     """Circular window interaction boundary; center is inside, even with no options."""
     return (all(type(value) in (int, float) and math.isfinite(value) for value in (x, y))
             and math.hypot(x - CENTER, y - CENTER) <= OUTER)
+
+
+def inside_dismiss_boundary(x, y):
+    """Leave tolerance only; the extra rim never becomes a clickable sector."""
+    return (all(type(value) in (int, float) and math.isfinite(value) for value in (x, y))
+            and math.hypot(x - CENTER, y - CENTER) <= DISMISS_OUTER)
 
 
 def hit_test(x, y, count):

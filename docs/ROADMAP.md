@@ -133,3 +133,7 @@ by both renderers is checked. Continue C offline inputs, D Pandoc, E packaging.
 
 Phase 2 C: bounded local structured inputs, HTM/EPUB Python API and text-only ZIP
 are implemented/actual-fixture-tested (601 tests/406 subtests). Continue D/E.
+
+F1–F4: entrance/exit/tolerance, short PDF labels and progress lifecycle recovery
+implemented and portable-tested. Native intermittent root cause remains unproven.
+Continue preserved D Pandoc and E packaging; A–C are already complete.

@@ -1,5 +1,9 @@
 # Durable background conversion feedback
 
+Windows user acceptance: all eight functional progress checks passed. A later
+intermittent missing transition recovered after restart; its cause remains
+unproven. F1–F4 lifecycle polish/recovery still needs native acceptance.
+
 The approved selection wheel still dismisses after circular mouse leave. Once a
 format starts a job, moving away, outside click, focus loss or native popup Hide
 collapses its feedback into a **272×72 logical pixel glass pill**. A coordinated
@@ -71,3 +75,9 @@ away from the checkout and repeat. Use `--ui-backend widgets` for the fallback.
 Linux tests establish actual QML rendering/input at startup scaling and pure
 logical placement; they do not prove native mixed-DPI focus/compositor behavior.
 No Windows build or new native pill test was performed in Kubuntu.
+
+
+F1–F4 adds independent selection fades and tolerant leave geometry, plus tested
+progress-window/timer recovery. See UI_LIFECYCLE_POLISH.md. The eight earlier
+Windows functional checks are user-reported passed; the intermittent missing
+transition is not declared definitively fixed without native reproduction.

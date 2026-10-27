@@ -35,6 +35,10 @@ def run(*, include_quick=False):
             application.setQuitOnLastWindowClosed(False)
             view = GlassPopup(manager.registry, point_mapper=lambda p, screens: p)
             try:
+                # Plugin/raster smoke is deterministic, independent of the
+                # interactive selection entrance's intentional first-frame alpha.
+                view.session._reduced = True
+                view.session.appearanceChanged.emit()
                 center = application.primaryScreen().availableGeometry().center()
                 view.present(TargetResolution(PureWindowsPath('C:/preview/self-test.png'), 0,
                                               (center.x(), center.y()), monotonic(), source='shell_explicit'))

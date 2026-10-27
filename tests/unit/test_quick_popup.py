@@ -67,7 +67,7 @@ def test_qml_loads_alpha_and_does_not_use_painted_canvas(popup, app, target):
     assert popup.present(target)
     pump(app, lambda: popup.isVisible())
     # Software scenegraph grab is an actual renderer output, not a mocked image.
-    app.processEvents()
+    pump(app, lambda: popup.rootObject().property('selectionOpacity') >= .99)
     image = popup.grabWindow()
     assert not image.isNull()
     assert image.width() == 240
@@ -350,7 +350,7 @@ def test_circular_leave_without_click_then_reopen(popup, app, target):
     move_pointer(popup, 195, 120)
     move_pointer(popup, 18, 18)  # No rectangular exit event.
     assert popup.leave_timer.isActive()
-    QTest.qWait(110)
+    QTest.qWait(240)
     assert not popup.isVisible()
     assert popup.state.stage == 'closed'
     assert completions == [True]
@@ -389,7 +389,7 @@ def test_debounce_rechecks_actual_cursor_and_rectangle_exit(popup, app, target):
     assert popup.isVisible()
     move_pointer(popup, -20, 120)
     popup.session.clearHover()
-    QTest.qWait(110)
+    QTest.qWait(240)
     assert not popup.isVisible()
 
 
@@ -438,7 +438,7 @@ def test_actual_qml_motion_to_transparent_corner_starts_leave_debounce(popup, ap
     QCursor.setPos(popup.mapToGlobal(QPoint(20, 20)))
     assert popup.session.hovered == -1
     assert popup.leave_timer.isActive()  # MouseArea itself delivered this update.
-    QTest.qWait(110)
+    QTest.qWait(240)
     assert not popup.isVisible()
 
 

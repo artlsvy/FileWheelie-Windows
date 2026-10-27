@@ -17,8 +17,10 @@ from filewheel.converters.base import (
 class PdfImagesEngine:
     engine_id = "pymupdf-images"
     _possible_capabilities = (
-        Capability(".pdf", "Image", ".png", "PNG pages", engine_id),
-        Capability(".pdf", "Image", ".jpg", "JPEG pages", engine_id),
+        Capability(".pdf", "Image", ".png", "PNG", engine_id,
+                   "Export all PDF pages as PNG images"),
+        Capability(".pdf", "Image", ".jpg", "JPG", engine_id,
+                   "Export all PDF pages as JPG images"),
     )
 
     def __init__(

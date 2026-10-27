@@ -371,7 +371,8 @@ class RadialPopup(QWidget):
             if self.hovered >= 0:
                 option = self.state.options[self.hovered]
                 label = option if isinstance(option, str) else option.label
-                self.setToolTip(f"{self.state.target.path}\n{label}")
+                description = getattr(option, "description", "")
+                self.setToolTip(f"{self.state.target.path}\n{description or label}")
             else:
                 self.setToolTip(str(self.state.target.path))
         self._animation.start()

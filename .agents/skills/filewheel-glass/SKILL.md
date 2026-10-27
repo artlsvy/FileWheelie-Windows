@@ -55,7 +55,7 @@ source of truth. Default QWidget remains available until native acceptance.
   no OS rectangle shadow. Reuse the window. Share physical-to-logical monitor
   mapping and work-area clamping with QWidget; never divide global coordinates
   by one DPR. Test mixed scaling and negative monitor origins on Windows.
-- Selection also dismisses 75 ms after circular mouse leave, with a current-
+- Selection also dismisses after r118 /100 ms circular mouse leave tolerance, with a current-
   cursor logical-coordinate recheck. Center/sector motion and quick re-entry stay
   open. No new global hooks. Conversion/results never auto-dismiss on leave.
 - Selection dismisses on Escape/outside/focus loss; conversion/results persist
@@ -76,3 +76,9 @@ source of truth. Default QWidget remains available until native acceptance.
 - Render current visual proof with `scripts/render_glass_preview.py`; label its
   backdrops as synthetic. Keep native Windows visual/focus/frozen validation
   pending until actually performed. Preserve the widget startup escape route.
+
+Selection entrance/exit uses separate opacity-only140/110 ms effects, never the
+conversion morph's scale. Visible/hit radius remains110 despite leave radius118.
+Tokenize invocation and motion callbacks; intentionalhiddenQMLexits must not
+collapse a newprogress surface. Use finite recovery and normalize endpoints,
+not permanent polling. Preserve success expiry through surface recreation.

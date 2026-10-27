@@ -10,6 +10,7 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 os.environ.setdefault('QT_QUICK_BACKEND', 'software')
 pytest.importorskip('PySide6.QtQuick')
 from PySide6.QtCore import QEvent, QPoint, Qt
+from PySide6.QtGui import QCursor
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 from test_persistent_progress import BlockingManager
@@ -41,6 +42,8 @@ def running(app, target):
     coordinator = ConversionController(app)
     view = GlassPopup(manager.registry, manager=manager, coordinator=coordinator, point_mapper=lambda p, s: p)
     view.present(target)
+    QCursor.setPos(view.mapToGlobal(QPoint(120, 120)))
+    app.processEvents()
     view.session.choose(0)
     view.session.choose(0)
     pump(app, manager.started.is_set)
@@ -237,6 +240,7 @@ def test_actual_progress_raster_and_logical_pill_click_at_dpi(scale):
 from pathlib import PureWindowsPath
 from time import monotonic
 from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QCursor
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 from filewheel.core.models import TargetResolution

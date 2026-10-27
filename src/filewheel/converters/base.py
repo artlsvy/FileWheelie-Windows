@@ -33,6 +33,7 @@ class Capability:
     output_extension: str
     label: str
     engine_id: str
+    description: str = ""
 
 
 @dataclass(frozen=True)
