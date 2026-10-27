@@ -257,3 +257,12 @@ AST size enforcement, structural output validation and optional staged DOCX→PD
 No Qt objects, filters, remote APIs or tool downloads cross the converter boundary.
 Only final validated root-stage outputs enter normal atomic publication. Optional
 tool absence hides From MD capabilities. See PANDOC.md for limits/acceptance.
+
+Optional native packaging is a build-time operation, separate from conversion:
+complete Pandoc/LibreOffice trees are validated before and after copying outside
+the Python payload. Physical source/output separation resolves filesystem aliases
+before PyInstaller can replace output. Release hashes and copied-tool manifests
+support reproducibility without automatic downloads. The source/frozen self-test
+loads both Quick scenes and exercises actual available conversion families;
+an installed Linux wheel does not certify Windows-native DLL/focus/tool behavior.
+See PACKAGING.md and CONVERSION_MATRIX.md.

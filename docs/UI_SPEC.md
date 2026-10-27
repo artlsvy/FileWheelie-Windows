@@ -181,3 +181,9 @@ necessary. PDF formats use JPG/PNG with all-pages behavior in descriptions and
 tooltips. Invocation/motion tokens and finite endpoint/surface recovery preserve
 observable jobs through repeated operations. See UI_LIFECYCLE_POLISH.md for
 actual rendered states and the unresolved native intermittent acceptance item.
+
+From MD now contains only actual probed Pandoc writers; PDF additionally needs
+LibreOffice. New To MD inputs use the same navigation/job/progress surfaces.
+Missing tools hide capabilities without changing geometry or trust rules.
+Current conversion availability and native verification boundaries are recorded
+in CONVERSION_MATRIX.md and PANDOC.md.

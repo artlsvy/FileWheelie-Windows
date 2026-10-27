@@ -22,6 +22,35 @@ def git_value(root, *arguments):
     return result.stdout.strip() if result.returncode == 0 else None
 
 
+def native_tools(distribution):
+    """Inventory copied native tools without importing or executing their engines."""
+    tools = {}
+    pandoc = distribution / "tools/pandoc"
+    if pandoc.is_symlink():
+        raise ValueError("Bundled Pandoc directory must not be a symlink")
+    if pandoc.exists():
+        if not pandoc.is_dir():
+            raise ValueError("Bundled Pandoc must be a directory")
+        files = []
+        for path in sorted(pandoc.rglob("*")):
+            if path.is_symlink():
+                raise ValueError("Bundled Pandoc files must not be symlinks")
+            if path.is_file():
+                digest = hashlib.sha256()
+                size = 0
+                with path.open("rb") as stream:
+                    while chunk := stream.read(1024 * 1024):
+                        digest.update(chunk)
+                        size += len(chunk)
+                files.append({
+                    "path": path.relative_to(distribution).as_posix(),
+                    "size_bytes": size,
+                    "sha256": digest.hexdigest(),
+                })
+        tools["pandoc"] = {"path": "tools/pandoc", "files": files}
+    return tools
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
@@ -46,6 +75,7 @@ def main():
         "distributions": dict(sorted(versions.items(), key=lambda pair: pair[0].lower())),
         "layout": "onedir",
         "experimental_mouse3_default": False,
+        "native_tools": native_tools(args.output.parent),
     }
     with args.output.open("x", encoding="utf-8") as stream:
         json.dump(manifest, stream, ensure_ascii=False, indent=2)

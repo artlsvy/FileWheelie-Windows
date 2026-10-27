@@ -190,3 +190,63 @@ The QML resource glob also includes ProgressSurface.qml. The explicit Quick
 self-test now requires actual nonblank `quick_progress_render`, so a missing
 lazy progress scene cannot silently pass a wheel-only smoke test. Native onedir
 focus, outside collapse, cancellation and status persistence still need testing.
+
+## Phase 2 optional Pandoc and complete conversion smoke
+
+No new model or MarkItDown extra is bundled. defusedxml 0.7.1 is now explicitly a
+direct desktop/Markdown dependency; its already-pinned Windows wheel hash is
+unchanged. The MarkItDown 0.1.9 pin/extras remain unchanged because HTM/EPUB use
+base converters. Structured formats and the bounded ZIP engine use existing
+stdlib/defusedxml/HTML dependencies. The spec's package discovery and QML glob
+cover the new Python modules and ProgressSurface.qml.
+
+Pandoc is an **optional native tool**, not a pip wrapper. Default builds do not
+download or include it. `packaging/pandoc-artifacts.json` records official 3.12.1
+release URLs and SHA256 hashes. For an optional portable build, download into a
+fresh private temporary folder and verify the archive:
+
+```powershell
+$pandocArtifact = (Get-Content .\packaging\pandoc-artifacts.json -Raw | ConvertFrom-Json).artifacts.'windows-x86_64'
+$pandocWork = Join-Path $env:TEMP ('filewheel-pandoc-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $pandocWork | Out-Null
+$pandocZip = Join-Path $pandocWork 'pandoc.zip'
+Invoke-WebRequest -Uri $pandocArtifact.url -OutFile $pandocZip
+if ((Get-FileHash -LiteralPath $pandocZip -Algorithm SHA256).Hash.ToLowerInvariant() -ne $pandocArtifact.sha256) { throw 'Pandoc archive hash mismatch' }
+Expand-Archive -LiteralPath $pandocZip -DestinationPath $pandocWork
+$pandocDirectory = Join-Path $pandocWork $pandocArtifact.release_directory
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1 -PandocDirectory $pandocDirectory
+```
+
+To include the complete LibreOffice tree too, add
+`-LibreOfficeDirectory 'D:\Tools\LibreOfficePortable'`. Installed LibreOffice may
+otherwise provide PDF, but it is not implied by packaging Pandoc.
+
+The script validates real Pandoc readers/writers before rebuilding, rejects
+source/output overlap, copies the complete flat release to `tools/pandoc` beside
+the EXE, and validates again. Keep pandoc.exe, COPYRIGHT.txt, COPYING.rtf and
+MANUAL.html together. The official Windows ZIP is about 40 MiB downloaded /225 MiB
+expanded; retain GPL/copyright notices. Final manifest inventories native-tool
+file hashes/sizes incrementally. Runtime prefers an explicit FILEWHEEL_PANDOC
+path, then bundled tool, then PATH. Remove that environment override when testing
+bundled discovery. Conversion never downloads a tool or uploads content.
+
+The expanded `--self-test --ui-backend quick` renders wheel and pill, checks new
+text/HTM/EPUB/ZIP extraction, runs every available MD writer/PDF route, checks
+fixture hashes/collisions and cleans private intermediate files. The report names
+Pandoc version/source; unavailable external tools are marked optional. From the
+updated bundle after closing the old owner:
+
+```powershell
+Remove-Item Env:FILEWHEEL_PANDOC -ErrorAction SilentlyContinue
+& .\dist\Filewheel\Filewheel.exe --self-test --ui-backend quick
+Get-Content "$env:LOCALAPPDATA\Filewheel\logs\self-test.json"
+& .\dist\Filewheel\Filewheel.exe --tray --ui-backend quick
+```
+
+Move the entire onedir away from its checkout/venv and repeat the smoke and real
+UI conversion/Cancel/retry/Send to checks. Check `pandoc_source: bundled` when
+bundled discovery is intended, source hashes, output contents and log details.
+PowerShell/native EXE execution was not available on Kubuntu; script contract,
+artifact inspection and Python wheel/source checks cannot certify Windows DLL,
+focus, tool, Unicode-path or frozen behavior. See UI_LIFECYCLE_POLISH.md,
+PROGRESS_UX.md and PANDOC.md for the native acceptance checklist.

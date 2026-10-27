@@ -21,7 +21,7 @@ from filewheel.converters.base import (
 )
 from filewheel.converters.office import _stop_office_tree
 from filewheel.libreoffice_bundle import external_tool_environment
-from filewheel.paths import application_root
+from filewheel.paths import application_root, ensure_separate_tool_source
 
 PUBLISH_WRITERS = {'.docx': 'docx', '.html': 'html5', '.txt': 'plain', '.rtf': 'rtf',
                    '.odt': 'odt', '.epub': 'epub3', '.pptx': 'pptx'}
@@ -155,13 +155,20 @@ def _location(path, source):
     return PandocLocation(path, source, *result) if result else None
 
 
-def validate_bundle(directory, *, platform=None, execute=True):
+def validate_bundle(directory, *, platform=None, execute=True, output_root=None):
     directory = Path(directory)
+    if output_root is not None:
+        # Resolve ancestor junctions/symlinks too, before executing or rebuilding.
+        ensure_separate_tool_source(directory, output_root)
+    if directory.is_dir():
+        for member in directory.iterdir():
+            if (member.is_symlink() or member.is_junction() or not member.is_file()):
+                raise ValueError('Portable Pandoc must be a flat release without filesystem aliases')
     platform = sys.platform if platform is None else platform
     executable = directory / ('pandoc.exe' if platform == 'win32' else 'pandoc')
     licenses = ('COPYRIGHT.txt', 'COPYRIGHT')
     copying = ('COPYING.rtf', 'COPYING', 'LICENSE')
-    if (not directory.is_dir() or directory.is_symlink() or not executable.is_file()
+    if (not directory.is_dir() or directory.is_symlink() or directory.is_junction() or not executable.is_file()
             or executable.is_symlink() or not executable.stat().st_size
             or not any((directory / name).is_file() and (directory / name).stat().st_size for name in licenses)
             or not any((directory / name).is_file() and (directory / name).stat().st_size for name in copying)):
@@ -201,9 +208,10 @@ def run_pandoc(location, arguments, *, workdir, cancel=None, timeout=45):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--validate', type=Path, required=True)
+    parser.add_argument('--output-root', type=Path, help='pre-build physical source/output separation check')
     args = parser.parse_args(argv)
     try:
-        location = validate_bundle(args.validate)
+        location = validate_bundle(args.validate, output_root=args.output_root)
     except (ValueError, OSError) as error:
         print(f'Pandoc bundle validation failed: {error}', file=sys.stderr)
         return 2

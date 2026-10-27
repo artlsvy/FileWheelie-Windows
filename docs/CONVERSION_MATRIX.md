@@ -1,36 +1,38 @@
-# Conversion matrix — implemented local pairs and future work
+# Actual local conversion matrix
 
-Capability categories: `editable`, `extracted-content`, `rasterized`, `transcoded`. Every edge needs tests before appearing in the wheel. Live capabilities are engine/codec-gated; see CONVERTERS.md. MarkItDown is unavailable on Python3.15.
+Implemented means real engines and Linux output-content/structure fixtures, not
+Windows certification. Options are generated only from available codecs/tools.
+The [captured Linux registry](conversion-capabilities-linux.json) contains 42
+pairs in the full tested environment; another installation may expose fewer.
 
-| Input | Output | Engine candidates | Capability | Phase |
-| --- | --- | --- | --- | --- |
-| PDF | DOCX | pdf2docx (Word COM deferred) | editable best effort; scanned PDFs need OCR | Implemented; optional local dependencies |
-| DOCX | PDF | LibreOffice headless (Word COM deferred) | rendered layout | Implemented; optional local dependencies |
-| DOCX | MD | MarkItDown Python API | extracted-content | Implemented; optional local dependencies |
-| PDF | MD | MarkItDown Python API | extracted-content; scanned limitations | Implemented; optional local dependencies |
-| PPTX | MD | MarkItDown Python API | extracted-content | Implemented; optional local dependencies |
-| XLSX | MD | MarkItDown Python API | extracted-content | Implemented; optional local dependencies |
-| HTML | MD | MarkItDown Python API | extracted-content | Implemented; optional local dependencies |
-| JPG/PNG/WebP/HEIC | JPG/PNG/WebP etc. | Pillow + pillow-heif | transcoded, possible quality loss | Implemented (single-frame) |
-| Implemented (single-frame) | PDF | Pillow | rasterized | Implemented (single-frame) |
-| PDF | JPG/PNG | PyMuPDF | rasterized | Implemented (single-frame) |
-| MD | DOCX | Pandoc | formatted best effort | Follow-up |
-| MD | PDF | Pandoc + PDF backend | rendered layout | Follow-up |
-| PPTX/XLSX | PDF | Office/LibreOffice | rendered layout | Follow-up |
-| CSV | XLSX | openpyxl/csv | structured data | Follow-up |
-| audio/video | common formats | FFmpeg | transcoded | Optional |
-
-Rules: No extension renaming as conversion; file extension is only a hint, verify input file type when feasible. Local/offline only. Do not expose unsupported targets or pretend extraction is visually lossless. Licensing is not a primary architecture driver for private use.
-
-
-Phase 2 C additions (implemented/actual Linux fixtures; Windows acceptance pending):
-
-| Input | Output | Engine | Limits/status |
+| Input | Outputs | Engine | Availability / limitations |
 |---|---|---|---|
-| TXT, CSV, JSON, XML | MD | structured-markdown | Useful fenced text, escaped tables, structured JSON/XML; bounded, no network |
-| HTM, EPUB | MD | MarkItDown 0.1.9 | Actual Python API; EPUB archive/spine preflight and validated snapshot |
-| ZIP (textual members only) | MD | archive-markdown | No nesting/binaries/extraction; strict quotas and production pre-publication timeout |
-| XLS, MSG | MD | none registered | Optional future work; dependencies/real fixtures not introduced |
+| PNG, JPG/JPEG, WebP | Other PNG/JPEG/WebP formats, PDF | Pillow | Codec-gated; single image/frame; transparency flattened for JPEG |
+| HEIC/HEIF | JPEG, PNG, WebP, PDF | Pillow + pillow-heif | Optional working HEIF codec; single frame |
+| PDF | DOCX | pdf2docx | Editable text/layout best effort; scanned PDFs require OCR |
+| PDF | JPG, PNG | PyMuPDF | Every page exported separately; short labels, all-pages tooltips |
+| DOCX | PDF | LibreOffice | Optional installed or complete portable engine; fonts/layout vary |
+| DOCX, PDF, PPTX, XLSX, HTML, HTM | MD | MarkItDown 0.1.9 Python API | Local content extraction, lossy layout; no plugins/cloud/OCR |
+| TXT | MD | structured-markdown | Fenced text; UTF-8 or BOM UTF-16 |
+| CSV | MD | structured-markdown | Escaped table, bounded consistent rows/columns |
+| JSON | MD | structured-markdown | Parsed readable JSON fence; ambiguous/nonfinite/deep input rejected |
+| XML | MD | structured-markdown + defusedxml | Hierarchical text/attributes; DTD/entities rejected |
+| EPUB | MD | MarkItDown Python API | Bounded archive, validated package/spine and staged snapshot |
+| ZIP (text-only subset) | MD | archive-markdown | TXT/CSV/JSON/XML/MD/HTML/HTM only; no nesting, binaries or extraction |
+| MD | DOCX, HTML, TXT, RTF, ODT, EPUB, PPTX | Pandoc executable | Optional actual sandboxed writer probes; HTML is standalone; slides are heading-based |
+| MD | PDF | Pandoc + LibreOffice | One staged DOCX→PDF transaction; no intermediate publication |
 
-See CONVERTERS.md for exact quotas and known lossy behavior. This does not enable
-MarkItDown image OCR, audio transcription, Azure, YouTube or third-party plugins.
+Semantic categories retain image transcoding, document rendering and extracted
+content. Navigation groups actual .md destinations under **To MD** (direct when
+sole output); MD input uses **From MD** then an available target format.
+
+These are **not implemented/exposed**: legacy XLS→MD, Outlook MSG→MD, general
+recursive/binary ZIP conversion, image OCR/vision, audio transcription, cloud
+APIs/Azure/YouTube, new audio/video transcoders, PPTX/XLSX→PDF and CSV→XLSX.
+Upstream library support alone is not an installed Filewheel capability.
+
+All source files remain unchanged, outputs use collision-safe names and manager
+publication validates real outputs. Quotas and fidelity limits: CONVERTERS.md and
+PANDOC.md. Python runtime remains 3.14; optional tools do not require another
+Python environment. Windows baseline progress checks passed per user; new F
+polish, Markdown families and frozen optional-tool operation require acceptance.

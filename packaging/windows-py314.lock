@@ -1,6 +1,8 @@
 # Filewheel Windows amd64 CPython 3.14 build lock.
 # Resolved from PyPI wheels on 2026-10-25; do not install on another ABI/platform.
 # All runtime/build transitive dependencies are explicit and hash verified.
+# Phase 2: defusedxml is now direct; its existing 0.7.1 wheel hash is unchanged.
+# Optional Pandoc is outside pip: see pandoc-artifacts.json.
 # Regenerate together with Windows resolver evidence; never add unpinned entries.
 
 altgraph==0.17.5 \

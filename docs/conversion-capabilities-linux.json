@@ -1,0 +1,345 @@
+{
+  "schema_version": 1,
+  "platform": "Linux",
+  "python": "3.14.4",
+  "pandoc": "3.12.1",
+  "status": "Linux-discovered; native Windows acceptance separate",
+  "capabilities": [
+    {
+      "input_extension": ".png",
+      "category": "Image",
+      "output_extension": ".jpg",
+      "label": "JPEG",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".png",
+      "category": "Image",
+      "output_extension": ".webp",
+      "label": "WebP",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".png",
+      "category": "Document",
+      "output_extension": ".pdf",
+      "label": "PDF",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".jpg",
+      "category": "Image",
+      "output_extension": ".png",
+      "label": "PNG",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".jpg",
+      "category": "Image",
+      "output_extension": ".webp",
+      "label": "WebP",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".jpg",
+      "category": "Document",
+      "output_extension": ".pdf",
+      "label": "PDF",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".jpeg",
+      "category": "Image",
+      "output_extension": ".png",
+      "label": "PNG",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".jpeg",
+      "category": "Image",
+      "output_extension": ".webp",
+      "label": "WebP",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".jpeg",
+      "category": "Document",
+      "output_extension": ".pdf",
+      "label": "PDF",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".webp",
+      "category": "Image",
+      "output_extension": ".jpg",
+      "label": "JPEG",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".webp",
+      "category": "Image",
+      "output_extension": ".png",
+      "label": "PNG",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".webp",
+      "category": "Document",
+      "output_extension": ".pdf",
+      "label": "PDF",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".heic",
+      "category": "Image",
+      "output_extension": ".jpg",
+      "label": "JPEG",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".heic",
+      "category": "Image",
+      "output_extension": ".png",
+      "label": "PNG",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".heic",
+      "category": "Document",
+      "output_extension": ".pdf",
+      "label": "PDF",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".heif",
+      "category": "Image",
+      "output_extension": ".jpg",
+      "label": "JPEG",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".heif",
+      "category": "Image",
+      "output_extension": ".png",
+      "label": "PNG",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".heif",
+      "category": "Document",
+      "output_extension": ".pdf",
+      "label": "PDF",
+      "engine_id": "pillow",
+      "description": ""
+    },
+    {
+      "input_extension": ".pdf",
+      "category": "Document",
+      "output_extension": ".docx",
+      "label": "DOCX",
+      "engine_id": "pdf2docx",
+      "description": ""
+    },
+    {
+      "input_extension": ".docx",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "markitdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".pdf",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "markitdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".pptx",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "markitdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".xlsx",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "markitdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".html",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "markitdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".htm",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "markitdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".epub",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "markitdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".docx",
+      "category": "Document",
+      "output_extension": ".pdf",
+      "label": "PDF",
+      "engine_id": "libreoffice",
+      "description": ""
+    },
+    {
+      "input_extension": ".pdf",
+      "category": "Image",
+      "output_extension": ".png",
+      "label": "PNG",
+      "engine_id": "pymupdf-images",
+      "description": "Export all PDF pages as PNG images"
+    },
+    {
+      "input_extension": ".pdf",
+      "category": "Image",
+      "output_extension": ".jpg",
+      "label": "JPG",
+      "engine_id": "pymupdf-images",
+      "description": "Export all PDF pages as JPG images"
+    },
+    {
+      "input_extension": ".txt",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "structured-markdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".csv",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "structured-markdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".json",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "structured-markdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".xml",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "structured-markdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".zip",
+      "category": "Markdown/Text",
+      "output_extension": ".md",
+      "label": "Markdown",
+      "engine_id": "archive-markdown",
+      "description": ""
+    },
+    {
+      "input_extension": ".md",
+      "category": "Document",
+      "output_extension": ".docx",
+      "label": "DOCX",
+      "engine_id": "pandoc",
+      "description": ""
+    },
+    {
+      "input_extension": ".md",
+      "category": "Document",
+      "output_extension": ".html",
+      "label": "HTML",
+      "engine_id": "pandoc",
+      "description": ""
+    },
+    {
+      "input_extension": ".md",
+      "category": "Document",
+      "output_extension": ".txt",
+      "label": "TXT",
+      "engine_id": "pandoc",
+      "description": ""
+    },
+    {
+      "input_extension": ".md",
+      "category": "Document",
+      "output_extension": ".rtf",
+      "label": "RTF",
+      "engine_id": "pandoc",
+      "description": ""
+    },
+    {
+      "input_extension": ".md",
+      "category": "Document",
+      "output_extension": ".odt",
+      "label": "ODT",
+      "engine_id": "pandoc",
+      "description": ""
+    },
+    {
+      "input_extension": ".md",
+      "category": "Document",
+      "output_extension": ".epub",
+      "label": "EPUB",
+      "engine_id": "pandoc",
+      "description": ""
+    },
+    {
+      "input_extension": ".md",
+      "category": "Document",
+      "output_extension": ".pptx",
+      "label": "PPTX",
+      "engine_id": "pandoc",
+      "description": ""
+    },
+    {
+      "input_extension": ".md",
+      "category": "Document",
+      "output_extension": ".pdf",
+      "label": "PDF",
+      "engine_id": "pandoc",
+      "description": ""
+    }
+  ]
+}

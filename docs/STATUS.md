@@ -1510,3 +1510,43 @@ Ruff, compilation and diff checks pass. No native Windows/frozen Pandoc executio
 occurred. PANDOC.md records limits, optional tools and exact commands. Next: E
 portable build seams, expanded source/frozen smoke families, lock metadata and
 final regression/native handoff. F source/appearance is preserved.
+
+## Phase 2 E — packaging and final validation (2026-10-27)
+
+Optional `-PandocDirectory` build support validates actual readers/writers before
+rebuilding, copies the complete flat release beside the EXE, and validates it
+again. Default builds do not download or bundle Pandoc. Official 3.12.1 artifact
+hashes and required license/manual files are recorded in packaging metadata;
+the Windows ZIP/hash/member layout was inspected, not executed. The manifest
+inventories copied tool bytes with bounded hashing. Physical source/output
+separation checks resolve ancestor aliases before a rebuild can replace output;
+the same guard protects the existing LibreOffice build seam. Alias tests and
+focused review cover these paths; native junction/build execution remains pending.
+
+defusedxml 0.7.1 is explicitly declared using its existing locked Windows hash.
+No new MarkItDown extras, plugins, models or network services were introduced.
+The real Linux registry snapshot records 42 available pairs; the conversion
+matrix distinguishes implemented, optional and unsupported routes. XLS/MSG,
+OCR/audio and unrestricted ZIP remain unavailable.
+
+Final actual Linux checks with Python 3.14.4, Pandoc 3.12.1 and LibreOffice:
+
+- **656 tests / 408 subtests passed** (full suite, 32.40 s).
+- Source and independently installed Python-wheel Quick smoke each passed
+  **32 checks / 26 real conversion pairs**, including nonblank wheel/pill renders,
+  transparent corners, source hashes and output collision protection.
+- Python wheel built successfully; installed import location and new engine/QML
+  resources were verified. Compilation, spec syntax and diff checks passed.
+- Changed/new Python files pass Ruff. Repository-wide Ruff still reports **25
+  pre-existing findings in unchanged files**; it is not claimed clean.
+- Focused conversion/security/packaging review has no remaining material findings
+  after bounded repeated-image serialization and physical-build-alias fixes.
+
+**WINDOWS_VALIDATION_REQUIRED:** F selection motion and long-session recovery,
+new Markdown families, actual Pandoc/native portable tools, source/frozen paths,
+mixed-DPI focus/placement, repeated Mouse3/touchpad/Send to and cancellation/retry.
+The earlier eight progress checks remain user-reported Windows-passed. The
+original intermittent transition event is not reproduced or declared definitively
+resolved. No Windows EXE was built or executed here. PACKAGING.md gives exact
+PowerShell rebuild/optional bundle/self-test commands; NEXT_TASK.md is now the
+native acceptance handoff. No push was performed.

@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
 
-from filewheel.paths import application_root
+from filewheel.paths import application_root, ensure_separate_tool_source
 
 _DLL_LOCK = Lock()
 
@@ -220,8 +220,11 @@ def external_tool_environment(*, _windows_backend=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--validate", type=Path, required=True)
+    parser.add_argument("--output-root", type=Path)
     args = parser.parse_args(argv)
     try:
+        if args.output_root is not None:
+            ensure_separate_tool_source(args.validate, args.output_root)
         location = validate_bundle(args.validate)
     except ValueError as error:
         print(f"LibreOffice bundle validation failed: {error}", file=sys.stderr)

@@ -60,3 +60,9 @@ Experimental native glass renderer: [GLASS_UI.md](docs/GLASS_UI.md) documents
 `--ui-backend quick`, reduced effects, Windows acceptance and the Widget fallback.
 The default remains Widget. [PERFORMANCE_ARCHITECTURE.md](docs/PERFORMANCE_ARCHITECTURE.md)
 contains actual local measurements and the recommendation to keep the Python host.
+
+
+Current Markdown destinations are **To MD** / **From MD**, generated from actual
+engines. [Conversion matrix](docs/CONVERSION_MATRIX.md),
+[optional Pandoc](docs/PANDOC.md), [durable progress](docs/PROGRESS_UX.md) and
+[latest UI polish](docs/UI_LIFECYCLE_POLISH.md) describe setup and native checks.

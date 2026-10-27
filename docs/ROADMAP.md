@@ -141,3 +141,13 @@ Continue preserved D Pandoc and E packaging; A–C are already complete.
 Phase 2 D: real probed Pandoc supplies seven Markdown writers plus staged PDF
 when LibreOffice is available.649tests/406subtests pass on Linux; native pending.
 Finish E packaging, expanded smoke and final regression.
+
+Phase 2 E: optional complete Pandoc packaging/artifact hashes, physical build
+source/output guards, expanded source/installed-wheel smoke and final matrix are
+implemented. Full Linux suite: **656 tests / 408 subtests passed**; both Quick
+smokes: **32 checks / 26 real pairs**. Scoped Ruff/compilation/wheel checks pass;
+25 existing Ruff findings remain outside changed files. Phase 2 and F implementation
+is complete as far as this environment permits. Next is native Windows long-session
+UI, new-format and moved-onedir acceptance (NEXT_TASK.md), not another rewrite.
+The baseline eight Windows progress checks passed per user; the later intermittent
+transition remains unproven. Native build/optional-tool claims stay pending.

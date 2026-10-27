@@ -1,7 +1,9 @@
 """Packaged local smoke checks. No user documents, network or persistent outputs."""
+import hashlib
 import json
 import tempfile
 from pathlib import Path
+from zipfile import ZIP_STORED, ZipFile
 
 from filewheel.converters import ConversionManager
 from filewheel.converters.debugging import debug_log_path, record_failure
@@ -88,6 +90,10 @@ def run(*, include_quick=False):
             location = office.location()
             results.append({'libreoffice_source': location.source,
                             'libreoffice_executable': str(location.executable), 'ok': True})
+        pandoc = manager.registry.engines.get('pandoc')
+        results.append({'pandoc': pandoc.location.version if pandoc else 'unavailable',
+                        'pandoc_source': pandoc.location.source if pandoc else None,
+                        'optional': True, 'ok': True})
         with tempfile.TemporaryDirectory(prefix='filewheel-selftest-') as folder:
             root = Path(folder)
             image = root / 'image.png'
@@ -105,11 +111,47 @@ def run(*, include_quick=False):
             html = root / 'page.html'; html.write_text('<h1>HTML smoke</h1><p>Local text</p>', encoding='utf-8')
             pairs = [(image, '.jpg'), (image, '.webp'), (image, '.pdf'), (pdf, '.docx'),
                      (pdf, '.png'), (docx, '.md'), (pdf, '.md'), (pptx, '.md'), (xlsx, '.md'), (html, '.md')]
+            for suffix, text in (('.txt', 'Useful Unicode text æøå'),
+                                 ('.csv', 'Name,Count\nWidgets,42'),
+                                 ('.json', '{"useful": true, "value": 42}'),
+                                 ('.xml', '<book title="Résumé"><chapter>Useful content</chapter></book>'),
+                                 ('.htm', '<h1>Useful heading</h1><p>Local text</p>')):
+                local = root / ('Résumé input' + suffix)
+                local.write_text(text, encoding='utf-8')
+                pairs.append((local, '.md'))
+            epub = root / 'book.epub'
+            with ZipFile(epub, 'w', compression=ZIP_STORED) as archive:
+                archive.writestr('mimetype', 'application/epub+zip')
+                archive.writestr('META-INF/container.xml', '<container><rootfiles><rootfile full-path="book.opf"/></rootfiles></container>')
+                archive.writestr('book.opf', '<package xmlns:dc="http://purl.org/dc/elements/1.1/"><metadata><dc:title>Useful book</dc:title></metadata><manifest><item id="one" href="one.xhtml" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="one"/></spine></package>')
+                archive.writestr('one.xhtml', '<html xmlns="http://www.w3.org/1999/xhtml"><body><h1>Useful chapter</h1><p>Local book text</p></body></html>')
+            collection = root / 'collection.zip'
+            with ZipFile(collection, 'w', compression=ZIP_STORED) as archive:
+                archive.writestr('notes.txt', 'Useful local archive text')
+                archive.writestr('values.csv', 'Name,Value\nWidgets,42')
+            pairs.extend(((epub, '.md'), (collection, '.md')))
+            if pandoc is not None:
+                markdown = root / 'publish.md'
+                markdown.write_text('# Useful publishing heading\n\n- Local item\n\n| Name | Value |\n|---|---|\n| Widgets | 42 |\n\n![Local raster](image.png)\n', encoding='utf-8')
+                pairs.extend((markdown, c.output_extension) for c in pandoc.capabilities)
             for source, extension in pairs:
+                before = hashlib.sha256(source.read_bytes()).digest()
                 result = manager.convert(source, extension)
+                if hashlib.sha256(source.read_bytes()).digest() != before:
+                    raise RuntimeError('Conversion smoke changed its source fixture')
+                if extension == '.md' and not result.path.read_text(encoding='utf-8').strip():
+                    raise RuntimeError('Markdown smoke generated no useful content')
                 results.append({'pair': source.suffix + '->' + extension, 'engine': result.engine_id,
                                 'outputs': len(result.outputs), 'ok': True})
-            if any(c.input_extension == '.docx' and c.output_extension == '.pdf' for c in manager.registry.capabilities):
+            first_jpeg = root / 'image.jpg'
+            first_hash = hashlib.sha256(first_jpeg.read_bytes()).digest()
+            collision = manager.convert(image, '.jpg')
+            if collision.path == first_jpeg or hashlib.sha256(first_jpeg.read_bytes()).digest() != first_hash:
+                raise RuntimeError('Collision smoke replaced a pre-existing output')
+            results.append({'collision_safe': True, 'ok': True})
+            if list(root.glob('.filewheel-*')):
+                raise RuntimeError('Conversion smoke leaked staging files')
+            if any(c.input_extension == '.docx'  and c.output_extension == '.pdf' for c in manager.registry.capabilities):
                 result = manager.convert(docx, '.pdf')
                 results.append({'pair': '.docx->.pdf', 'engine': result.engine_id, 'ok': True})
             else:

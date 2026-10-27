@@ -170,3 +170,10 @@ Get-Process Filewheel | Select-Object Id,WorkingSet64,PeakWorkingSet64
 Keep source/frozen, first-process/resident and effect modes separate. Report any
 missing resources, frame stalls, focus failures or unusual driver behavior before
 making Quick the default.
+
+
+Current Phase 2 navigation and progress: To MD directly starts the shared job;
+From MD offers only probed available outputs. Running work remains observable
+in the compact pill. PROGRESS_UX.md and UI_LIFECYCLE_POLISH.md describe current
+Windows user acceptance versus remaining lifecycle/native polish checks. See
+PANDOC.md and PACKAGING.md for optional tool setup and new-format smoke tests.

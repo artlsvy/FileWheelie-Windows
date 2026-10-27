@@ -1,6 +1,7 @@
 param(
     [string]$Python = '',
-    [string]$LibreOfficeDirectory = ''
+    [string]$LibreOfficeDirectory = '',
+    [string]$PandocDirectory = ''
 )
 $ErrorActionPreference = 'Stop'
 if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
@@ -23,6 +24,20 @@ if ($LibreOfficeDirectory) {
         $sourceFull.StartsWith($distFull + '\', [StringComparison]::OrdinalIgnoreCase) -or
         $distFull.StartsWith($sourceFull + '\', [StringComparison]::OrdinalIgnoreCase)) {
         throw 'LibreOffice source and build output must not contain each other'
+    }
+}
+$pandocSource = $null
+if ($PandocDirectory) {
+    $pandocSource = (Resolve-Path -LiteralPath $PandocDirectory).Path
+    if (-not (Test-Path -LiteralPath $pandocSource -PathType Container)) {
+        throw 'PandocDirectory must be the complete extracted flat release directory'
+    }
+    $pandocFull = [IO.Path]::GetFullPath($pandocSource).TrimEnd('\')
+    $distFull = [IO.Path]::GetFullPath($distribution).TrimEnd('\')
+    if ($pandocFull.Equals($distFull, [StringComparison]::OrdinalIgnoreCase) -or
+        $pandocFull.StartsWith($distFull + '\', [StringComparison]::OrdinalIgnoreCase) -or
+        $distFull.StartsWith($pandocFull + '\', [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Pandoc source and build output must not contain each other'
     }
 }
 $checkPython = "import sys,struct,sysconfig; assert sys.platform=='win32' and sys.implementation.name=='cpython' and sys.version_info[:2]==(3,14) and struct.calcsize('P')==8 and sysconfig.get_platform()=='win-amd64' and not sysconfig.get_config_var('Py_GIL_DISABLED'), 'Windows CPython 3.14 amd64 is required'"
@@ -58,7 +73,11 @@ try {
     if ($portableSource) {
         # G12 validator accepts a complete flat or PortableApps installation;
         # copying only soffice.exe is never sufficient.
-        Invoke-BuildPython -PythonArguments @('-m', 'filewheel.libreoffice_bundle', '--validate', $portableSource)
+        Invoke-BuildPython -PythonArguments @('-m', 'filewheel.libreoffice_bundle', '--validate', $portableSource, '--output-root', $distribution)
+    }
+    if ($pandocSource) {
+        # Execute real reader/writer probes before PyInstaller rebuilds its output.
+        Invoke-BuildPython -PythonArguments @('-m', 'filewheel.pandoc_tool', '--validate', $pandocSource, '--output-root', $distribution)
     }
     Invoke-BuildPython -PythonArguments @('-m', 'PyInstaller', '--clean', '--noconfirm', '--distpath', (Join-Path $root 'dist'), '--workpath', (Join-Path $root 'build\pyinstaller'), (Join-Path $root 'packaging\Filewheel.spec'))
     if ($portableSource) {
@@ -68,6 +87,15 @@ try {
         if (Test-Path -LiteralPath $destination) { throw 'Refusing to replace an existing bundled LibreOffice directory' }
         Copy-Item -LiteralPath $portableSource -Destination $destination -Recurse
         Invoke-BuildPython -PythonArguments @('-m', 'filewheel.libreoffice_bundle', '--validate', $destination)
+    }
+    if ($pandocSource) {
+        $tools = Join-Path $distribution 'tools'
+        [void][IO.Directory]::CreateDirectory($tools)
+        $pandocDestination = Join-Path $tools 'pandoc'
+        if (Test-Path -LiteralPath $pandocDestination) { throw 'Refusing to replace an existing bundled Pandoc directory' }
+        # Preserve the complete release, including COPYRIGHT.txt, COPYING.rtf and MANUAL.html.
+        Copy-Item -LiteralPath $pandocSource -Destination $pandocDestination -Recurse
+        Invoke-BuildPython -PythonArguments @('-m', 'filewheel.pandoc_tool', '--validate', $pandocDestination)
     }
     $executable = Join-Path $distribution 'Filewheel.exe'
     if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) { throw 'PyInstaller did not create Filewheel.exe' }

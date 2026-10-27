@@ -116,3 +116,25 @@ def test_frozen_root_discovery_and_explicit_override_priority(monkeypatch, tmp_p
         assert found.source == 'bundled'
         monkeypatch.setenv('FILEWHEEL_PANDOC', str(root/'missing.exe'))
         assert find_pandoc() is None  # Bad explicit choice is not silently replaced.
+
+
+def test_prebuild_separation_checks_resolved_ancestor_aliases(tmp_path):
+    output = tmp_path/'dist/Filewheel'
+    source = output/'tools/pandoc'
+    source.mkdir(parents=True)
+    alias = tmp_path/'outside-looking-alias'
+    try:
+        alias.symlink_to(output, target_is_directory=True)
+    except OSError:
+        pytest.skip('Directory symlink creation not permitted on this host')
+    with (patch('filewheel.pandoc_tool._location', side_effect=AssertionError('ran tool before safety check')),
+          pytest.raises(ValueError, match='physical source')):
+        validate_bundle(alias/'tools/pandoc', execute=False, output_root=output)
+    with pytest.raises(ValueError, match='physical source'):
+        validate_bundle(source, execute=False, output_root=source/'nested-output')
+
+
+def test_portable_release_rejects_nested_aliases(tmp_path):
+    (tmp_path/'nested').mkdir()
+    with pytest.raises(ValueError, match='flat release'):
+        validate_bundle(tmp_path, execute=False)

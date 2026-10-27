@@ -169,6 +169,7 @@ class PackagingTests(unittest.TestCase):
         package = files('filewheel.ui').joinpath('qml')
         self.assertTrue(package.joinpath('GlassWheel.qml').is_file())
         self.assertTrue(package.joinpath('Lens.qml').is_file())
+        self.assertTrue(package.joinpath('ProgressSurface.qml').is_file())
         self.assertIn('Lens {', package.joinpath('GlassWheel.qml').read_text())
         metadata = tomllib.loads((ROOT / 'pyproject.toml').read_text())
         self.assertIn('qml/*.qml', metadata['tool']['setuptools']['package-data']['filewheel.ui'])
