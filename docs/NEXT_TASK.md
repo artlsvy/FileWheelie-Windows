@@ -3,7 +3,8 @@
 Cleanup/main integration completed in b9b77a3; remote main was verified at that
 checkpoint, including the baseline standalone EXE through Git LFS. Obsolete
 prototype files/local fixtures were preserved outside checkout, not discarded.
-Current source adds PPTX/XLSX-to-PDF using bundled LibreOffice and conservative
+Final source/EXE commit1290458 is also pushed to origin/main and was remotely
+verified. Current source adds PPTX/XLSX-to-PDF using bundled LibreOffice and conservative
 spreadsheet offline guards. No tests/benchmarks/UI automation ran in this pass.
 
 New EXE: releases/Filewheel.exe. SHA256:

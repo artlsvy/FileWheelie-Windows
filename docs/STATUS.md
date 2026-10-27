@@ -66,3 +66,12 @@ No tests, benchmarks or UI automation ran. Compilation is not runtime acceptance
 The last natively checked baseline4a46099d87 remains recoverable from b9b77a3 via
 Git LFS. Current artifact metadata is in releases and standalone/cleanup-build.json.
 Remaining runtime/family checks require a new user request. No C implementation.
+
+## Final integration
+
+Cleanup checkpoint b9b77a3 and converter/source/EXE commit1290458 were both pushed
+to origin/main. Remote main was independently verified at1290458 and the complete
+668MB LFS upload succeeded. Source working tree was clean at that checkpoint.
+Build intermediates were preserved outside checkout; the running older Filewheel
+install was not moved. No tests/probes/benchmarks/UI automation ran. Current EXE
+and new Office routes still require future runtime acceptance; no C rewrite needed.

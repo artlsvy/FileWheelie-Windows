@@ -18,7 +18,9 @@ Milestones:
    remote refs/heads/main verified equal to b9b77a3. Old native EXE preserved in Git.
 2. Complete: bounded PPTX/XLSX-to-PDF, offline workbook guards and unrun regression
    cases added. EXE rebuilt successfully with --skip-tool-probes, no test runs.
-3. Active: document converter/audio/C findings, final commit/remote integration.
+3. Complete: report and rebuilt EXE committed1290458 and pushed to main; remote
+   refs/heads/main verified at1290458 and LFS upload completed. No tests/probes,
+   benchmarks or interactive automation ran.
 
 Evidence: origin/main is an ancestor of HEAD; branch contains two later commits
 (F5/OpenGL and Windows onefile). Git LFS3.3.0 available. Existing EXE668358672 bytes.
@@ -30,4 +32,7 @@ the user's running artifacts/f5 instance is untouched. LFS upload completed.
 Current artifact SHA256a0bf33614ee5eb24269add1b871a7c28c9470fcc7c2a293eccc41f77ef37feb1.
 MarkItDown speech helper calls online Google recognition; excluded. C review finds
 no need for a rewrite; no implementation started. No tests/benchmarks/UI automation.
-Next: commit current source/binary/metadata and verify origin/main after push.
+Working tree is clean. Build intermediates were moved to the external backup;
+the active build environment and user's running older install remain local.
+Next: stop. Runtime acceptance requires a future request; do not restart the
+interrupted UI test or begin a C implementation.
