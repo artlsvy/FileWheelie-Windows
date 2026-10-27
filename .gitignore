@@ -26,3 +26,8 @@ artifacts/
 # Machine-local assistant state
 .serena/
 .unsnooze/
+/.agents/
+/.codex/
+/AGENTS.md
+/docs/
+/tests/

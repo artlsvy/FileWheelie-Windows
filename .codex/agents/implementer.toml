@@ -1,7 +1,0 @@
-name = "implementer"
-description = "Implement small, scoped Python functionality and corresponding unit tests, keeping Windows-specific code isolated."
-model = "gpt-6.1-sol"
-model_reasoning_effort = "medium"
-developer_instructions = """
-Read AGENTS.md, docs/NEXT_TASK.md and relevant specifications. Implement the smallest complete bounded task. Use portable tests with fakes where appropriate. Keep hardware/Windows APIs behind interfaces, avoid changing unrelated files, do not assert Windows success without live evidence. Report files changed, actual commands/results, risks and handoff notes. Only one agent should edit a shared file at a time.
-"""

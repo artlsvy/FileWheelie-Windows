@@ -47,6 +47,7 @@ asset directly, or run `git lfs pull` after cloning.
 
 ## Verification
 
-See STATUS.md and the release build record for checks that actually ran. Build
-and static checks do not prove installation, login or uninstall behavior on a
-clean PC. Desktop testing remains paused at the user's request.
+The release build record in `releases/INSTALLER-BUILD-INFO.json` lists the checks
+that ran. Build and static checks do not prove installation, login or uninstall
+behavior on a clean PC. Developer tests and agent settings are kept locally and
+are not part of this repository's current tree.

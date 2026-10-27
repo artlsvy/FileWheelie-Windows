@@ -4,6 +4,17 @@ Convert files straight from Windows File Explorer. Middle-click a file, choose
 an output format from the wheel, and let Filewheel create a converted copy.
 Your original file stays in place.
 
+This project was fully **vibecoded with OpenAI Codex**. It was created as an
+experiment to see what Codex could build, from the app itself to its installer.
+
+## A look at the app
+
+These are real UI captures with transparent backgrounds.
+
+| Choose a format | Track a conversion | See more details |
+| --- | --- | --- |
+| ![Filewheel selection wheel](assets/ui/wheel.png) | ![Compact conversion progress](assets/ui/progress.png) | ![Expanded conversion progress](assets/ui/expanded.png) |
+
 ## Download and install
 
 **[Download Filewheel v0.2 for Windows](https://github.com/artlsvy/fileconverter/releases/download/v0.2/FilewheelSetup.exe)**
@@ -46,4 +57,4 @@ Mouse and touchpad activation are on by default. Start on login is optional.
 Conversions work locally. No account, internet connection or uploads are needed.
 To uninstall, open **Windows Settings > Apps > Installed apps > Filewheel**.
 
-[Installer and build notes](docs/INSTALLER.md)
+[Installer and build notes](INSTALL.md)
