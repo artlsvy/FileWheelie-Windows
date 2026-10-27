@@ -9,6 +9,8 @@ from filewheel.converters import ConversionManager
 from filewheel.converters.debugging import record_failure
 from filewheel.core.controller import InvocationController
 from filewheel.performance import get_recorder
+from filewheel import preferences
+from filewheel.platforms.windows import startup as login_startup
 from filewheel.platforms.windows.explicit_path_diagnostics import inspect_file
 from filewheel.ui.backend import create_popup
 from filewheel.ui.conversion_controller import ConversionController
@@ -34,7 +36,8 @@ class _StartMouse(QThread):
 
 class DesktopApplication(QObject):
     def __init__(self, *, tray=False, manager=None, inspector=inspect_file,
-                 runtime_factory=None, point_mapper=None, confirm_candidates=False, ui_backend=None, parent=None):
+                 runtime_factory=None, point_mapper=None, confirm_candidates=False, ui_backend=None,
+                 auto_start=False, parent=None):
         super().__init__(parent)
         timing = get_recorder()
         started = monotonic() if timing.enabled else None
@@ -50,7 +53,8 @@ class DesktopApplication(QObject):
         self.dialog = None
         self.confirm_button = None
         self.confirm_candidates = bool(confirm_candidates)
-        self.allow_injected_candidates = False  # Explicit, session-only touchpad opt-in.
+        self.allow_injected_candidates = True  # Injected gestures still require exact-path confirmation.
+        self.auto_start = auto_start
         self.tray_mode = tray
         self.quitting = False
         self.bridge = _Bridge(self)
@@ -64,28 +68,25 @@ class DesktopApplication(QObject):
         self.popup.finished.connect(self._popup_finished)
         self.tray = QSystemTrayIcon(self._icon(), self)
         self.menu = QMenu()
-        self.experiment_action = QAction('Experimental Mouse3', self)
+        self.experiment_action = QAction('Enable wheel', self)
         self.experiment_action.setCheckable(True)
         self.experiment_action.toggled.connect(self.set_experiment)
         self.menu.addAction(self.experiment_action)
-        self.touchpad_action = QAction('Touchpad middle-click (always confirm)', self)
-        self.touchpad_action.setCheckable(True)
-        self.touchpad_action.setToolTip('Allow injected gestures; turn Mouse3 off before changing.')
-        self.touchpad_action.toggled.connect(self.set_touchpad)
-        self.menu.addAction(self.touchpad_action)
-        self.confirm_action = QAction('Confirm file before opening', self)
-        self.confirm_action.setCheckable(True)
-        self.confirm_action.setChecked(self.confirm_candidates)
-        self.confirm_action.toggled.connect(self.set_confirmation)
-        self.menu.addAction(self.confirm_action)
+        self.login_action = QAction('Start on login', self)
+        self.login_action.setCheckable(True)
+        self.login_action.toggled.connect(self.set_start_on_login)
+        self.menu.addAction(self.login_action)
+        self.menu.aboutToShow.connect(self._refresh_login)
+        self._refresh_login()
         diagnostics = getattr(self.popup, 'render_diagnostics', None)
         if diagnostics is not None and diagnostics.enabled:
             trace_action = self.menu.addAction('Save UI trace snapshot')
             trace_action.triggered.connect(self.popup._trace_presentation)
+        self.menu.addSeparator()
         quit_action = self.menu.addAction('Quit Filewheel')
         quit_action.triggered.connect(self.request_quit)
         self.tray.setContextMenu(self.menu)
-        self.tray.setToolTip('Filewheel — Mouse3 experiment off')
+        self.tray.setToolTip('Filewheel — wheel disabled')
         self.stop_timer = QTimer(self)
         self.stop_timer.setInterval(100)
         self.stop_timer.timeout.connect(self._poll_mouse_stop)
@@ -94,13 +95,40 @@ class DesktopApplication(QObject):
         self.shutdown_timer.timeout.connect(self._finish_quit)
         if tray:
             self.tray.show()
+            if self.auto_start:
+                QTimer.singleShot(0, self._start_default_wheel)
+
+    def _start_default_wheel(self):
+        if not self.quitting and preferences.wheel_enabled():
+            self.set_experiment(True, persist=False)
+
+    def _refresh_login(self):
+        self.login_action.blockSignals(True)
+        try:
+            self.login_action.setChecked(login_startup.is_enabled())
+        except (OSError, RuntimeError):
+            self.login_action.setChecked(False)
+        finally:
+            self.login_action.blockSignals(False)
+
+    @Slot(bool)
+    def set_start_on_login(self, enabled):
+        try:
+            login_startup.configure('install' if enabled else 'remove')
+        except (OSError, RuntimeError) as error:
+            record_failure('desktop', 'start_on_login', error)
+            self.notify('Could not change Start on login. An entry from another installation is preserved.')
+        self._refresh_login()
 
     def ensure_tray(self):
         """Adopt tray mode when a later no-file launch reaches a transient owner."""
         if self.quitting or not QSystemTrayIcon.isSystemTrayAvailable():
             return False
+        was_transient = not self.tray_mode
         self.tray_mode = True
         self.tray.show()
+        if was_transient and self.auto_start:
+            QTimer.singleShot(0, self._start_default_wheel)
         return True
 
     @staticmethod
@@ -140,37 +168,50 @@ class DesktopApplication(QObject):
             return False
 
     @Slot(bool)
-    def set_experiment(self, enabled):
+    def set_experiment(self, enabled, *, persist=True):
+        if self.quitting:
+            return
         if self._startup is not None:
             self._check_action(False)
             return
         if enabled and not self.tray_mode:
             enabled = False
+        if persist:
+            try:
+                preferences.save_wheel_enabled(enabled)
+            except (OSError, KeyError) as error:
+                record_failure('desktop', 'save_preferences', error)
+                self.notify('Wheel changed for this session; could not save the preference.')
         self.close_confirmation()
+        if not enabled and self.popup.job is None:
+            self.popup.dismiss()
         if self.runtime is not None:
             if not self.runtime.close(timeout=0):
                 self.experimental_enabled = False
                 self._check_action(False)
                 self.experiment_action.setEnabled(False)
-                self.touchpad_action.setEnabled(False)
-                self.tray.setToolTip('Filewheel — Mouse3 stopping')
+                self.tray.setToolTip('Filewheel — wheel stopping')
                 self.stop_timer.start()
                 return
             self.runtime = None
+        self.stop_timer.stop()
         self.experimental_enabled = False
         if enabled:
             factory = self.runtime_factory
             if factory is None:
                 from filewheel.platforms.windows.mouse_runtime import MouseRuntime
                 factory = MouseRuntime
-            self.runtime = factory(self.bridge.candidate.emit, self.bridge.error.emit,
-                                   allow_injected_candidates=self.allow_injected_candidates)
-            self.touchpad_action.setEnabled(False)
             try:
+                self.runtime = factory(self.bridge.candidate.emit, self.bridge.error.emit,
+                                       allow_injected_candidates=self.allow_injected_candidates)
                 if hasattr(self.runtime, 'prepare'):
                     self.runtime.prepare()
             except (RuntimeError, OSError) as error:
                 record_failure('mouse3', 'bootstrap', error)
+                if self.runtime is not None:
+                    self.runtime.close(timeout=0)
+                self.experiment_action.setEnabled(False)
+                self.stop_timer.start()
                 self._check_action(False)
                 self.notify('Mouse3 COM bootstrap failed; see local diagnostics.')
                 return
@@ -179,20 +220,19 @@ class DesktopApplication(QObject):
             self.experiment_action.setEnabled(False)
             self._startup.start()
         self._check_action(self.experimental_enabled)
-        if self.runtime is None:
-            self.touchpad_action.setEnabled(not self.quitting)
-        self.tray.setToolTip('Filewheel — Mouse3 experimental' if self.experimental_enabled
-                             else 'Filewheel — Mouse3 experiment off')
+        self.tray.setToolTip('Filewheel — wheel enabled' if self.experimental_enabled
+                             else 'Filewheel — wheel disabled')
 
     @Slot()
     def _poll_mouse_stop(self):
+        if self._startup is not None:
+            return
         if self.runtime is not None and self.runtime.threads_alive:
             return
         self.stop_timer.stop()
         self.runtime = None
         self.experiment_action.setEnabled(not self.quitting)
-        self.touchpad_action.setEnabled(not self.quitting)
-        self.tray.setToolTip('Filewheel — Mouse3 experiment off')
+        self.tray.setToolTip('Filewheel — wheel disabled')
 
     @Slot()
     def _mouse_started(self):
@@ -200,11 +240,14 @@ class DesktopApplication(QObject):
         self.experimental_enabled = bool(startup.result and not self.quitting
                                          and self.runtime is not None and self.runtime.running)
         startup.deleteLater()
-        self.experiment_action.setEnabled(True)
+        self.experiment_action.setEnabled(not self.quitting)
         self._check_action(self.experimental_enabled)
-        self.tray.setToolTip('Filewheel — Mouse3 experimental' if self.experimental_enabled
-                             else 'Filewheel — Mouse3 experiment off')
+        self.tray.setToolTip('Filewheel — wheel enabled' if self.experimental_enabled
+                             else 'Filewheel — wheel disabled')
         if not self.experimental_enabled and not self.quitting:
+            if self.runtime is not None:
+                self.runtime.close(timeout=0)
+            self.experiment_action.setEnabled(False)
             self.stop_timer.start()  # Release a failed runtime before policy changes.
             self.notify('Mouse3 could not start; see local diagnostics.')
         if self.quitting:
@@ -220,21 +263,13 @@ class DesktopApplication(QObject):
         self.experimental_enabled = False
         self._check_action(False)
         self.close_confirmation()
-        self.tray.setToolTip('Filewheel — Mouse3 experiment off')
+        self.tray.setToolTip('Filewheel — wheel disabled')
+        if self.runtime is not None:
+            self.runtime.close(timeout=0)
+            self.experiment_action.setEnabled(False)
+            self.stop_timer.start()
         record_failure('mouse3', 'runtime', RuntimeError(message))
         self.notify(f'Mouse3 stopped: {message}. Send to remains available.')
-
-    @Slot(bool)
-    def set_touchpad(self, enabled):
-        # A runtime's policy is immutable; don't leave an in-flight injected
-        # candidate valid across a setting change. Stop Mouse3 before changing.
-        if self.runtime is not None or self._startup is not None or self.quitting:
-            self.touchpad_action.blockSignals(True)
-            self.touchpad_action.setChecked(self.allow_injected_candidates)
-            self.touchpad_action.blockSignals(False)
-            return
-        self.close_confirmation()
-        self.allow_injected_candidates = enabled is True
 
     @Slot(bool)
     def set_confirmation(self, enabled):
@@ -323,7 +358,7 @@ class DesktopApplication(QObject):
         self.quitting = True
         self.stop_timer.stop()
         self.experiment_action.setEnabled(False)
-        self.touchpad_action.setEnabled(False)
+        self.login_action.setEnabled(False)
         self.experimental_enabled = False
         self.close_confirmation()
         self.controller.cancel()

@@ -8,6 +8,23 @@ KEY = r'Software\Microsoft\Windows\CurrentVersion\Run'
 NAME = 'Filewheel'
 
 
+def _commands():
+    parts = launch_command('--tray')
+    return {subprocess.list2cmdline(parts),
+            '"' + parts[0] + '" ' + subprocess.list2cmdline(parts[1:])}
+
+
+def is_enabled():
+    require_windows()
+    import winreg
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, KEY, 0, winreg.KEY_READ) as key:
+            command, kind = winreg.QueryValueEx(key, NAME)
+        return kind == winreg.REG_SZ and command in _commands()
+    except FileNotFoundError:
+        return False
+
+
 def configure(action):
     require_windows()
     if action not in ('install', 'remove'):
@@ -22,7 +39,7 @@ def configure(action):
                 existing = None
     except FileNotFoundError:
         existing = None
-    if existing is not None and (existing != command or kind != winreg.REG_SZ):
+    if existing is not None and (kind != winreg.REG_SZ or existing not in _commands()):
         raise RuntimeError('Startup entry differs; refusing to overwrite or remove it')
     if action == 'remove' and existing is None:
         return

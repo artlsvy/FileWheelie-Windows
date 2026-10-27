@@ -158,7 +158,7 @@ class PackagingTests(unittest.TestCase):
                 module["main"]()
             manifest = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(manifest["layout"], "onedir")
-            self.assertFalse(manifest["experimental_mouse3_default"])
+            self.assertTrue(manifest["experimental_mouse3_default"])
             self.assertRegex(manifest["lock_sha256"], r"^[0-9a-f]{64}$")
             self.assertIn("python", manifest)
             with patch.object(sys, "argv", args), self.assertRaises(FileExistsError):

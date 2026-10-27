@@ -394,3 +394,23 @@ routes reuse bundled LO and conservative offline guards; mark them unverified un
 future runtime acceptance. MarkItDown Google speech transcription is excluded.
 Current source/context does not justify a C rewrite; do not start one. No force-push
 or branch-history rewrite is required to integrate main.
+
+## D-028 — Per-user offline installer and finalized tray
+
+Deliver FilewheelSetup.exe with a conventional Inno Setup wizard and file-copy
+progress. Install a private frozen onedir runtime once; retain the previous
+portable EXE as an explicitly older alternative. Reuse compatible installed
+Pandoc3.1+/LibreOffice7.6+ by default, record selected paths, and skip copying
+their private fallback trees. Include all fallbacks inside Setup for offline use.
+Do not replace arbitrary system Python/Qt or install global redistributables.
+
+Physical Mouse3 and injected/touchpad routes default on, with one persistent
+Enable wheel setting. Injected exact-path confirmation and all provenance checks
+remain mandatory. Normal tray entries are Enable wheel, Start on login, Quit;
+trace snapshot is present only when diagnostic tracing is enabled. Setup and
+tray share the current-user owned Run entry; fresh login startup is opt-in.
+Preserve foreign startup entries and existing Send to shortcuts. Running-app
+mutex blocks setup/uninstall for new hosts; no forced conversion termination.
+
+Build-only verification this pass: user paused desktop testing. Do not describe
+compiler success as installer/runtime acceptance or renew older UI evidence.

@@ -1,5 +1,9 @@
 # Filewheel: one Windows EXE
 
+For the current recommended family installer, use **FilewheelSetup.exe** and
+[INSTALLER.md](INSTALLER.md). This document describes the older portable onefile
+artifact; it has not been rebuilt with the finalized tray/startup changes.
+
 Windows 11 amd64 only. The family build contains Python 3.14, Qt Quick, the
 conversion engines, complete Pandoc and LibreOffice trees, and the MSVC runtime
 DLLs used by LibreOffice. Windows and a working graphics driver remain required.
@@ -37,9 +41,10 @@ The build log is `build/single-exe-build.log`.
 ## Run
 
 Quit an older Filewheel tray owner first; repeated launches forward to that owner
-and cannot replace its code. Double-click the new EXE for its tray menu. Enable
-Experimental Mouse3 to use the Explorer wheel. All existing target validation,
-confirmation preferences and injected-touchpad consent remain in place.
+and cannot replace its code. The older committed portable artifact has the
+Experimental Mouse3 tray toggle. Newly built source and the installed version
+start the wheel by default and expose Enable wheel, Start on login, Quit.
+All target validation and injected-gesture exact-path confirmation remain.
 
 This build defaults to the accepted Quick glass UI and its Windows OpenGL
 preference. Explicit environment/backend choices are preserved. Widgets remains

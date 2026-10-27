@@ -97,9 +97,8 @@ def test_quick_host_keeps_explicit_controller_validation_and_injected_consent(ap
         assert host.present_explicit(['C:/image.png'], (300, 300))
         assert host.popup.state.target.source == 'shell_explicit'
         host.popup.dismiss()
-        host.touchpad_action.trigger()
         host.set_confirmation(False)
-        host.set_experiment(True)
+        host.set_experiment(True, persist=False)
         pump(app, lambda: host._startup is None)
         now = time.monotonic()
         candidate = ExperimentalCandidate(PureWindowsPath('C:/image.png'), (300, 300),

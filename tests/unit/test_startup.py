@@ -3,7 +3,7 @@ from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from filewheel.platforms.windows.startup import configure
+from filewheel.platforms.windows.startup import configure, is_enabled
 
 
 class StartupTests(unittest.TestCase):
@@ -37,3 +37,22 @@ class StartupTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, 'differs'):
                     configure(action)
         self.assertEqual(values, {'Filewheel':('other program',4)})
+
+    def test_installer_quoted_command_is_owned_and_removable(self):
+        values = {'Filewheel': ('"C:/Filewheel.exe" --tray', 4)}
+        with (patch.dict('sys.modules', {'winreg': self.fake(values)}),
+              patch('filewheel.platforms.windows.startup.require_windows'),
+              patch('filewheel.platforms.windows.startup.launch_command',
+                    return_value=['C:/Filewheel.exe', '--tray'])):
+            self.assertTrue(is_enabled())
+            configure('remove')
+            self.assertFalse(is_enabled())
+
+    def test_foreign_non_string_entry_is_preserved(self):
+        values = {'Filewheel': (['other', 'program'], 7)}
+        with (patch.dict('sys.modules', {'winreg': self.fake(values)}),
+              patch('filewheel.platforms.windows.startup.require_windows')):
+            self.assertFalse(is_enabled())
+            with self.assertRaisesRegex(RuntimeError, 'differs'):
+                configure('install')
+        self.assertEqual(values['Filewheel'], (['other', 'program'], 7))

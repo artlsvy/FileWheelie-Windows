@@ -183,6 +183,12 @@ def find_pandoc(executable=None, *, app_root=None):
     try:
         if explicit is not None:
             return _location(explicit, 'explicit')
+        from filewheel.installation import selected_tool
+        selected = selected_tool('Pandoc') if app_root is None else None
+        if selected is not None:
+            location = _location(selected, 'system')
+            if location is not None:
+                return location
         root = bundled_tool_root() if app_root is None else Path(app_root)
         try:
             return validate_bundle(root / 'tools/pandoc')

@@ -1,21 +1,29 @@
 ﻿# Current handoff
 
-Cleanup/main integration completed in b9b77a3; remote main was verified at that
-checkpoint, including the baseline standalone EXE through Git LFS. Obsolete
-prototype files/local fixtures were preserved outside checkout, not discarded.
-Final source/EXE commit1290458 is also pushed to origin/main and was remotely
-verified. Current source adds PPTX/XLSX-to-PDF using bundled LibreOffice and conservative
-spreadsheet offline guards. No tests/benchmarks/UI automation ran in this pass.
+Implemented task: offline Windows installer and finalized tray. See
+plans/installer-tray.md and INSTALLER.md. Setup reuses compatible installed
+LibreOffice/Pandoc, includes private fallbacks and runtime, shows dependency choices
+and installation progress, creates Start Menu/uninstall and optional login startup.
+Tray: Enable wheel, Start on login, Quit. Both mouse/touchpad routes default on;
+injected exact-path confirmation and target validation remain mandatory.
 
-New EXE: releases/Filewheel.exe. SHA256:
-a0bf33614ee5eb24269add1b871a7c28c9470fcc7c2a293eccc41f77ef37feb1.
-Compilation succeeded; new converter/runtime acceptance is pending. Do not apply
-the baseline native checks to this different artifact. Checksums/build metadata
-are in releases; review/limits in CONVERTER_REVIEW.md and standalone/cleanup-build.json.
+No tests, conversion/tool probes, installer execution or desktop automation while
+the user needs the PC. Compilation/static payload review is allowed; do not
+extend older native acceptance to the new installer. Do not stop the resident
+older Filewheel from artifacts/f5. Do not push automatically.
 
-MarkItDown audio/video transcription calls online speech recognition, so it remains
-disabled. C assessment finds no reason for a rewrite. No C implementation started.
+Cleanup/main integration completed and was pushed in b9b77a3/1290458/9e64127.
+The older portable Filewheel.exe remains at SHA256
+a0bf33614ee5eb24269add1b871a7c28c9470fcc7c2a293eccc41f77ef37feb1;
+it does not include the new installer/tray changes. New Office PDF routes are
+compiled but runtime-unverified. Offline speech extraction/C rewrite remain out
+of scope; there is no reason to start a C rewrite.
 
-Next only when requested: run the unexecuted Office-route checks and native/family
-acceptance, including the interrupted UI stress test. Do not reopen desktop tests
-while the user needs the PC. No additional feature work is pending from this task.
+Built: releases/FilewheelSetup.exe, SHA256
+e29f925ceb792335b1abfa11df2c668e624a41c1a738fceae2e70ed54a24b0f6.
+Inno6.7.3 compilation succeeded. Packaged source/static inventory review succeeded;
+runtime acceptance remains unrun. Metadata: releases/INSTALLER-BUILD-INFO.json.
+
+Stop after committing this milestone. Only when user requests testing: native
+install/reuse/fallback/login/upgrade/uninstall acceptance, Office-route regression
+checks and the interrupted UI trial. Do not begin other feature development.

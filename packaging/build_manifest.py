@@ -74,7 +74,7 @@ def main():
         "lock_sha256": hashlib.sha256(lock.read_bytes()).hexdigest(),
         "distributions": dict(sorted(versions.items(), key=lambda pair: pair[0].lower())),
         "layout": "onedir",
-        "experimental_mouse3_default": False,
+        "experimental_mouse3_default": True,
         "native_tools": native_tools(args.output.parent),
     }
     with args.output.open("x", encoding="utf-8") as stream:

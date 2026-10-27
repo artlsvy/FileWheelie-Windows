@@ -7,7 +7,10 @@ from pathlib import Path
 os.environ["ORT_DISABLE_TELEMETRY"] = "1"
 
 if getattr(sys, "frozen", False) and sys.platform == "win32":
-    if (Path(sys._MEIPASS) / 'tools/libreoffice').is_dir():
+    installed = (Path(sys.executable).parent / 'installation.ini').is_file()
+    if installed:
+        os.environ.setdefault('FILEWHEEL_UI_BACKEND', 'quick')
+    elif (Path(sys._MEIPASS) / 'tools/libreoffice').is_dir():
         # Family onefile: never silently depend on an installed office tool.
         os.environ.setdefault('FILEWHEEL_BUNDLED_TOOLS_ONLY', '1')
         os.environ.setdefault('FILEWHEEL_UI_BACKEND', 'quick')

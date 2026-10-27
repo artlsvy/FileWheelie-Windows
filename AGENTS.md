@@ -4,15 +4,17 @@
 Build a **private, local-first Windows 11 file-conversion utility**. The primary UX is **middle-click on a file in Windows Explorer → cursor-centered radial menu → output category → concrete format → convert**. No accounts, cloud services, telemetry, monetization, or distribution infrastructure.
 
 ## Current milestone / source of truth
-Read docs/STATUS.md and docs/NEXT_TASK.md first. Current user priority is a clean
-committed repository including the standalone EXE, integrated with origin/main.
-Then add bounded useful offline conversions if feasible. No tests/benchmarks or
-interactive automation in this review pass. Assess C from source/context only;
-do not start a rewrite. Current task state is docs/plans/cleanup-main.md.
+Read docs/STATUS.md and docs/NEXT_TASK.md first. Current user task is the offline
+Windows installer and finalized tray/startup controls. Compatible installed
+Pandoc/LibreOffice should be reused; private fallbacks/runtime are included.
+No tests/benchmarks or interactive automation while user needs the PC. Compilation
+and source/payload review are allowed. Task state: docs/plans/installer-tray.md.
 
 Preserve the accepted Quick/OpenGL glass UI, durable progress and cancellation.
-Mouse3 remains experimental: all provenance/freshness/path checks and injected
-input consent remain mandatory. No trusted-hover promotion. Keep Send to.
+Mouse3 provenance remains experimental: all provenance/freshness/path checks and
+injected input consent remain mandatory. Physical/touchpad routes are now on by
+default; only their shared Enable wheel switch belongs in the normal tray menu.
+No trusted-hover promotion. Keep Send to.
 Family EXE/resources and checksums live in releases; EXE uses Git LFS.
 
 ## Development environment

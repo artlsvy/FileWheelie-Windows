@@ -1,8 +1,9 @@
 # Windows application bundle — G11
 
 The application and build target Windows 11 amd64 only. A native onedir build
-and its real conversion/UI tests have passed (F5). The current family delivery
-is a single EXE with complete embedded tools; see [SINGLE_EXE.md](SINGLE_EXE.md).
+and its real conversion/UI tests have passed (F5). Current family delivery is
+the offline [Setup installer](INSTALLER.md); the previous
+[portable single EXE](SINGLE_EXE.md) remains available.
 The onedir recipe below remains useful for diagnostics. Older Linux measurements
 in historical documents are not Windows runtime acceptance.
 

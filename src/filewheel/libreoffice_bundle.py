@@ -112,6 +112,10 @@ def _system_location(platform, excluded_root):
 
 def find_libreoffice(*, app_root: Path | None = None, platform: str | None = None):
     platform = sys.platform if platform is None else platform
+    from filewheel.installation import selected_tool
+    selected = selected_tool('LibreOffice') if app_root is None else None
+    if selected is not None and selected.name.lower() in ('soffice.com', 'soffice.exe'):
+        return LibreOfficeLocation(selected, 'system', selected.parent.parent, 'system')
     bundle = (bundled_tool_root() if app_root is None else Path(app_root)) / "tools/libreoffice"
     try:
         return validate_bundle(bundle, platform=platform)

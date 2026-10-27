@@ -1,7 +1,7 @@
 # Remaining work
 
-Current priority: cleanup/main integration and bounded offline conversions. See
-plans/cleanup-main.md for progress and NEXT_TASK.md for the immediate handoff.
+Current priority: per-user offline installer, installed dependency reuse and
+finalized tray/startup controls. See plans/installer-tray.md and NEXT_TASK.md.
 
 Completed baseline: Windows-only onefile with embedded tools, OpenGL mitigation,
 source/output safety, process cancellation and user acceptance of progress/cancel.

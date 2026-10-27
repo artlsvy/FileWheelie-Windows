@@ -4,8 +4,16 @@ Private, local-first **Windows 11** file converter for personal/family use.
 Middle-click an Explorer file, choose a format in the glass wheel, and convert
 locally. No accounts, uploads or telemetry. Send to and the Widgets fallback remain.
 
-The family build is [releases/Filewheel.exe](releases/Filewheel.exe), containing
-Python, Qt, conversion engines, Pandoc and LibreOffice. Share that file alone.
+The recommended family download is [releases/FilewheelSetup.exe](releases/FilewheelSetup.exe):
+an offline installer with Next/Cancel/progress, a dependency summary, shortcuts,
+uninstall and optional start on login. It reuses compatible installed LibreOffice
+and Pandoc; missing tools and the private Python/Qt runtime are included. See
+[installation and rebuilding](docs/INSTALLER.md).
+
+[releases/Filewheel.exe](releases/Filewheel.exe) remains the previous portable
+build, containing Python, Qt, conversion engines, Pandoc and LibreOffice. Share
+Setup alone for the finalized tray/startup behavior; the older portable EXE has
+not been rebuilt with those changes.
 It is versioned using **Git LFS**; source checkouts need Git LFS installed and
 `git lfs pull` to obtain the actual EXE instead of its small pointer file.
 See [single EXE delivery](docs/SINGLE_EXE.md) for build and

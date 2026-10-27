@@ -13,7 +13,7 @@ def main(argv=None):
     parser.add_argument('--gui', action='store_true')
     parser.add_argument('--ui-backend', choices=('widgets', 'quick'),
                         help='startup-only renderer; widgets remains default')
-    parser.add_argument('--experimental-mouse3', action='store_true')
+    parser.add_argument('--experimental-mouse3', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--startup', choices=('install', 'remove'))
     parser.add_argument('--sendto', choices=('stage', 'install', 'remove'))
     parser.add_argument('--diagnostic', action='store_true')
@@ -76,11 +76,13 @@ def main(argv=None):
             record_instance(outcome)
         if outcome != 'owner':
             return 0 if outcome == 'forwarded' else 3
+        from filewheel.platforms.windows.install_mutex import retain_until_exit
+        application._filewheel_install_mutex = retain_until_exit()
         tray_mode = args.tray or not args.paths
         if tray_mode and not QSystemTrayIcon.isSystemTrayAvailable():
             broker.close()
             raise RuntimeError('System tray is unavailable; use an explicit file invocation.')
-        desktop = host = DesktopApplication(tray=tray_mode, ui_backend=args.ui_backend)
+        desktop = host = DesktopApplication(tray=tray_mode, ui_backend=args.ui_backend, auto_start=True)
         application._filewheel_desktop = desktop
         application.aboutToQuit.connect(broker.close)
         application._filewheel_broker = broker
@@ -88,10 +90,6 @@ def main(argv=None):
             desktop.request_quit()
             broker.close()
             return 2
-        if args.experimental_mouse3:
-            if not desktop.tray_mode:
-                parser.error('--experimental-mouse3 requires tray mode')
-            desktop.set_experiment(True)
         application._filewheel_desktop = desktop
         try:
             return application.exec()

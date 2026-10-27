@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -25,6 +26,8 @@ def main():
     parser.add_argument('--libreoffice', type=Path)
     parser.add_argument('--pandoc', type=Path)
     parser.add_argument('--output', type=Path, default=ROOT / 'releases')
+    parser.add_argument('--installer-payload', action='store_true',
+                        help='build installed onedir payload with conditional-copy tools')
     parser.add_argument('--skip-tool-probes', action='store_true',
                         help='structure-only native tool checks; do not run conversion probes')
     args = parser.parse_args()
@@ -60,18 +63,39 @@ def main():
     for pattern in ('msvcp140*.dll', 'vcruntime140*.dll', 'concrt140.dll', 'vcomp140.dll'):
         for library in system.glob(pattern):
             shutil.copy2(library, copied_office / 'program' / library.name)
-    env = dict(os.environ, FILEWHEEL_BUILD_ONEFILE='1',
+    env = dict(os.environ, FILEWHEEL_BUILD_ONEFILE='0' if args.installer_payload else '1',
                FILEWHEEL_BUNDLE_LIBREOFFICE=str(copied_office),
                FILEWHEEL_BUNDLE_PANDOC=str(pandoc))
+    # Do not capture unrelated applications' DLLs (for example a JDK on PATH).
+    env['PATH'] = os.pathsep.join((str(Path(sys.executable).parent), str(system), str(system.parent)))
+    env.pop('JAVA_HOME', None)
+    env.pop('JDK_HOME', None)
     args.output.mkdir(parents=True, exist_ok=True)
-    log_path = ROOT / 'build/single-exe-build.log'
-    print('Building single EXE; log:', log_path, flush=True)
+    mode = 'installer-payload' if args.installer_payload else 'single-exe'
+    log_path = ROOT / ('build/' + mode + '-build.log')
+    print('Building ' + mode + '; log:', log_path, flush=True)
     with log_path.open('w', encoding='utf-8') as log:
         subprocess.run([sys.executable, '-m', 'PyInstaller', '--noconfirm',
-            '--distpath', str(args.output), '--workpath', str(ROOT / 'build/onefile'),
+            '--distpath', str(args.output), '--workpath', str(ROOT / 'build' / ('pyinstaller-' + mode)),
             str(ROOT / 'packaging/Filewheel.spec')], cwd=ROOT, env=env,
             stdout=log, stderr=subprocess.STDOUT, check=True)
-    executable = args.output / 'Filewheel.exe'
+    executable = args.output / ('Filewheel/Filewheel.exe' if args.installer_payload else 'Filewheel.exe')
+    if args.installer_payload:
+        # External tools are separate processes, not Python DLL dependencies.
+        # Copy complete trees after Analysis to avoid DLL reclassification and
+        # accidental collection of build-machine Java/Office dependencies.
+        tools = executable.parent / '_internal/tools'
+        shutil.copytree(copied_office, tools / 'libreoffice')
+        shutil.copytree(pandoc, tools / 'pandoc')
+        packages = re.findall(r'^([A-Za-z0-9_.-]+(?:\[[^]]+\])?==[^\s\\]+)',
+                              (ROOT / 'packaging/windows-py314.lock').read_text(encoding='utf-8'), re.M)
+        (executable.parent / 'DEPENDENCIES.txt').write_text(
+            'Filewheel private runtime - Python 3.14\n'
+            'Bundled fallback engines: LibreOffice and Pandoc.\n'
+            'Compatible installed engines may be reused instead; see installation.ini.\n'
+            'Pinned runtime/build environment inventory follows. Build-only packages\n'
+            'may have metadata included without their tools being installed.\n\n'
+            + '\n'.join(packages) + '\n', encoding='utf-8')
     with executable.open('rb') as stream:
         digest = hashlib.file_digest(stream, 'sha256').hexdigest()
     manifest = {'file': executable.name, 'sha256': digest,

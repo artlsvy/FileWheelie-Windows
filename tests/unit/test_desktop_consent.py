@@ -44,7 +44,8 @@ class DesktopConsentTests(unittest.TestCase):
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
-        self.env = patch.dict(os.environ, {'FILEWHEEL_LOG_DIR': self.temp.name}); self.env.start()
+        self.env = patch.dict(os.environ, {'FILEWHEEL_LOG_DIR': self.temp.name,
+                                          'LOCALAPPDATA': self.temp.name}); self.env.start()
         self.addCleanup(self.env.stop)
         self.inspections = []
         def inspect(path):
@@ -177,14 +178,14 @@ class DesktopConsentTests(unittest.TestCase):
         self.desktop._poll_mouse_stop()
         self.assertIsNone(self.desktop.runtime)
         self.assertTrue(self.desktop.experiment_action.isEnabled())
-        self.assertIn('off', self.desktop.tray.toolTip())
+        self.assertIn('disabled', self.desktop.tray.toolTip())
         self.assertFalse(self.desktop.stop_timer.isActive())
 
     def test_runtime_error_resets_active_tooltip(self):
         self.enable()
         self.desktop.mouse_error('hook failed')
         self.assertFalse(self.desktop.experimental_enabled)
-        self.assertIn('off', self.desktop.tray.toolTip())
+        self.assertIn('disabled', self.desktop.tray.toolTip())
 
     def test_no_file_invocation_adopts_tray_without_enabling_experiment(self):
         self.desktop.tray_mode = False
@@ -197,7 +198,7 @@ class DesktopConsentTests(unittest.TestCase):
         self.assertFalse(self.desktop.ensure_tray())
 
     def test_direct_open_revalidates_without_dialog_and_records_provisional_source(self):
-        self.desktop.confirm_action.trigger()  # Opt out of per-file confirmation.
+        self.desktop.set_confirmation(False)
         with patch.object(self.desktop.popup, 'present', return_value=True) as present:
             candidate = self.offer()
         self.assertIsNone(self.desktop.dialog)
@@ -222,7 +223,8 @@ class DesktopConsentTests(unittest.TestCase):
         host = DesktopApplication(point_mapper=lambda p, s: p)
         try:
             self.assertFalse(host.confirm_candidates)
-            self.assertFalse(host.confirm_action.isChecked())
+            self.assertEqual([action.text() for action in host.menu.actions() if not action.isSeparator()],
+                             ['Enable wheel', 'Start on login', 'Quit Filewheel'])
             self.assertIsNone(host.runtime)
         finally:
             host.popup.deleteLater()
@@ -231,7 +233,6 @@ class DesktopConsentTests(unittest.TestCase):
 
     def offer_injected(self):
         self.desktop.set_confirmation(False)
-        self.desktop.touchpad_action.trigger()
         self.enable()
         now = time.monotonic()
         candidate = ExperimentalCandidate(PureWindowsPath('C:/file.png'), (500, 300),
@@ -241,21 +242,28 @@ class DesktopConsentTests(unittest.TestCase):
         self.app.processEvents()
         return candidate
 
-    def test_touchpad_is_opt_in_session_setting_and_locked_while_listening(self):
-        self.assertFalse(self.desktop.allow_injected_candidates)
-        self.assertFalse(self.desktop.touchpad_action.isChecked())
-        self.desktop.touchpad_action.trigger()
+    def test_touchpad_enabled_by_default_without_menu_toggle(self):
         self.assertTrue(self.desktop.allow_injected_candidates)
         self.enable()
         self.assertTrue(self.desktop.runtime.allow_injected_candidates)
-        self.assertFalse(self.desktop.touchpad_action.isEnabled())
-        self.desktop.set_touchpad(False)  # Even programmatic changes cannot race a runtime.
-        self.assertTrue(self.desktop.allow_injected_candidates)
         self.desktop.set_experiment(False)
         self.assertIsNone(self.desktop.runtime)
-        self.assertTrue(self.desktop.touchpad_action.isEnabled())
-        self.desktop.touchpad_action.trigger()
-        self.assertFalse(self.desktop.allow_injected_candidates)
+        self.assertTrue(self.desktop.allow_injected_candidates)
+
+    def test_login_toggle_refreshes_actual_owned_registration(self):
+        with (patch('filewheel.ui.desktop.login_startup.configure') as configure,
+              patch('filewheel.ui.desktop.login_startup.is_enabled', return_value=True)):
+            self.desktop.set_start_on_login(True)
+        configure.assert_called_once_with('install')
+        self.assertTrue(self.desktop.login_action.isChecked())
+
+    def test_failed_login_toggle_preserves_registry_and_resets_checkbox(self):
+        with (patch('filewheel.ui.desktop.login_startup.configure', side_effect=RuntimeError('foreign')),
+              patch('filewheel.ui.desktop.login_startup.is_enabled', return_value=False),
+              patch.object(self.desktop, 'notify') as notify):
+            self.desktop.set_start_on_login(True)
+        self.assertFalse(self.desktop.login_action.isChecked())
+        notify.assert_called_once()
 
     def test_injected_candidate_always_confirms_even_when_physical_preference_is_off(self):
         with patch.object(self.desktop.popup, 'present', return_value=True) as present:
@@ -291,7 +299,6 @@ class DesktopConsentTests(unittest.TestCase):
 
     def test_physical_candidate_keeps_direct_activation_with_touchpad_opt_in(self):
         self.desktop.set_confirmation(False)
-        self.desktop.touchpad_action.trigger()
         with patch.object(self.desktop.popup, 'present', return_value=True) as present:
             candidate = self.offer()
         self.assertIsNone(self.desktop.dialog)
@@ -299,6 +306,9 @@ class DesktopConsentTests(unittest.TestCase):
         self.assertEqual(present.call_args.args[0].source, 'experimental_candidate')
 
     def test_injected_queued_candidate_cannot_open_on_opt_out_host(self):
+        # Lower-level opt-out hosts still fail closed, although the product UI
+        # always enables injected gestures with exact-path confirmation.
+        self.desktop.allow_injected_candidates = False
         self.desktop.set_confirmation(False)
         self.enable()
         now = time.monotonic()

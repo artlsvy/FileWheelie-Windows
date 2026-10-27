@@ -91,6 +91,8 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     contents_directory="_internal",
+    icon=str(root / 'packaging/Filewheel.ico'),
+    version=str(root / 'packaging/version_info.txt'),
 )
 if not onefile:
     collection = COLLECT(exe, analysis.binaries, analysis.datas,

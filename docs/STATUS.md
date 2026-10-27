@@ -17,10 +17,11 @@ conversion libraries and embedded Pandoc/LibreOffice.
 
 ## Current authorized task
 
-Priority1: clean source tree, preserve standalone EXE through Git LFS, commit and
-integrate origin/main. Then bounded offline converter additions where appropriate.
-C feasibility is a source/context review only. No tests or UI automation in this
-pass. Do not restart interactive testing while the user needs the PC.
+Current: offline per-user Setup wizard with dependency inventory/reuse, optional
+login startup, shortcuts/uninstall and finalized tray. Physical/touchpad routes
+default enabled with existing input safeguards; shared persistent Enable wheel
+switch, Start on login and Quit. State: plans/installer-tray.md. No tests or UI
+automation while the user needs the PC. Build/static review only this pass.
 
 Obsolete prototype captures, superseded Linux setup and loose manual fixtures
 were removed from the active checkout. Local copies are preserved outside the
@@ -34,7 +35,24 @@ folder is intentionally preserved rather than moving a live installation.
 New changes require future Windows acceptance. Other GPUs/drivers, mixed DPI,
 sleep/resume and a clean family PC remain unverified. Audio/video transcription
 must stay offline; online MarkItDown speech recognition is not enabled.
-See NEXT_TASK.md and plans/cleanup-main.md for the current handoff.
+See NEXT_TASK.md and plans/installer-tray.md for the current handoff.
+
+## Installer/tray delivery
+
+FilewheelSetup.exe0.1.0 compiled with Inno Setup6.7.3. SHA256:
+e29f925ceb792335b1abfa11df2c668e624a41c1a738fceae2e70ed54a24b0f6.
+Per-user offline wizard, dependency inventory/reuse, private fallbacks, shortcuts,
+uninstall and optional login startup implemented. Tray exposes Enable wheel,
+Start on login and Quit; physical/injected routes default enabled with mandatory
+injected exact-path confirmation and unchanged provenance/path checks.
+
+Static Python compilation80 files; nine packaged runtime sources match current
+source. Full runtime/tool inventory and compiler record are in
+releases/INSTALLER-BUILD-INFO.json. No tests, installer execution, conversion/tool
+probes, login changes or UI automation ran. Native install/reuse/fallback and
+upgrade/uninstall/sign-in acceptance remains deferred. Prior portable EXE is
+unchanged and does not include these tray changes. See INSTALLER.md and the
+installer-tray plan. No automatic push or unrelated development.
 
 ## Cleanup checkpoint
 
