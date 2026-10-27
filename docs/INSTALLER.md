@@ -1,63 +1,36 @@
-# Installing Filewheel
+# Filewheel installer
 
-Give the recipient **releases/FilewheelSetup.exe**. Everything needed is inside
-this one offline installer. It supports Windows 11 x64 and installs for the current
-user without administrator rights, normally into
-`%LOCALAPPDATA%\Programs\Filewheel`.
+The current download is **FilewheelSetup.exe**, version 0.2.0. Share this installer
+alone. The older portable Filewheel.exe is no longer included in the repository.
 
-Quit any older Filewheel tray instance first, then double-click Setup. The wizard
-has Welcome, destination, included components, optional shortcuts/startup, Install
-with progress, Cancel, and Finish. The component page lists the private runtime
-and whether LibreOffice/Pandoc will be reused or installed. Setup creates a Start
-Menu entry and an Apps > Installed apps uninstall entry. Launch is optional at
-Finish. Source documents and conversion results are never installer inputs.
+## What setup does
 
-## Existing dependencies
+- Installs for the current user, normally in `%LOCALAPPDATA%\Programs\Filewheel`.
+- Shows Next, Cancel, included components and installation progress.
+- Adds a Start Menu shortcut and a Windows uninstall entry.
+- Offers a desktop shortcut, Explorer Send to and start on login.
+- Includes all fallback tools; no downloads are needed on the recipient's PC.
 
-Setup checks the usual per-user/system locations, LibreOffice's installation
-registry key, and absolute local-drive PATH entries. It checks tool version output before
-offering reuse: **Pandoc 3.1+**, **LibreOffice 7.6+**. Compatible tools are reused by
-default; their private copies are skipped. The checkbox lets a user choose the
-included private copies instead. Undetected/custom installations use the bundled
-fallback; Setup does not download or globally install dependencies.
+Compatible installed **LibreOffice 7.6+** and **Pandoc 3.1+** are reused by default
+when found in normal locations, the LibreOffice registry entry or local PATH.
+Their private copies are then skipped. Uncheck the reuse option to install the
+bundled copies instead. Custom locations that are not found use private copies.
 
-Python 3.14, Qt/PySide6 6.12 and the image/PDF/Office/Markdown libraries are private
-Filewheel components. An existing system Python or Qt is left alone; it cannot
-safely replace the exact frozen runtime. Native runtime DLLs are also app-local.
-No separate global Python, Qt or VC++ redistributable installer is run.
+Python 3.14, Qt/PySide6 and conversion libraries stay private to Filewheel. Setup
+leaves globally installed Python, Qt and other tools alone. Reused tool paths are
+saved in `installation.ini`. If a reused tool is later removed, rerun Setup and
+choose the bundled copies. `DEPENDENCIES.txt` lists the pinned build environment.
 
-The installer records reused paths in `installation.ini` next to Filewheel.exe.
-Runtime capability checks still apply; a version check does not guarantee every
-tool build supports every conversion. If a reused tool is later removed, repair
-by rerunning Setup and selecting the private copies. Uninstall never removes
-reused system tools. Private runtime files are installed once, avoiding the
-portable EXE's repeated temporary extraction.
+Quit an older Filewheel before setup. New builds prevent setup/uninstall while
+the app is running. The installer and tray share an owned current-user login
+entry; entries pointing elsewhere are preserved. Uninstall removes private app
+files, not reused system tools, original documents or conversion results. Local
+preferences/logs remain in `%LOCALAPPDATA%\Filewheel`.
 
-## Tray and startup
+## Build from source
 
-- **Enable wheel** controls mouse/touchpad invocation together and remembers the
-  choice. Both input routes are enabled on a fresh installation. Disabling the
-  wheel leaves an already running conversion alone.
-- **Start on login** toggles Windows current-user login startup. The same owned
-  Run entry is used by Setup, the tray and `--startup install/remove`. It is opt-in
-  on a fresh installation. An entry pointing elsewhere is preserved.
-- **Quit Filewheel** cooperatively cancels/cleans up any running conversion before
-  exiting. Setup/uninstall asks to quit an active new-version Filewheel rather
-  than forcibly terminating it. Older builds lack this installer mutex: quit
-  them manually before installing.
-
-Injected touchpad gestures still require confirmation of the proposed exact file.
-All provenance, freshness and path checks remain. Explorer **Send to > Filewheel**
-is an optional setup task and provides the explicit-path fallback. A pre-existing
-same-name Send to shortcut is preserved. Logs, COM cache and wheel preferences
-remain under `%LOCALAPPDATA%\Filewheel`; uninstall preserves those preferences.
-
-## Rebuild
-
-Use the pinned Windows Python3.14 build environment. The builder downloads the
-pinned official Inno Setup6.7.3 bootstrap only on the build machine, verifies its
-SHA256, and extracts a private compiler under ignored `build-tools`. It does not
-install a global compiler. Pandoc/LibreOffice inputs are complete local folders.
+Use Windows 11 x64, Python 3.14 and the pinned build environment prepared by
+`scripts/build-windows.ps1`. Full local LibreOffice/Pandoc folders are build inputs.
 
 ```powershell
 .\.venv-build314\Scripts\python.exe packaging/build_installer.py `
@@ -65,27 +38,15 @@ install a global compiler. Pandoc/LibreOffice inputs are complete local folders.
   --pandoc "$env:LOCALAPPDATA\Pandoc" --skip-tool-probes
 ```
 
-Output: `releases/FilewheelSetup.exe`, `INSTALLER-BUILD-INFO.json`, `SHA256SUMS.txt`.
-Build logs are under `build/installer-*-build.log` / `build/installer-compile.log`.
-The private onedir payload is under `build/installer-payload/Filewheel`; ship Setup
-alone. Release EXEs use Git LFS. No code signing certificate is configured, so
-Windows may display its normal unknown-publisher/SmartScreen prompt.
+The builder uses a checksum-pinned private Inno Setup 6.7.3 compiler in ignored
+`build-tools`. Only the build machine may need to download that compiler.
+Output is `releases/FilewheelSetup.exe`; checksums and build details are beside it.
+The installed app uses a folder of private files, avoiding temporary unpacking
+on every launch. Git stores the installer using Git LFS; download the release
+asset directly, or run `git lfs pull` after cloning.
 
-Compiler/API references: [Inno Setup file rules](https://jrsoftware.org/ishelp/topic_filessection.htm),
-[captured version probes](https://jrsoftware.org/ishelp/topic_isxfunc_execandcaptureoutput.htm),
-[running-app mutex](https://jrsoftware.org/ishelp/topic_setup_appmutex.htm).
+## Verification
 
-## Verification limit and deferred acceptance
-
-This task compiles the installer and statically reviews source/payload metadata.
-No application tests, installer execution, login changes, conversion probes or
-desktop automation are run while the user needs the PC. Compilation does not
-establish install/upgrade/uninstall correctness on a clean family computer.
-
-When the user resumes testing: install with existing compatible tools and confirm
-the reuse summary/paths; install on a clean PC and confirm private fallback paths;
-check wheel disable/relaunch, physical/touchpad targeting, login toggle and sign-in;
-convert/cancel/retry; rerun Setup with Filewheel active; uninstall and confirm that
-system tools and converted files remain. Finish the interrupted native UI trial
-and at least 50 normal conversions without pill disappearance. Preserve explicit
-D3D11/software options and the Widgets fallback during those checks.
+See STATUS.md and the release build record for checks that actually ran. Build
+and static checks do not prove installation, login or uninstall behavior on a
+clean PC. Desktop testing remains paused at the user's request.

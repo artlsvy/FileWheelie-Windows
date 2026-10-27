@@ -7,9 +7,9 @@ description: Design, refine and measure Filewheel's native Qt Quick radial glass
 
 Use the installed Liquid Glass skill only as optical inspiration. Filewheel is a
 native PySide6 utility: no DOM, CSS, WebView, Electron, desktop capture or Apple
-assets. Work from `docs/PERFORMANCE_ARCHITECTURE.md` and the current
+assets. Work from the current
 `src/filewheel/ui/qml/GlassWheel.qml` / `Lens.qml`; those files are the material
-source of truth. Default QWidget remains available until native acceptance.
+source of truth. Preserve the accepted Quick/OpenGL renderer and QWidget fallback.
 
 ## Material and legibility
 

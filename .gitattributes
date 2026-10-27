@@ -1,1 +1,1 @@
-releases/*.exe filter=lfs diff=lfs merge=lfs -text
+releases/FilewheelSetup.exe filter=lfs diff=lfs merge=lfs -text

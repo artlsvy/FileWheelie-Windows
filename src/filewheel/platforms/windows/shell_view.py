@@ -2,7 +2,7 @@
 
 Only interface prefixes through the called methods are bound. Unused preceding
 slots preserve SDK order with opaque struct pointers; no mutators are called.
-See docs/G2_MAPPING.md for API sources and Windows validation limitations.
+Keep provisional index mapping separate from trusted hover identity.
 """
 
 import os

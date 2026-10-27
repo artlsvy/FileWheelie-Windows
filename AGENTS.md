@@ -4,18 +4,18 @@
 Build a **private, local-first Windows 11 file-conversion utility**. The primary UX is **middle-click on a file in Windows Explorer → cursor-centered radial menu → output category → concrete format → convert**. No accounts, cloud services, telemetry, monetization, or distribution infrastructure.
 
 ## Current milestone / source of truth
-Read docs/STATUS.md and docs/NEXT_TASK.md first. Current user task is the offline
-Windows installer and finalized tray/startup controls. Compatible installed
-Pandoc/LibreOffice should be reused; private fallbacks/runtime are included.
-No tests/benchmarks or interactive automation while user needs the PC. Compilation
-and source/payload review are allowed. Task state: docs/plans/installer-tray.md.
+Read docs/STATUS.md and docs/NEXT_TASK.md first. Current task: clean docs/README,
+remove the portable EXE from main, push and publish installer-only releasev0.2.
+Push and release publication are explicitly authorized. Do not reread obsolete
+docs before removing them. Task state: docs/plans/release-v0.2.md. No tests or
+interactive automation while user needs the PC; build/static checks are allowed.
 
 Preserve the accepted Quick/OpenGL glass UI, durable progress and cancellation.
 Mouse3 provenance remains experimental: all provenance/freshness/path checks and
 injected input consent remain mandatory. Physical/touchpad routes are now on by
 default; only their shared Enable wheel switch belongs in the normal tray menu.
 No trusted-hover promotion. Keep Send to.
-Family EXE/resources and checksums live in releases; EXE uses Git LFS.
+Only the installer and its records belong in releases; the EXE uses Git LFS.
 
 ## Development environment
 - Filewheel targets Windows 11 amd64 only. Codex now runs directly on Windows.
@@ -38,7 +38,8 @@ Family EXE/resources and checksums live in releases; EXE uses Git LFS.
 ## Future design constraints
 - Qt/PySide6 frameless, translucent, DPI-aware radial wheel. Stage 1: valid output category; stage 2: valid extension; center=Back; Escape/outside=Cancel. Position within monitor work area.
 - Formats displayed depend on validated conversion registry capabilities, never invented pairs.
-- Later converters: PDF→editable DOCX (Word COM if locally available, pdf2docx alternative), DOCX/PDF/PPTX/XLSX/HTML→MD (MarkItDown Python API), DOCX→PDF (LibreOffice/Word), standard image conversions (Pillow, PyMuPDF, pillow-heif); MD→DOCX using Pandoc is P1. See `docs/CONVERSION_MATRIX.md`.
+- Available conversions come from the registry in source. Do not add formats or
+  advertise unsupported pairs while preparing a release.
 - Do not overwrite source files or silently overwrite output; no network uploads; conversion work outside UI thread; check real output validity.
 - For private use, do not over-engineer redistribution/licensing, but obey applicable licenses and isolate optional dependencies.
 

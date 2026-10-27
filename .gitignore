@@ -20,6 +20,8 @@ logs/
 .venv-build314/
 packaging/vendor/
 artifacts/
+/releases/Filewheel.exe
+/releases/BUILD-INFO.json
 
 # Machine-local assistant state
 .serena/

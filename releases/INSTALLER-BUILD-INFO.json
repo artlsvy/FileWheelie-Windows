@@ -1,14 +1,14 @@
 {
   "file": "FilewheelSetup.exe",
-  "sha256": "e29f925ceb792335b1abfa11df2c668e624a41c1a738fceae2e70ed54a24b0f6",
-  "bytes": 415408242,
-  "version": "0.1.0",
-  "built_utc": "2026-10-27T17:18:48.774391+00:00",
+  "sha256": "0d04e761c680ad0a8addc54924841a82282df39520ac42a637f1e77425f0ba31",
+  "bytes": 415407573,
+  "version": "0.2.0",
+  "built_utc": "2026-10-27T17:43:35.226601+00:00",
   "compiler": "Inno Setup 6.7.3",
   "payload": {
     "file": "Filewheel.exe",
-    "sha256": "873f813ece9b8e94af07fc41754e59a837a254beac09658bea3d1dccfb54b7ad",
-    "bytes": 21815840,
+    "sha256": "45db9afca3a7a574a3efbbde5d88e61ff8c1a92b61bb81d478d04b7098e69e5f",
+    "bytes": 21815835,
     "python": "3.14.5 (tags/v3.14.5:5607950, May 10 2026, 10:43:50) [MSC v.1944 64 bit (AMD64)]",
     "pandoc": "not-executed",
     "embedded_tools": [
@@ -24,8 +24,8 @@
     "Pandoc": "3.1+"
   },
   "static_review": {
-    "type": "static source/archive and filesystem inspection only",
-    "python_sources_compiled": 80,
+    "type": "static archive/source, metadata and file inventory only",
+    "python_sources_compiled": 75,
     "packaged_sources_matching": {
       "src\\filewheel\\app.py": "bc8ffe9bc2b18522bc7c4a31575eea566cfc9a9a9b0b8efa50e61deaaaf13dcf",
       "src\\filewheel\\ui\\desktop.py": "c2e9efb3847d13e446913cbe40a1fb9e86dedfb9c8986d3e7af2600f5d85f1d7",
@@ -33,6 +33,7 @@
       "src\\filewheel\\installation.py": "ecf90c83061f23bb26f9c3b6b1586cf023e3b5729debe931250dacf2751cd032",
       "src\\filewheel\\platforms\\windows\\startup.py": "41bd3cc2d92d59620335e54dff550b9219ff7beb61c84f3c8ed70290b3e9c58d",
       "src\\filewheel\\platforms\\windows\\install_mutex.py": "abf8cc501f6b9b194ec961dfd8a1bd38a62e0c33164af7256d53ef5d5c73ebcc",
+      "src\\filewheel\\platforms\\windows\\shell_view.py": "c46ca0808489a2d6006ae18c35cb0aff629d4c5d2c803238ace84522c30a70b0",
       "src\\filewheel\\libreoffice_bundle.py": "11667b1f76bc8e086ebfdad05330464d723df4eb65189300765ebc9f40ad3096",
       "src\\filewheel\\pandoc_tool.py": "2d406382b54792217dd7b06b4f33166f2e255955e7745baab193731a3e2d2f31",
       "packaging\\runtime_hook.py": "d9c208be2ea10326359a6e15031b750341398547728193e40e79b37dbad96bd2"
@@ -56,7 +57,8 @@
     "conversion_probes_run": false,
     "desktop_automation_run": false,
     "installer_payload_file_entries": 17753,
-    "payload_files": 17753
+    "payload_files": 17753,
+    "local_documentation_links": "valid"
   },
-  "installer_script_sha256": "6fc2b6ac49a9417a61be38221c37307cb1170ded6c73ad5cfd8eb200e9eca6ed"
+  "installer_script_sha256": "e91964a2fe9efc4ddc637589d33a103e133f6666b36b1ce3abe03ae02f1ab910"
 }

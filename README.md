@@ -1,37 +1,49 @@
 # Filewheel
 
-Private, local-first **Windows 11** file converter for personal/family use.
-Middle-click an Explorer file, choose a format in the glass wheel, and convert
-locally. No accounts, uploads or telemetry. Send to and the Widgets fallback remain.
+Convert files straight from Windows File Explorer. Middle-click a file, choose
+an output format from the wheel, and let Filewheel create a converted copy.
+Your original file stays in place.
 
-The recommended family download is [releases/FilewheelSetup.exe](releases/FilewheelSetup.exe):
-an offline installer with Next/Cancel/progress, a dependency summary, shortcuts,
-uninstall and optional start on login. It reuses compatible installed LibreOffice
-and Pandoc; missing tools and the private Python/Qt runtime are included. See
-[installation and rebuilding](docs/INSTALLER.md).
+## Download and install
 
-[releases/Filewheel.exe](releases/Filewheel.exe) remains the previous portable
-build, containing Python, Qt, conversion engines, Pandoc and LibreOffice. Share
-Setup alone for the finalized tray/startup behavior; the older portable EXE has
-not been rebuilt with those changes.
-It is versioned using **Git LFS**; source checkouts need Git LFS installed and
-`git lfs pull` to obtain the actual EXE instead of its small pointer file.
-See [single EXE delivery](docs/SINGLE_EXE.md) for build and
-verification instructions. The diagnostic onedir build is in
-[PACKAGING.md](docs/PACKAGING.md); development setup uses
-[scripts/setup-windows.ps1](scripts/setup-windows.ps1) with Python 3.14.
+**[Download Filewheel v0.2 for Windows](https://github.com/artlsvy/fileconverter/releases/download/v0.2/FilewheelSetup.exe)**
 
-The Quick glass UI uses the tested OpenGL preference on Windows. Explicit graphics
-settings and `--ui-backend widgets` are available. The user accepted F5 progress
-reliability and cancellation; evidence is in
-[F5_RENDERER_RELIABILITY.md](docs/F5_RENDERER_RELIABILITY.md).
+1. Quit any older copy of Filewheel.
+2. Open **FilewheelSetup.exe** and follow the installer.
+3. Launch Filewheel from the Start menu or the installer's Finish page.
 
-See [conversion capabilities](docs/CONVERSION_MATRIX.md),
-[status](docs/STATUS.md), [next task](docs/NEXT_TASK.md) and
-[decisions](docs/DECISIONS.md). Windows 11 amd64 is the only supported target.
-Obsolete prototype captures and setup instructions remain available in Git history.
+You need **Windows 11 on an Intel or AMD 64-bit PC**. Everything needed is
+included. You do not need to install Python or download extra tools.
+If compatible LibreOffice or Pandoc installations are found, Filewheel can use
+those instead of installing its own copies.
 
-The latest build adds **PPTX → PDF** and **XLSX → PDF** through bundled LibreOffice.
-These additions were source-reviewed and compiled without running tests, per the
-current request. [Converter review](docs/CONVERTER_REVIEW.md) records restrictions,
-the offline-only audio decision and why a C rewrite is not needed.
+## Use it
+
+1. Find a file in File Explorer.
+2. Middle-click it with your mouse, or use a touchpad gesture set to middle-click.
+3. Choose a category, then a file format.
+4. Follow the progress indicator until the conversion finishes.
+
+If Filewheel asks you to confirm a file, check that the displayed path is right.
+You can also right-click a file and choose **Show more options > Send to > Filewheel**
+if you selected that option during installation.
+
+Filewheel handles pictures, PDFs, Word documents, presentations, spreadsheets,
+Markdown and text files. The wheel only shows conversions available for that file.
+
+## Tray menu
+
+Find Filewheel beside the Windows clock. You may need to open the hidden icons.
+
+- **Enable wheel** turns mouse and touchpad activation on or off.
+- **Start on login** starts Filewheel when you sign in to Windows.
+- **Quit Filewheel** closes the app.
+
+Mouse and touchpad activation are on by default. Start on login is optional.
+
+## Your files stay on your PC
+
+Conversions work locally. No account, internet connection or uploads are needed.
+To uninstall, open **Windows Settings > Apps > Installed apps > Filewheel**.
+
+[Installer and build notes](docs/INSTALLER.md)

@@ -77,7 +77,7 @@ def main():
     executable = ROOT / 'releases/FilewheelSetup.exe'
     digest = sha256(executable)
     manifest = {'file': executable.name, 'sha256': digest,
-                'bytes': executable.stat().st_size, 'version': '0.1.0',
+                'bytes': executable.stat().st_size, 'version': '0.2.0',
                 'built_utc': datetime.now(timezone.utc).isoformat(),
                 'compiler': 'Inno Setup ' + INNO_VERSION,
                 'payload': json.loads((output / 'BUILD-INFO.json').read_text(encoding='utf-8')),
@@ -86,10 +86,7 @@ def main():
     (ROOT / 'releases/INSTALLER-BUILD-INFO.json').write_text(
         json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
     sums = ROOT / 'releases/SHA256SUMS.txt'
-    lines = sums.read_text(encoding='utf-8').splitlines() if sums.exists() else []
-    lines = [line for line in lines if not line.endswith('FilewheelSetup.exe')]
-    lines.append(digest + '  FilewheelSetup.exe')
-    sums.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    sums.write_text(digest + '  FilewheelSetup.exe\n', encoding='utf-8')
     print('Built:', executable, '\nSHA256:', digest, flush=True)
     return 0
 
