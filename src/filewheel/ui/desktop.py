@@ -3,13 +3,13 @@ from time import monotonic
 
 from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal, Slot
 from PySide6.QtGui import QAction, QColor, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QApplication, QMenu, QMessageBox, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication, QColorDialog, QMenu, QMessageBox, QSystemTrayIcon
 
+from filewheel import preferences
 from filewheel.converters import ConversionManager
 from filewheel.converters.debugging import record_failure
 from filewheel.core.controller import InvocationController
 from filewheel.performance import get_recorder
-from filewheel import preferences
 from filewheel.platforms.windows import startup as login_startup
 from filewheel.platforms.windows.explicit_path_diagnostics import inspect_file
 from filewheel.ui.backend import create_popup
@@ -53,7 +53,9 @@ class DesktopApplication(QObject):
         self.dialog = None
         self.confirm_button = None
         self.confirm_candidates = bool(confirm_candidates)
-        self.allow_injected_candidates = True  # Injected gestures still require exact-path confirmation.
+        self.allow_injected_candidates = True
+        self.accent_color = preferences.accent_color()
+        self.color_dialog = None
         self.auto_start = auto_start
         self.tray_mode = tray
         self.quitting = False
@@ -65,6 +67,7 @@ class DesktopApplication(QObject):
         if point_mapper is not None:
             options['point_mapper'] = point_mapper
         self.popup = create_popup(self.manager.registry, backend=ui_backend, **options)
+        self.popup.set_accent_color(self.accent_color)
         self.popup.finished.connect(self._popup_finished)
         self.tray = QSystemTrayIcon(self._icon(), self)
         self.menu = QMenu()
@@ -76,6 +79,11 @@ class DesktopApplication(QObject):
         self.login_action.setCheckable(True)
         self.login_action.toggled.connect(self.set_start_on_login)
         self.menu.addAction(self.login_action)
+        self.accent_action = self.menu.addAction('Accent color…')
+        self.accent_action.triggered.connect(self.choose_accent_color)
+        self.reset_accent_action = self.menu.addAction('Reset accent color')
+        self.reset_accent_action.setEnabled(self.accent_color is not None)
+        self.reset_accent_action.triggered.connect(lambda: self.set_accent_color(None))
         self.menu.aboutToShow.connect(self._refresh_login)
         self._refresh_login()
         diagnostics = getattr(self.popup, 'render_diagnostics', None)
@@ -101,6 +109,40 @@ class DesktopApplication(QObject):
     def _start_default_wheel(self):
         if not self.quitting and preferences.wheel_enabled():
             self.set_experiment(True, persist=False)
+
+    @Slot()
+    def choose_accent_color(self):
+        if self.quitting:
+            return
+        if self.color_dialog is not None:
+            self.color_dialog.raise_()
+            self.color_dialog.activateWindow()
+            return
+        dialog = QColorDialog(QColor(self.accent_color or '#173E32'))
+        dialog.setWindowTitle('Filewheel — accent color')
+        dialog.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
+        self.color_dialog = dialog
+        dialog.colorSelected.connect(lambda color: self.set_accent_color(color.name()))
+        dialog.finished.connect(self._close_color_dialog)
+        dialog.open()
+
+    def _close_color_dialog(self):
+        dialog, self.color_dialog = self.color_dialog, None
+        if dialog is not None:
+            dialog.deleteLater()
+
+    def set_accent_color(self, color):
+        if self.quitting:
+            return
+        try:
+            preferences.save_accent_color(color)
+        except (OSError, ValueError) as error:
+            record_failure('desktop', 'save_accent_color', error)
+            self.notify('Could not save the accent color. Your previous color is unchanged.')
+            return
+        self.accent_color = preferences.accent_color()
+        self.popup.set_accent_color(self.accent_color)
+        self.reset_accent_action.setEnabled(self.accent_color is not None)
 
     def _refresh_login(self):
         self.login_action.blockSignals(True)
@@ -280,7 +322,7 @@ class DesktopApplication(QObject):
     def offer_candidate(self, candidate):
         if (not self.experimental_enabled or self.runtime is None or self.quitting
                 or self.popup.job is not None
-                or (candidate.requires_confirmation and not self.allow_injected_candidates)
+                or (candidate.is_injected and not self.allow_injected_candidates)
                 or not self.runtime.gate.is_current(candidate.token, now=monotonic())):
             return
         timing = get_recorder()
@@ -288,7 +330,7 @@ class DesktopApplication(QObject):
             timing.record('candidate_to_ui', (monotonic() - candidate.captured_at) * 1000)
         self.close_confirmation(cancel_gate=False)
         self.popup.dismiss()
-        if not self.confirm_candidates and not candidate.requires_confirmation:
+        if not self.confirm_candidates:
             result = self.runtime.gate.activate(candidate.token, self.controller, self.inspector,
                                                 now=monotonic())
             if result.target is not None:
@@ -301,13 +343,10 @@ class DesktopApplication(QObject):
         box = QMessageBox()
         box.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
         box.setTextFormat(Qt.TextFormat.PlainText)
-        box.setWindowTitle('Experimental Mouse3 — confirm proposed file')
-        box.setText('Explorer mapping is provisional. Confirm this exact file before continuing.')
+        box.setWindowTitle('Filewheel — confirm file')
+        box.setText('Open the conversion menu for this file?')
         box.setInformativeText(str(candidate.path))
-        box.setDetailedText('This is an experimental index correlation, not a verified hover identity.\n'
-                            'Cancel if the proposed path is not the file you intended.'
-                            + ('\nInjected middle-clicks always require confirmation; the hook flags '
-                               'do not identify a touchpad.' if candidate.requires_confirmation else ''))
+        box.setDetailedText('Cancel if this is not the file you intended.')
         yes = box.addButton('Use this file', QMessageBox.ButtonRole.AcceptRole)
         cancel = box.addButton(QMessageBox.StandardButton.Cancel)
         box.setDefaultButton(cancel)
@@ -356,6 +395,8 @@ class DesktopApplication(QObject):
     @Slot()
     def request_quit(self):
         self.quitting = True
+        if self.color_dialog is not None:
+            self.color_dialog.reject()
         self.stop_timer.stop()
         self.experiment_action.setEnabled(False)
         self.login_action.setEnabled(False)

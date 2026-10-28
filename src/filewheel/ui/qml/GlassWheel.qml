@@ -25,12 +25,21 @@ Item {
     readonly property bool selection: wheel.stage === "categories" || wheel.stage === "formats"
     readonly property int count: wheel.labels.length
     readonly property int activeIndex: wheel.hovered >= 0 ? wheel.hovered : wheel.keyboardIndex
-    readonly property color foreground: wheel.dark ? "#F3ECDD" : "#20392F"
-    readonly property color accent: wheel.dark ? "#D6BF83" : "#65532A"
-    readonly property color material: wheel.dark
-        ? (wheel.lowEffects ? "#182C24" : "#D8182C24")
-        : (wheel.lowEffects ? "#F4F0E5" : "#D8F4F0E5")
-    readonly property color selectedMaterial: wheel.dark ? "#304A38" : "#E3E5CF"
+    readonly property var palette: wheel.colors
+    readonly property color foreground: palette.text
+    readonly property color accent: palette.accent
+    readonly property color baseSurface: palette.surface
+    readonly property color upperSurface: palette.top
+    readonly property color lowerSurface: palette.bottom
+    readonly property color outline: palette.outline
+    readonly property color glare: palette.glare
+    readonly property color reflection: palette.reflection
+    readonly property color shade: palette.shade
+    readonly property color selectedMaterial: palette.hover
+    readonly property color material: glass(baseSurface, 216 / 255)
+    function glass(color, alpha) {
+        return Qt.rgba(color.r, color.g, color.b, wheel.lowEffects ? 1 : alpha)
+    }
     readonly property real sectorAngle: count > 0 ? 360 / count : 360
     readonly property real halfRadians: sectorAngle * Math.PI / 360
     readonly property real radians: sectorAngle * Math.PI / 180
@@ -66,11 +75,11 @@ Item {
         x: 10; y: 10; width: 220; height: 220; radius: 110
         color: root.material
         border.width: 1
-        border.color: wheel.dark ? "#A196B69A" : "#B38B9478"
+        border.color: root.glass(root.outline, wheel.dark ? 161 / 255 : 179 / 255)
         gradient: Gradient {
-            GradientStop { position: 0; color: wheel.lowEffects ? root.material : (wheel.dark ? "#DF304637" : "#E0FFFDF3") }
+            GradientStop { position: 0; color: wheel.lowEffects ? root.material : root.glass(root.upperSurface, wheel.dark ? 223 / 255 : 224 / 255) }
             GradientStop { position: 0.45; color: root.material }
-            GradientStop { position: 1; color: wheel.lowEffects ? root.material : (wheel.dark ? "#D9172B23" : "#D9E0E2CD") }
+            GradientStop { position: 1; color: wheel.lowEffects ? root.material : root.glass(root.lowerSurface, 217 / 255) }
         }
     }
 
@@ -123,6 +132,11 @@ Item {
         x: 120; y: 120
         dark: wheel.dark
         lowEffects: wheel.lowEffects
+        material: root.selectedMaterial
+        upperMaterial: root.palette.lensTop
+        middleMaterial: root.palette.lensMid
+        lowerMaterial: root.palette.lensBottom
+        edge: root.glare
         sectorAngle: root.sectorAngle
         rotation: root.lensRotation
         opacity: wheel.movingLens && root.selection && root.count > 0 && root.activeIndex >= 0 ? 1 : 0
@@ -147,7 +161,7 @@ Item {
         visible: wheel.movingLens && !wheel.lowEffects && root.selection && wheel.hovered >= 0
         ShapePath {
             fillColor: "transparent"
-            strokeColor: wheel.dark ? "#70E5EBD8" : "#B0FFFFFF"
+            strokeColor: root.glass(root.glare, wheel.dark ? 112 / 255 : 176 / 255)
             strokeWidth: 1.8
             capStyle: ShapePath.RoundCap
             startX: -104 * Math.sin(13 * Math.PI / 180)
@@ -170,7 +184,7 @@ Item {
         visible: !wheel.lowEffects
         ShapePath {
             fillColor: "transparent"
-            strokeColor: wheel.dark ? "#719EB29B" : "#D9FFFFFF"
+            strokeColor: root.glass(root.reflection, wheel.dark ? 113 / 255 : 217 / 255)
             strokeWidth: 1.4
             capStyle: ShapePath.RoundCap
             startX: 108 * Math.sin(-65 * Math.PI / 180)
@@ -184,7 +198,7 @@ Item {
         }
         ShapePath {
             fillColor: "transparent"
-            strokeColor: wheel.dark ? "#686A865F" : "#647D805F"
+            strokeColor: root.glass(root.shade, wheel.dark ? 104 / 255 : 100 / 255)
             strokeWidth: 1
             capStyle: ShapePath.RoundCap
             startX: 108 * Math.sin(110 * Math.PI / 180)
@@ -286,9 +300,9 @@ Item {
 
     Rectangle {
         x: 81; y: 81; width: 78; height: 78; radius: 39
-        color: wheel.dark ? "#182C24" : "#F4F0E5"
+        color: root.baseSurface
         border.width: 1
-        border.color: wheel.dark ? "#677E68" : "#A3AA91"
+        border.color: root.outline
         Text {
             anchors.fill: parent
             anchors.margins: 6

@@ -11,6 +11,14 @@ Item {
     transformOrigin: Item.TopLeft
     property bool dark: false
     property bool lowEffects: false
+    property color material: "#E3E5CF"
+    property color upperMaterial: "#FFFFED"
+    property color middleMaterial: "#E6E9D5"
+    property color lowerMaterial: "#CDD4B8"
+    property color edge: "#FFFFFF"
+    function glass(color, alpha) {
+        return Qt.rgba(color.r, color.g, color.b, lens.lowEffects ? 1 : alpha)
+    }
     property real sectorAngle: 120
     readonly property real centerRadius: 76
     // Keep rounded ends inside narrow sectors too. 2..6 options retain the
@@ -33,12 +41,12 @@ Item {
             // Exactly one outline; the former second inner-edge stroke and
             // displaced shadow path caused unnecessary ghost contours.
             strokeWidth: 0.8
-            strokeColor: lens.dark ? "#80B0C59B" : "#B0FFFFFF"
+            strokeColor: lens.glass(lens.edge, lens.dark ? 128 / 255 : 176 / 255)
             fillGradient: LinearGradient {
                 x1: 0; y1: -lens.outerRadius; x2: 0; y2: -lens.innerRadius
-                GradientStop { position: 0; color: lens.lowEffects ? (lens.dark ? "#304A38" : "#E3E5CF") : (lens.dark ? "#F44C624A" : "#F8FFFFED") }
-                GradientStop { position: 0.36; color: lens.lowEffects ? (lens.dark ? "#304A38" : "#E3E5CF") : (lens.dark ? "#F2354E3B" : "#F3E6E9D5") }
-                GradientStop { position: 1; color: lens.lowEffects ? (lens.dark ? "#304A38" : "#E3E5CF") : (lens.dark ? "#F02B4231" : "#E9CDD4B8") }
+                GradientStop { position: 0; color: lens.lowEffects ? lens.material : lens.glass(lens.upperMaterial, lens.dark ? 244 / 255 : 248 / 255) }
+                GradientStop { position: 0.36; color: lens.lowEffects ? lens.material : lens.glass(lens.middleMaterial, lens.dark ? 242 / 255 : 243 / 255) }
+                GradientStop { position: 1; color: lens.lowEffects ? lens.material : lens.glass(lens.lowerMaterial, lens.dark ? 240 / 255 : 233 / 255) }
             }
             startX: -lens.outerRadius * lens.sine
             startY: -lens.outerRadius * lens.cosine

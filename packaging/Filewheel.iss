@@ -6,10 +6,10 @@
 [Setup]
 AppId={{B2EA8B48-3A15-476B-8991-62B9764C4907}
 AppName=Filewheel
-AppVersion=0.2.0
+AppVersion=0.2.1
 AppPublisher=Filewheel
-AppVerName=Filewheel 0.2.0
-VersionInfoVersion=0.2.0.0
+AppVerName=Filewheel 0.2.1
+VersionInfoVersion=0.2.1.0
 DefaultDirName={localappdata}\Programs\Filewheel
 DefaultGroupName=Filewheel
 PrivilegesRequired=lowest

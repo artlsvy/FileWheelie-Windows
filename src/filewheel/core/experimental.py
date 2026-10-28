@@ -29,7 +29,7 @@ class ExperimentalCandidate:
     native_flags: int = 0
 
     @property
-    def requires_confirmation(self):
+    def is_injected(self):
         return bool(self.native_flags & LLMHF_INJECTED)
 
     def __post_init__(self):
@@ -146,8 +146,6 @@ class CandidateGate:
                 return ExplicitInvocationResult(None, "candidate_expired")
             if not confirmed and not 0 <= now - candidate.event_timestamp <= 0.5:
                 return ExplicitInvocationResult(None, "candidate_expired")
-            if not confirmed and candidate.requires_confirmation:
-                return ExplicitInvocationResult(None, "candidate_confirmation_required")
         result = controller.handle_explicit(
             [str(candidate.path)], point=candidate.point, timestamp=now, inspect_file=inspect_file
         )

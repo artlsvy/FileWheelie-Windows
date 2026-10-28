@@ -35,7 +35,6 @@ those instead of installing its own copies.
 3. Choose a category, then a file format.
 4. Follow the progress indicator until the conversion finishes.
 
-If Filewheel asks you to confirm a file, check that the displayed path is right.
 You can also right-click a file and choose **Show more options > Send to > Filewheel**
 if you selected that option during installation.
 
@@ -48,9 +47,14 @@ Find Filewheel beside the Windows clock. You may need to open the hidden icons.
 
 - **Enable wheel** turns mouse and touchpad activation on or off.
 - **Start on login** starts Filewheel when you sign in to Windows.
+- **Accent color…** changes the glass wheel, hover lens and progress display.
+  Text contrast adjusts automatically, and the color is saved for next launch.
+- **Reset accent color** restores the original appearance.
 - **Quit Filewheel** closes the app.
 
 Mouse and touchpad activation are on by default. Start on login is optional.
+Mouse and laptop touchpad gestures open the wheel directly, without a file-path
+confirmation prompt. The same file validation checks still apply.
 
 ## Your files stay on your PC
 

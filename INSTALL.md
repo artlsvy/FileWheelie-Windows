@@ -1,7 +1,9 @@
 # Filewheel installer
 
-The current download is **FilewheelSetup.exe**, version 0.2.0. Share this installer
+The current source build is **FilewheelSetup.exe**, version 0.2.1. Share this installer
 alone. The older portable Filewheel.exe is no longer included in the repository.
+The published v0.2 download remains the previous release until the updated
+installer is published separately.
 
 ## What setup does
 

@@ -16,7 +16,7 @@ from filewheel.ui.arc_text import arc_direction, arc_glyphs
 from filewheel.ui.desktop_errors import DesktopInitializationError
 from filewheel.ui.placement import Rect, popup_position
 from filewheel.ui.radial import DEFAULT_PREVIEW_REGISTRY, RadialState
-from filewheel.ui.theme import DARK, LIGHT
+from filewheel.ui.theme import accented_theme, normalize_accent
 
 
 def logical_point(point, screens):
@@ -536,7 +536,12 @@ class RadialPopup(QWidget):
             self._animation.stop()
 
     def _theme(self):
-        return DARK if self.palette().window().color().lightnessF() < 0.5 else LIGHT
+        return accented_theme(getattr(self, '_accent_color', None),
+                              self.palette().window().color().lightnessF() < 0.5)
+
+    def set_accent_color(self, color):
+        self._accent_color = normalize_accent(color)
+        self.update()
 
     def _colors(self):
         theme = self._theme()

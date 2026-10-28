@@ -1,11 +1,11 @@
 """Build one offline Setup EXE with a pinned, private Inno Setup compiler."""
 import argparse
-from datetime import datetime, timezone
 import hashlib
 import json
-from pathlib import Path
 import subprocess
 import sys
+from datetime import UTC, datetime
+from pathlib import Path
 from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -77,11 +77,11 @@ def main():
     executable = ROOT / 'releases/FilewheelSetup.exe'
     digest = sha256(executable)
     manifest = {'file': executable.name, 'sha256': digest,
-                'bytes': executable.stat().st_size, 'version': '0.2.0',
-                'built_utc': datetime.now(timezone.utc).isoformat(),
+                'bytes': executable.stat().st_size, 'version': '0.2.1',
+                'built_utc': datetime.now(UTC).isoformat(),
                 'compiler': 'Inno Setup ' + INNO_VERSION,
                 'payload': json.loads((output / 'BUILD-INFO.json').read_text(encoding='utf-8')),
-                'runtime_validation': 'not run; user paused desktop testing',
+                'runtime_validation': 'not run by builder; record subsequent verification separately',
                 'tool_reuse': {'LibreOffice': '7.6+', 'Pandoc': '3.1+'}}
     (ROOT / 'releases/INSTALLER-BUILD-INFO.json').write_text(
         json.dumps(manifest, indent=2) + '\n', encoding='utf-8')

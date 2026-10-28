@@ -37,6 +37,7 @@ from filewheel.ui.progress_state import ProgressMode, ProgressPresentation, prog
 from filewheel.ui.quick_geometry import SIZE, hit_test, inside_dismiss_boundary
 from filewheel.ui.radial import DEFAULT_PREVIEW_REGISTRY, RadialState
 from filewheel.ui.render_diagnostics import RenderDiagnostics
+from filewheel.ui.theme import glass_palette, normalize_accent
 
 
 class GlassSession(QObject):
@@ -62,6 +63,7 @@ class GlassSession(QObject):
         self._progress = 0.
         self._status = self._detail = ''
         self._dark = QApplication.styleHints().colorScheme() == Qt.ColorScheme.Dark
+        self._accent_color = None
         self._reduced = os.getenv('FILEWHEEL_REDUCED_MOTION') == '1'
         self._low = os.getenv('FILEWHEEL_LOW_EFFECTS') == '1'
         self._moving = True
@@ -128,6 +130,10 @@ class GlassSession(QObject):
     @Property(bool, notify=appearanceChanged)
     def dark(self):
         return self._dark
+
+    @Property('QVariantMap', notify=appearanceChanged)
+    def colors(self):
+        return glass_palette(self._accent_color, self._dark)
 
     @Property(bool, notify=appearanceChanged)
     def reducedMotion(self):
@@ -307,6 +313,10 @@ class GlassPopup(QQuickView):
     """Experimental selectable renderer; same present/finished/job desktop seam."""
     selected = Signal(object)
     finished = Signal()
+
+    def set_accent_color(self, color):
+        self.session._accent_color = normalize_accent(color)
+        self.session.appearanceChanged.emit()
 
     def __init__(self, registry=DEFAULT_PREVIEW_REGISTRY, *, point_mapper=logical_point,
                  manager=None, source_mapper=lambda path: Path(str(path)), coordinator=None, _scene_file=None):

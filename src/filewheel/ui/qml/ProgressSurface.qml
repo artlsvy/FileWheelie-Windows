@@ -11,17 +11,25 @@ Item {
     transformOrigin: Item.Center
     readonly property var session: progress
     readonly property bool expanded: progress.surfaceExpanded
-    readonly property color foreground: progress.dark ? "#F3ECDD" : "#20392F"
-    readonly property color brass: progress.dark ? "#D6BF83" : "#65532A"
+    readonly property var palette: progress.colors
+    readonly property color foreground: palette.text
+    readonly property color brass: palette.accent
+    readonly property color surface: palette.surface
+    readonly property color outline: palette.outline
+    readonly property color reflection: palette.reflection
+    readonly property color hover: palette.hover
+    function glass(color, alpha) {
+        return Qt.rgba(color.r, color.g, color.b, progress.lowEffects ? 1 : alpha)
+    }
     Rectangle {
         x: 4; y: 4; width: parent.width - 8; height: parent.height - 8
         radius: root.expanded ? 24 : 31
-        color: progress.dark ? (progress.lowEffects ? "#182C24" : "#ED182C24") : (progress.lowEffects ? "#F4F0E5" : "#EDF4F0E5")
+        color: root.glass(root.surface, 237 / 255)
         border.width: 1
-        border.color: progress.dark ? "#809CB097" : "#A69CA88B"
+        border.color: root.glass(root.outline, progress.dark ? 128 / 255 : 166 / 255)
         Rectangle {
             x: 22; y: 1; width: parent.width - 44; height: 1
-            color: progress.dark ? "#669EB29B" : "#C0FFFFFF"
+            color: root.glass(root.reflection, progress.dark ? 102 / 255 : 192 / 255)
         }
     }
     Text {
@@ -41,7 +49,7 @@ Item {
     }
     Rectangle {
         x: 20; y: 48; width: 230; height: 3; radius: 1.5
-        color: progress.dark ? "#60748666" : "#60778167"
+        color: root.glass(root.outline, 96 / 255)
         Rectangle {
             width: progress.stage === "converting" ? (progress.progressKnown ? parent.width * progress.progress : 64) : parent.width
             height: parent.height; radius: 1.5
@@ -85,8 +93,8 @@ Item {
             delegate: Rectangle {
                 required property string modelData
                 width: 112; height: 28; radius: 14
-                color: progress.dark ? "#304A38" : "#E3E5CF"
-                border.color: progress.dark ? "#708A9675" : "#A0B3BBA1"
+                color: root.hover
+                border.color: root.glass(root.outline, progress.dark ? 112 / 255 : 160 / 255)
                 Text { anchors.centerIn: parent; text: modelData; font.pixelSize: 12; color: root.foreground }
                 MouseArea {
                     anchors.fill: parent
