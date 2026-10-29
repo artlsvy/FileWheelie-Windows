@@ -47,8 +47,13 @@ jobs:
         run: |
           $env:QT_QPA_PLATFORM = 'offscreen'
           $env:FILEWHEEL_LOG_DIR = Join-Path $env:RUNNER_TEMP 'FilewheelLogs'
-          & build/installer-payload/Filewheel/Filewheel.exe --self-test
-          if ($LASTEXITCODE -ne 0) {
+          $exe = (Resolve-Path 'build/installer-payload/Filewheel/Filewheel.exe').Path
+          $testProcess = Start-Process -FilePath $exe -ArgumentList '--self-test' -WorkingDirectory (Split-Path $exe) -PassThru -WindowStyle Hidden
+          if (-not $testProcess.WaitForExit(180000)) {
+            Stop-Process -Id $testProcess.Id -Force
+            throw 'Frozen self-test timed out after three minutes'
+          }
+          if ($testProcess.ExitCode -ne 0) {
             $report = Join-Path $env:FILEWHEEL_LOG_DIR 'self-test.json'
             $debugLog = Join-Path $env:FILEWHEEL_LOG_DIR 'conversion-debug.log'
             if (Test-Path -LiteralPath $report) { Get-Content -LiteralPath $report }
