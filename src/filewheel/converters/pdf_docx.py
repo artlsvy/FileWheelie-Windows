@@ -1,4 +1,4 @@
-"""Best-effort editable PDF→DOCX via local pdf2docx; no OCR or Office required."""
+"""Editable PDF→DOCX via pdf2docx, with local Windows OCR for image-only PDFs."""
 
 from importlib.util import find_spec
 from pathlib import Path
@@ -60,10 +60,8 @@ class PdfDocxEngine:
                     empty_pages += 1
                 progress(.1 + .15 * (index + 1) / document.page_count, "Inspecting PDF pages")
         if not text_pages:
-            raise ConversionError(
-                "No extractable text: this PDF may be scanned or blank. "
-                "Editable text requires OCR, which is not implemented."
-            )
+            from filewheel.converters.windows_ocr import image_pdf_to_docx
+            return image_pdf_to_docx(source, workdir, progress, cancel)
         check_cancel(cancel)
         output = workdir / "output.docx"
         progress(.35, "Reconstructing editable document")

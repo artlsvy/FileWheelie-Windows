@@ -53,7 +53,7 @@ class OfficeExit(int):
         return result
 
 
-def run_office(arguments, *, workdir, timeout, cancel=None):
+def run_office(arguments, *, workdir, timeout, cancel=None, tool_name='LibreOffice'):
     """Bound the owned process tree and keep external libraries out of Qt's bundle."""
     process = None
     environment = None
@@ -92,7 +92,7 @@ def run_office(arguments, *, workdir, timeout, cancel=None):
         raise
     except subprocess.TimeoutExpired as error:
         _stop_office_tree(process, environment)
-        raise ConversionError("LibreOffice timed out; conversion stopped") from error
+        raise ConversionError(f"{tool_name} timed out; conversion stopped") from error
     return OfficeExit(process.returncode, stdout, stderr)
 
 

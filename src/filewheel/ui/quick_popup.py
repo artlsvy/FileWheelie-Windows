@@ -326,6 +326,7 @@ class GlassPopup(QQuickView):
         self.point_mapper = point_mapper
         self.coordinator = coordinator or ConversionController(QApplication.instance())
         self.progress_view = None
+        self._details_box = None
         self._transitioning = False
         self._generation = self._progress_serial = self._selection_serial = self._surface_serial = 0
         self._selection_exiting = False
@@ -611,8 +612,14 @@ class GlassPopup(QQuickView):
         self._changing_flags = True
         try:
             self.render_diagnostics.record('flags', old=int(self.flags()), new=int(flags))
+            # A visible QWindow Popup is registered in Qt's popup/grab stack.
+            # Changing it to Tool first leaves the old popup registered: later
+            # dialogs receive presses but their releases go to the hidden wheel.
+            # Hide with the OLD flags so Qt releases that grab before retyping.
+            if visible:
+                self.hide()
             self.setFlags(flags)
-            if visible and not self.isVisible():
+            if visible:
                 self.show()
         finally:
             self._changing_flags = False
@@ -883,15 +890,24 @@ class GlassPopup(QQuickView):
 
     def show_details(self):
         from filewheel.converters.debugging import debug_log_path
+        if self._details_box is not None:
+            self._details_box.raise_()
+            self._details_box.activateWindow()
+            return
         box = QMessageBox()
         box.setWindowTitle('Filewheel conversion details')
         box.setTextFormat(Qt.TextFormat.PlainText)
         box.setText(self.session.statusTitle)
         box.setInformativeText(self.session.detail)
         box.setDetailedText('Local log: ' + str(debug_log_path()))
-        box.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self._details_box = box
+        box.finished.connect(self._close_details)
         box.open()
+
+    def _close_details(self):
+        box, self._details_box = self._details_box, None
+        if box is not None:
+            box.deleteLater()
 
     def _hide_progress(self):
         self._cancel_progress_motion()

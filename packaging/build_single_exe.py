@@ -25,6 +25,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--libreoffice', type=Path)
     parser.add_argument('--pandoc', type=Path)
+    parser.add_argument('--ffmpeg', type=Path)
     parser.add_argument('--output', type=Path, default=ROOT / 'releases')
     parser.add_argument('--installer-payload', action='store_true',
                         help='build installed onedir payload with conditional-copy tools')
@@ -43,8 +44,19 @@ def main():
         if installed is None:
             parser.error('Supply --pandoc with the complete Windows Pandoc directory')
         pandoc = Path(installed).parent
+    ffmpeg = args.ffmpeg
+    if ffmpeg is None:
+        installed = shutil.which('ffmpeg')
+        if installed is None:
+            parser.error('Supply --ffmpeg with the FFmpeg v9 binary or its bin directory')
+        ffmpeg = Path(installed)
+    if ffmpeg.is_dir():
+        ffmpeg = ffmpeg / 'ffmpeg.exe'
+    if not ffmpeg.is_file() or ffmpeg.name.lower() != 'ffmpeg.exe':
+        parser.error('--ffmpeg must point to ffmpeg.exe or its containing directory')
     office = ensure_separate_tool_source(office, args.output)
     pandoc = ensure_separate_tool_source(pandoc, args.output)
+    ffmpeg = ensure_separate_tool_source(ffmpeg, args.output)
     validate_office(office)
     pandoc_info = validate_pandoc(pandoc, execute=not args.skip_tool_probes)
     (ROOT / 'build').mkdir(exist_ok=True)
@@ -65,7 +77,7 @@ def main():
             shutil.copy2(library, copied_office / 'program' / library.name)
     env = dict(os.environ, FILEWHEEL_BUILD_ONEFILE='0' if args.installer_payload else '1',
                FILEWHEEL_BUNDLE_LIBREOFFICE=str(copied_office),
-               FILEWHEEL_BUNDLE_PANDOC=str(pandoc))
+               FILEWHEEL_BUNDLE_PANDOC=str(pandoc), FILEWHEEL_BUNDLE_FFMPEG=str(ffmpeg))
     # Do not capture unrelated applications' DLLs (for example a JDK on PATH).
     env['PATH'] = os.pathsep.join((str(Path(sys.executable).parent), str(system), str(system.parent)))
     env.pop('JAVA_HOME', None)
@@ -87,11 +99,31 @@ def main():
         tools = executable.parent / '_internal/tools'
         shutil.copytree(copied_office, tools / 'libreoffice')
         shutil.copytree(pandoc, tools / 'pandoc')
+        ffmpeg_bundle = tools / 'ffmpeg'
+        ffmpeg_bundle.mkdir()
+        shutil.copy2(ffmpeg, ffmpeg_bundle / 'ffmpeg.exe')
+        license_path = ffmpeg.parent / 'LICENSE'
+        if not license_path.is_file():
+            license_path = ffmpeg.parent / 'COPYING.GPLv3'
+        if not license_path.is_file():
+            license_path = ffmpeg.parent.parent / 'LICENSE'
+        if not license_path.is_file():
+            license_path = ffmpeg.parent.parent / 'COPYING.GPLv3'
+        if not license_path.is_file():
+            raise RuntimeError('FFmpeg distribution license file is required')
+        shutil.copy2(license_path, ffmpeg_bundle / 'COPYING.GPLv3')
+        (ffmpeg_bundle / 'BUILD-INFO.txt').write_text(
+            'FFmpeg executable: ' + str(ffmpeg) + '\n'
+            'Version/build: ' + subprocess.check_output([str(ffmpeg), '-version'], text=True,
+                                                          stderr=subprocess.STDOUT).splitlines()[0] + '\n'
+            'This selected build enables GPLv3 components. See COPYING.GPLv3.\n'
+            'Corresponding upstream FFmpeg source: https://ffmpeg.org/download.html\n'
+            'The exact build configuration is reported by ffmpeg -version.\n', encoding='utf-8')
         packages = re.findall(r'^([A-Za-z0-9_.-]+(?:\[[^]]+\])?==[^\s\\]+)',
-                              (ROOT / 'packaging/windows-py314.lock').read_text(encoding='utf-8'), re.M)
+                              (ROOT / 'packaging/windows-py314.lock').read_text(encoding='utf-8'), re.MULTILINE)
         (executable.parent / 'DEPENDENCIES.txt').write_text(
             'Filewheel private runtime - Python 3.14\n'
-            'Bundled fallback engines: LibreOffice and Pandoc.\n'
+            'Bundled fallback engines: LibreOffice, Pandoc and FFmpeg.\n'
             'Compatible installed engines may be reused instead; see installation.ini.\n'
             'Pinned runtime/build environment inventory follows. Build-only packages\n'
             'may have metadata included without their tools being installed.\n\n'
@@ -100,7 +132,8 @@ def main():
         digest = hashlib.file_digest(stream, 'sha256').hexdigest()
     manifest = {'file': executable.name, 'sha256': digest,
                 'bytes': executable.stat().st_size, 'python': sys.version,
-                'pandoc': pandoc_info.version, 'embedded_tools': ['LibreOffice', 'Pandoc'],
+                'pandoc': pandoc_info.version, 'ffmpeg': ffmpeg.name,
+                'ffmpeg_gpl_build': True, 'embedded_tools': ['LibreOffice', 'Pandoc', 'FFmpeg'],
                 'build_log': str(log_path.relative_to(ROOT)), 'tool_probes_run': not args.skip_tool_probes}
     (args.output / 'BUILD-INFO.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
     print('Built:', executable, '\nSHA256:', digest, flush=True)

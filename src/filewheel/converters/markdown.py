@@ -8,7 +8,8 @@ from importlib.util import find_spec
 from pathlib import Path
 from threading import Event
 from typing import ClassVar
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
+from uuid import uuid4
 from xml.etree import ElementTree
 from zipfile import BadZipFile, ZipFile
 
@@ -91,7 +92,9 @@ class MarkItDownEngine:
         if source.stat().st_size > self.max_bytes:
             raise ConversionError("Document exceeds the Markdown extraction size limit")
         progress(0.1, "Checking document")
-        warnings = self._check_document(source, cancel)
+        warnings, pdf_needs_ocr = self._check_document(source, cancel)
+        if pdf_needs_ocr:
+            return self._ocr_pdf_markdown(source, workdir, progress, cancel)
         local_source = source
         if source.suffix.lower() == '.epub':
             members = self._check_epub(source, cancel)
@@ -149,7 +152,7 @@ class MarkItDownEngine:
         check_cancel(cancel)
         if not isinstance(markdown, str) or not markdown.strip():
             raise ConversionError(
-                "No extractable document content was found; OCR is not implemented"
+                "No extractable document content was found"
             )
         if len(markdown.encode("utf-8")) > self.max_bytes * 2:
             raise ConversionError("Extracted Markdown exceeds the output size limit")
@@ -162,7 +165,7 @@ class MarkItDownEngine:
         warnings = [
             (
                 "Markdown is lossy content extraction: page layout, styling, images and some "
-                "document structure may not be preserved. No OCR or cloud service is used."
+                "document structure may not be preserved. No cloud service is used."
             ),
         ]
         suffix = source.suffix.lower()
@@ -198,7 +201,7 @@ class MarkItDownEngine:
                     check_cancel(cancel)
                     text_pages += bool(page.get_text("text").strip())
             if not text_pages:
-                raise ConversionError("No extractable PDF text; scanned or blank PDFs require OCR")
+                return warnings, True
             if text_pages < count:
                 warnings.append(
                     "Some PDF pages have no extractable text; scanned content requires OCR."
@@ -213,7 +216,41 @@ class MarkItDownEngine:
                 re.IGNORECASE,
             ):
                 raise ConversionError("The input does not contain recognizable HTML")
-        return warnings
+        return warnings, False
+
+    def _ocr_pdf_markdown(self, source, workdir, progress, cancel):
+        from filewheel.converters.windows_ocr import ocr_pdf_pages
+
+        sections = []
+        images = []
+        languages = set()
+        recognized = False
+        image_tag = uuid4().hex
+        for number, lines, language, image in ocr_pdf_pages(source, workdir, progress, cancel):
+            check_cancel(cancel)
+            languages.add(language)
+            useful = [line.strip() for line in lines if line.strip()]
+            recognized |= bool(useful)
+            # Manager may rename colliding outputs when the same PDF is
+            # converted again. A fresh tag keeps Markdown links paired with
+            # this conversion's own page images.
+            name = f'{source.stem}-{image_tag}-page-{number}.png'
+            sections.append(f'## Page {number}\n\n' + '\n'.join(useful)
+                            + f'\n\n![Original page {number}]({quote(name)})')
+            images.append(EngineOutput(image, name))
+        if not recognized:
+            raise ConversionError('Local OCR could not recognize any text in this PDF. No Markdown was created.')
+        markdown = ('# ' + source.stem + '\n\n'
+                    + '\n\n'.join(sections).rstrip() + '\n')
+        if len(markdown.encode('utf-8')) > self.max_bytes * 2:
+            raise ConversionError('Extracted Markdown exceeds the output size limit')
+        check_cancel(cancel)
+        progress(.8, 'Writing OCR Markdown and page images')
+        output = workdir / 'output.md'
+        output.write_text(markdown, encoding='utf-8')
+        warning = (f'Local Windows OCR ({", ".join(sorted(languages))}) was used. '
+                   'Review recognized text; original page images are linked beside the Markdown file.')
+        return (EngineOutput(output, source.with_suffix('.md').name, (warning,)), *images)
 
     def _check_epub(self, source, cancel):
         from defusedxml import ElementTree as SafeXML
@@ -262,6 +299,17 @@ class MarkItDownEngine:
             raise ConversionError('EPUB package is corrupt, unsafe or incomplete') from error
 
     def validate(self, output: EngineOutput) -> None:
+        if output.path.suffix.lower() == '.png':
+            from PIL import Image
+
+            try:
+                with Image.open(output.path) as image:
+                    if image.format != 'PNG' or image.width < 1 or image.height < 1:
+                        raise ConversionError('Generated Markdown page image is invalid')
+                    image.verify()
+            except (OSError, ValueError) as error:
+                raise ConversionError('Generated Markdown page image is invalid') from error
+            return
         try:
             text = output.path.read_text(encoding="utf-8")
         except UnicodeError as error:

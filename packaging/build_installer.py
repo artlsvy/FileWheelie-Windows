@@ -49,6 +49,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--libreoffice', type=Path, required=True)
     parser.add_argument('--pandoc', type=Path, required=True)
+    parser.add_argument('--ffmpeg', type=Path, required=True)
     parser.add_argument('--skip-tool-probes', action='store_true')
     parser.add_argument('--reuse-payload', action='store_true',
                         help='compile existing payload; only after its source build is current')
@@ -60,6 +61,7 @@ def main():
         command = [sys.executable, str(ROOT / 'packaging/build_single_exe.py'),
                    '--installer-payload', '--output', str(output),
                    '--libreoffice', str(args.libreoffice), '--pandoc', str(args.pandoc)]
+        command.extend(['--ffmpeg', str(args.ffmpeg)])
         if args.skip_tool_probes:
             command.append('--skip-tool-probes')
         subprocess.run(command, check=True)
@@ -77,12 +79,13 @@ def main():
     executable = ROOT / 'releases/FilewheelSetup.exe'
     digest = sha256(executable)
     manifest = {'file': executable.name, 'sha256': digest,
-                'bytes': executable.stat().st_size, 'version': '0.2.1',
+                'bytes': executable.stat().st_size, 'version': '0.2.7',
                 'built_utc': datetime.now(UTC).isoformat(),
                 'compiler': 'Inno Setup ' + INNO_VERSION,
                 'payload': json.loads((output / 'BUILD-INFO.json').read_text(encoding='utf-8')),
                 'runtime_validation': 'not run by builder; record subsequent verification separately',
-                'tool_reuse': {'LibreOffice': '7.6+', 'Pandoc': '3.1+'}}
+                'tool_reuse': {'LibreOffice': '7.6+', 'Pandoc': '3.1+', 'FFmpeg': '9+'},
+                'ffmpeg_distribution_license': 'GPLv3 build; see installed tools/ffmpeg files'}
     (ROOT / 'releases/INSTALLER-BUILD-INFO.json').write_text(
         json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
     sums = ROOT / 'releases/SHA256SUMS.txt'

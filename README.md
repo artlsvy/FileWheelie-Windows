@@ -7,6 +7,16 @@ Your original file stays in place.
 This project was fully **vibecoded with OpenAI Codex**. It was created as an
 experiment to see what Codex could build, from the app itself to its installer.
 
+## What's new in v0.3
+
+- Convert supported video combinations across MP4, MOV, MKV and WebM. AVI and
+  M4V files are accepted as inputs.
+- Convert audio to MP3, M4A, WAV or FLAC; OGG and Opus are supported as inputs.
+  Extract audio from supported videos.
+- Use local Windows OCR to convert scanned PDFs to DOCX or Markdown.
+- Choose an accent color for the glass interface; text contrast adjusts
+  automatically. Optionally start Filewheel when you sign in to Windows.
+
 ## A look at the app
 
 These are real UI captures with transparent backgrounds.
@@ -17,14 +27,15 @@ These are real UI captures with transparent backgrounds.
 
 ## Download and install
 
-**[Download Filewheel v0.2 for Windows](https://github.com/artlsvy/fileconverter/releases/download/v0.2/FilewheelSetup.exe)**
+**[Download Filewheel v0.3 for Windows](https://github.com/artlsvy/fileconverter/releases/tag/v0.3)**
 
 1. Quit any older copy of Filewheel.
 2. Open **FilewheelSetup.exe** and follow the installer.
 3. Launch Filewheel from the Start menu or the installer's Finish page.
 
-You need **Windows 11 on an Intel or AMD 64-bit PC**. Everything needed is
-included. You do not need to install Python or download extra tools.
+You need **Windows 11 on an Intel or AMD 64-bit PC**. Conversion tools are
+included; you do not need to install Python. Local OCR uses Windows' installed
+recognition languages (see below).
 If compatible LibreOffice or Pandoc installations are found, Filewheel can use
 those instead of installing its own copies.
 
@@ -35,11 +46,34 @@ those instead of installing its own copies.
 3. Choose a category, then a file format.
 4. Follow the progress indicator until the conversion finishes.
 
+When the format wheel is open, moving the pointer outside its boundary closes
+it by design, keeping Filewheel quick to use. Press **Esc** to close it manually
+instead.
+
 You can also right-click a file and choose **Show more options > Send to > Filewheel**
 if you selected that option during installation.
 
 Filewheel handles pictures, PDFs, Word documents, presentations, spreadsheets,
-Markdown and text files. The wheel only shows conversions available for that file.
+Markdown and text. Audio conversion offers MP3, M4A, WAV and FLAC outputs, with
+OGG and Opus also accepted as inputs. Supported videos can be converted among
+MP4, MOV, MKV and WebM where the source and target combination is available;
+AVI and M4V are accepted as inputs. MP3, M4A and WAV audio can be extracted from
+supported videos. The wheel only shows conversions available for that file.
+Results explain when streams were re-encoded or tracks were omitted. Converting
+lossy audio to FLAC cannot restore quality lost in the original.
+
+For **image-only PDF to DOCX**, Filewheel uses local Windows OCR. It creates
+editable text with simplified layout and includes the original pages as images
+for reference. Check recognized text for mistakes, especially numbers and formulas.
+PDFs with an existing text layer keep using the normal layout converter; mixed
+text/image PDFs may still contain non-editable scanned pages. Image-only PDF
+to Markdown also uses local OCR and saves each original page beside the Markdown
+file as a linked PNG. Keep the Markdown file and its page images together.
+
+OCR needs an installed Windows recognition language. Filewheel uses a supported
+Windows profile language, falling back to an installed recognition language.
+If none is installed, add OCR in **Settings > Time & language > Language & region
+> Language options**. Filewheel never uploads pages or downloads language packs.
 
 ## Tray menu
 
@@ -47,7 +81,7 @@ Find Filewheel beside the Windows clock. You may need to open the hidden icons.
 
 - **Enable wheel** turns mouse and touchpad activation on or off.
 - **Start on login** starts Filewheel when you sign in to Windows.
-- **Accent color…** changes the glass wheel, hover lens and progress display.
+- **Accent color** changes the glass wheel, hover lens and progress display.
   Text contrast adjusts automatically, and the color is saved for next launch.
 - **Reset accent color** restores the original appearance.
 - **Quit Filewheel** closes the app.

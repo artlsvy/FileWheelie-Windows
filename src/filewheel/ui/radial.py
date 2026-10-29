@@ -59,15 +59,20 @@ def _defaults():
                   PreviewCapability(".docx", "Document", ".pdf", "PDF"),
                   PreviewCapability(".pdf", "Image", ".png", "PNG"),
                   PreviewCapability(".md", "Document", ".docx", "DOCX")))
-    # Audio/video are declared optional FFmpeg previews, never installed engines.
-    for source in (".mp3", ".wav", ".flac"):
-        for output in (".mp3", ".wav", ".flac"):
+    for source in (".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v",
+                   ".mp3", ".m4a", ".wav", ".flac", ".ogg", ".opus"):
+        for output in (".mp3", ".m4a", ".wav", ".flac"):
             if source != output:
                 edges.append(PreviewCapability(source, "Audio", output, output[1:].upper()))
-    for source in (".mp4", ".mkv", ".webm"):
-        for output in (".mp4", ".mkv", ".webm"):
-            if source != output:
-                edges.append(PreviewCapability(source, "Video", output, output[1:].upper()))
+    for source, target in (
+        (".mp4", ".mov"), (".mp4", ".mkv"), (".mp4", ".webm"),
+        (".mov", ".mp4"), (".mov", ".mkv"), (".mov", ".webm"),
+        (".mkv", ".mp4"), (".mkv", ".mov"), (".mkv", ".webm"),
+        (".webm", ".mp4"), (".webm", ".mkv"),
+        (".avi", ".mp4"), (".avi", ".mkv"),
+        (".m4v", ".mp4"), (".m4v", ".mkv"),
+    ):
+        edges.append(PreviewCapability(source, "Video", target, target[1:].upper()))
     return CapabilityRegistry(tuple(edges))
 
 

@@ -31,3 +31,8 @@ artifacts/
 /AGENTS.md
 /docs/
 /tests/
+!/tests/
+/tests/*
+!/tests/unit/
+/tests/unit/*
+!/tests/unit/test_media_ffmpeg.py

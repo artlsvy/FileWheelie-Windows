@@ -24,6 +24,8 @@ root = Path(SPECPATH).resolve().parent
 onefile = os.environ.get('FILEWHEEL_BUILD_ONEFILE') == '1'
 binaries = []
 datas = [(str(root / "src/filewheel/platforms/windows/sendto_shortcut.ps1"),
+          "filewheel/platforms/windows"),
+         (str(root / "src/filewheel/platforms/windows/ocr_image.ps1"),
           "filewheel/platforms/windows")]
 # Python package data is not sufficient for Analysis(entry.py). Preserve the
 # local relative QML path used by GlassPopup, including its Lens component.
@@ -31,7 +33,7 @@ datas += [(str(path), "filewheel/ui/qml") for path in (root / "src/filewheel/ui/
 hiddenimports = collect_submodules("filewheel")
 if onefile:
     # Include the COMPLETE native tools in the archive, not external siblings.
-    for tool in ('libreoffice', 'pandoc'):
+    for tool in ('libreoffice', 'pandoc', 'ffmpeg'):
         source = Path(os.environ['FILEWHEEL_BUNDLE_' + tool.upper()])
         if not source.is_dir():
             raise SystemExit('Complete bundled tool directory required: ' + tool)

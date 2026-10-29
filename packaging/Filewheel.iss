@@ -6,10 +6,10 @@
 [Setup]
 AppId={{B2EA8B48-3A15-476B-8991-62B9764C4907}
 AppName=Filewheel
-AppVersion=0.2.1
+AppVersion=0.2.7
 AppPublisher=Filewheel
-AppVerName=Filewheel 0.2.1
-VersionInfoVersion=0.2.1.0
+AppVerName=Filewheel 0.2.7
+VersionInfoVersion=0.2.7.0
 DefaultDirName={localappdata}\Programs\Filewheel
 DefaultGroupName=Filewheel
 PrivilegesRequired=lowest
@@ -43,9 +43,10 @@ Name: "sendto"; Description: "Add Filewheel to Explorer's Send to menu"
 [Files]
 Source: "Filewheel.exe"; DestDir: "{app}"; Flags: ignoreversion; BeforeInstall: ShowComponent('Installing Filewheel...')
 Source: "DEPENDENCIES.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "_internal\*"; DestDir: "{app}\_internal"; Excludes: "\tools\libreoffice\*,\tools\pandoc\*"; Flags: ignoreversion recursesubdirs createallsubdirs; BeforeInstall: ShowComponent('Installing private Python, Qt and conversion libraries...')
+Source: "_internal\*"; DestDir: "{app}\_internal"; Excludes: "\tools\libreoffice\*,\tools\pandoc\*,\tools\ffmpeg\*"; Flags: ignoreversion recursesubdirs createallsubdirs; BeforeInstall: ShowComponent('Installing private Python, Qt and conversion libraries...')
 Source: "_internal\tools\libreoffice\*"; DestDir: "{app}\_internal\tools\libreoffice"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: NeedOffice; BeforeInstall: ShowComponent('Installing private LibreOffice for Office-to-PDF...')
 Source: "_internal\tools\pandoc\*"; DestDir: "{app}\_internal\tools\pandoc"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: NeedPandoc; BeforeInstall: ShowComponent('Installing private Pandoc for document conversion...')
+Source: "_internal\tools\ffmpeg\*"; DestDir: "{app}\_internal\tools\ffmpeg"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: NeedFfmpeg; BeforeInstall: ShowComponent('Installing private FFmpeg for video conversion...')
 
 [Icons]
 Name: "{group}\Filewheel"; Filename: "{app}\Filewheel.exe"; Parameters: "--tray"; WorkingDir: "{app}"
@@ -66,8 +67,8 @@ var
   DependencyPage: TWizardPage;
   Inventory: TNewMemo;
   ReuseTools: TNewCheckBox;
-  PandocPath, OfficePath: String;
-  PandocVersion, OfficeVersion: String;
+  PandocPath, OfficePath, FfmpegPath: String;
+  PandocVersion, OfficeVersion, FfmpegVersion: String;
   Detected, TasksVisited: Boolean;
 
 procedure ShowComponent(Text: String);
@@ -154,12 +155,37 @@ begin
       Probe(Path, 'LibreOffice ', 7, 6, OfficeVersion) then OfficePath := Path;
 end;
 
+procedure TryFfmpeg(Path: String);
+var Code: Integer; Output: TExecOutput; Index: Integer; HasH264, HasAac: Boolean;
+begin
+  if (FfmpegPath <> '') or not FileExists(Path) then exit;
+  try
+    if not ExecAndCaptureOutput(Path, '-hide_banner -encoders', ExtractFileDir(Path),
+        SW_HIDE, ewWaitUntilTerminated, Code, Output) then exit;
+    HasH264 := False; HasAac := False;
+    for Index := 0 to GetArrayLength(Output.StdOut) - 1 do begin
+      if Pos('libx264', Output.StdOut[Index]) > 0 then HasH264 := True;
+      if Pos(' aac ', Output.StdOut[Index]) > 0 then HasAac := True;
+    end;
+    if (Code = 0) and not Output.Error and HasH264 and HasAac and
+        ExecAndCaptureOutput(Path, '-version', ExtractFileDir(Path),
+          SW_HIDE, ewWaitUntilTerminated, Code, Output) and (Code = 0) then begin
+      FfmpegPath := Path;
+      if GetArrayLength(Output.StdOut) > 0 then FfmpegVersion := Output.StdOut[0];
+    end;
+  except
+    Log('Installed FFmpeg probe failed; using private fallback.');
+  end;
+end;
+
 procedure DetectTools();
 var Search, Part, InstallPath: String; Separator: Integer;
 begin
-  PandocPath := ''; OfficePath := '';
+  PandocPath := ''; OfficePath := ''; FfmpegPath := '';
   TryPandoc(ExpandConstant('{localappdata}\Pandoc\pandoc.exe'));
   TryPandoc(ExpandConstant('{autopf}\Pandoc\pandoc.exe'));
+  TryFfmpeg(ExpandConstant('{localappdata}\FFmpeg\bin\ffmpeg.exe'));
+  TryFfmpeg(ExpandConstant('{autopf}\FFmpeg\bin\ffmpeg.exe'));
   TryOffice(ExpandConstant('{autopf}\LibreOffice\program\soffice.com'));
   TryOffice(ExpandConstant('{commonpf32}\LibreOffice\program\soffice.com'));
   if RegQueryStringValue(HKLM64, 'Software\LibreOffice\UNO\InstallPath', '', InstallPath) then
@@ -178,6 +204,7 @@ begin
         ((Part[3] = '\') or (Part[3] = '/')) then begin
       TryPandoc(AddBackslash(Part) + 'pandoc.exe');
       TryOffice(AddBackslash(Part) + 'soffice.com');
+      TryFfmpeg(AddBackslash(Part) + 'ffmpeg.exe');
     end;
   end;
 end;
@@ -190,6 +217,11 @@ end;
 function NeedPandoc(): Boolean;
 begin
   Result := (PandocPath = '') or not ReuseTools.Checked;
+end;
+
+function NeedFfmpeg(): Boolean;
+begin
+  Result := (FfmpegPath = '') or not ReuseTools.Checked;
 end;
 
 procedure RefreshInventory(Sender: TObject);
@@ -208,6 +240,10 @@ begin
   if NeedPandoc() then
     Text := Text + 'PANDOC: private bundled copy will be installed.'
   else Text := Text + 'PANDOC: reuse ' + PandocVersion + #13#10 + PandocPath;
+  Text := Text + #13#10#13#10;
+  if NeedFfmpeg() then
+    Text := Text + 'FFMPEG: private GPLv3 build will be installed.'
+  else Text := Text + 'FFMPEG: reuse ' + FfmpegVersion + #13#10 + FfmpegPath;
   Inventory.Text := Text + #13#10#13#10 +
     'All fallbacks are included in this installer. No internet connection required.';
 end;
@@ -235,7 +271,7 @@ begin
   if CurPageID = DependencyPage.ID then begin
     WizardForm.StatusLabel.Caption := 'Checking installed conversion tools...';
     DetectTools(); Detected := True;
-    ReuseTools.Enabled := (OfficePath <> '') or (PandocPath <> '');
+    ReuseTools.Enabled := (OfficePath <> '') or (PandocPath <> '') or (FfmpegPath <> '');
     RefreshInventory(nil);
   end;
   if (CurPageID = wpSelectTasks) and not TasksVisited then begin
@@ -255,17 +291,19 @@ begin
   { Recheck availability immediately before copying. A removed tool needs fallback. }
   if (OfficePath <> '') and not FileExists(OfficePath) then OfficePath := '';
   if (PandocPath <> '') and not FileExists(PandocPath) then PandocPath := '';
+  if (FfmpegPath <> '') and not FileExists(FfmpegPath) then FfmpegPath := '';
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
-var Text, Value, SelectedOffice, SelectedPandoc: String;
+var Text, Value, SelectedOffice, SelectedPandoc, SelectedFfmpeg: String;
 begin
   if CurStep = ssPostInstall then begin
-    SelectedOffice := ''; SelectedPandoc := '';
+    SelectedOffice := ''; SelectedPandoc := ''; SelectedFfmpeg := '';
     if not NeedOffice() then SelectedOffice := OfficePath;
     if not NeedPandoc() then SelectedPandoc := PandocPath;
+    if not NeedFfmpeg() then SelectedFfmpeg := FfmpegPath;
     Text := '[Dependencies]' + #13#10 + 'LibreOfficePath=' + SelectedOffice + #13#10 +
-      'PandocPath=' + SelectedPandoc + #13#10;
+      'PandocPath=' + SelectedPandoc + #13#10 + 'FFmpegPath=' + SelectedFfmpeg + #13#10;
     if not SaveStringToFile(ExpandConstant('{app}\installation.ini'), Utf8Encode(Text), False) then
       RaiseException('Could not save Filewheel dependency selection.');
     if not RegQueryStringValue(HKCU, RunKey, 'Filewheel', Value) or StartupOwned(Value) then begin

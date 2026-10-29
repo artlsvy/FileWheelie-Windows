@@ -254,7 +254,8 @@ def _execution_deadline(manager, source, extension):
     seconds = getattr(engine, 'execution_timeouts', {}).get(Path(source).suffix.lower())
     if seconds is None:
         return None
-    if type(seconds) not in (int, float) or not math.isfinite(seconds) or not 0 < seconds <= 600:
+    maximum = 7200 if capability.category in ('Video', 'Audio') else 600
+    if type(seconds) not in (int, float) or not math.isfinite(seconds) or not 0 < seconds <= maximum:
         raise ConversionError('Invalid converter execution timeout')
     return monotonic() + seconds
 

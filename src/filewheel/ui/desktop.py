@@ -122,6 +122,9 @@ class DesktopApplication(QObject):
         dialog.setWindowTitle('Filewheel — accent color')
         dialog.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
         self.color_dialog = dialog
+        # Release any selection popup before opening a conventional dialog.
+        # Active conversions keep running and collapse to their progress pill.
+        self.popup.dismiss()
         dialog.colorSelected.connect(lambda color: self.set_accent_color(color.name()))
         dialog.finished.connect(self._close_color_dialog)
         dialog.open()
@@ -190,6 +193,9 @@ class DesktopApplication(QObject):
             self.tray.showMessage('Filewheel', message)
 
     def present_explicit(self, paths, point):
+        if QApplication.activeModalWidget() is not None:
+            self.notify('Close the open dialog before selecting another file.')
+            return False
         if self.quitting or self.popup.job is not None:
             self.notify('A conversion is running; try again when it finishes.')
             return False
@@ -321,6 +327,7 @@ class DesktopApplication(QObject):
     @Slot(object)
     def offer_candidate(self, candidate):
         if (not self.experimental_enabled or self.runtime is None or self.quitting
+                or QApplication.activeModalWidget() is not None
                 or self.popup.job is not None
                 or (candidate.is_injected and not self.allow_injected_candidates)
                 or not self.runtime.gate.is_current(candidate.token, now=monotonic())):
@@ -389,7 +396,7 @@ class DesktopApplication(QObject):
     def _popup_finished(self):
         if self.quitting:
             self._finish_quit()
-        elif not self.tray_mode and self.dialog is None:
+        elif not self.tray_mode and self.dialog is None and self.color_dialog is None:
             QApplication.instance().quit()
 
     @Slot()

@@ -25,17 +25,17 @@ Item {
     readonly property bool selection: wheel.stage === "categories" || wheel.stage === "formats"
     readonly property int count: wheel.labels.length
     readonly property int activeIndex: wheel.hovered >= 0 ? wheel.hovered : wheel.keyboardIndex
-    readonly property var palette: wheel.colors
-    readonly property color foreground: palette.text
-    readonly property color accent: palette.accent
-    readonly property color baseSurface: palette.surface
-    readonly property color upperSurface: palette.top
-    readonly property color lowerSurface: palette.bottom
-    readonly property color outline: palette.outline
-    readonly property color glare: palette.glare
-    readonly property color reflection: palette.reflection
-    readonly property color shade: palette.shade
-    readonly property color selectedMaterial: palette.hover
+    readonly property var glassColors: wheel.colors
+    readonly property color foreground: glassColors.text
+    readonly property color accent: glassColors.accent
+    readonly property color baseSurface: glassColors.surface
+    readonly property color upperSurface: glassColors.top
+    readonly property color lowerSurface: glassColors.bottom
+    readonly property color outline: glassColors.outline
+    readonly property color glare: glassColors.glare
+    readonly property color reflection: glassColors.reflection
+    readonly property color shade: glassColors.shade
+    readonly property color selectedMaterial: glassColors.hover
     readonly property color material: glass(baseSurface, 216 / 255)
     function glass(color, alpha) {
         return Qt.rgba(color.r, color.g, color.b, wheel.lowEffects ? 1 : alpha)
@@ -133,9 +133,9 @@ Item {
         dark: wheel.dark
         lowEffects: wheel.lowEffects
         material: root.selectedMaterial
-        upperMaterial: root.palette.lensTop
-        middleMaterial: root.palette.lensMid
-        lowerMaterial: root.palette.lensBottom
+        upperMaterial: root.glassColors.lensTop
+        middleMaterial: root.glassColors.lensMid
+        lowerMaterial: root.glassColors.lensBottom
         edge: root.glare
         sectorAngle: root.sectorAngle
         rotation: root.lensRotation

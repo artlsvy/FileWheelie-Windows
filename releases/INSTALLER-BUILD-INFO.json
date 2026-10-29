@@ -1,63 +1,31 @@
 {
   "file": "FilewheelSetup.exe",
-  "sha256": "46e889cffa17a6c24f8d51f02a5eb47f76f7f98e9b3aefa8d1c88906efa2eb87",
-  "bytes": 412843184,
-  "version": "0.2.1",
-  "built_utc": "2026-10-28T09:11:33.275517+00:00",
+  "sha256": "311b661f6b9584887ae5994846168eb71adfa47d69d9f270251aa98661dae466",
+  "bytes": 474374754,
+  "version": "0.2.7",
+  "built_utc": "2026-10-29T10:17:56.266607+00:00",
   "compiler": "Inno Setup 6.7.3",
   "payload": {
     "file": "Filewheel.exe",
-    "sha256": "6a3a0147cb20a4bb55bf9f91e1200f779ebfa5364ab24457810b1e4b75c2ebe7",
-    "bytes": 18938866,
+    "sha256": "34d9d722aad82a50b210a3bf5e086cfaa6f7bb783c6a520e53a6a01635789c71",
+    "bytes": 18964589,
     "python": "3.14.7 (tags/v3.14.7:823f032, Aug  5 2026, 10:51:32) [MSC v.1944 64 bit (AMD64)]",
     "pandoc": "3.13",
+    "ffmpeg": "ffmpeg.exe",
+    "ffmpeg_gpl_build": true,
     "embedded_tools": [
       "LibreOffice",
-      "Pandoc"
+      "Pandoc",
+      "FFmpeg"
     ],
     "build_log": "build\\installer-payload-build.log",
     "tool_probes_run": true
   },
-  "runtime_validation": {
-    "type": "Windows 11 frozen payload self-test; actual installer not executed",
-    "passed": true,
-    "graphics_api": "GraphicsApi.OpenGL",
-    "quick_wheel_and_progress_render": true,
-    "conversion_pairs": 28,
-    "bundled_libreoffice": true,
-    "bundled_pandoc": true,
-    "spawn_cancel_retry": true,
-    "installer_executed": false,
-    "manual_laptop_gesture_and_color_picker_acceptance": "pending"
-  },
+  "runtime_validation": "Frozen self-test passed, including MP4 to MOV/MKV/WebM/MP3 and MKV stream validation; innounp -t verified all 17,751 installer entries; IMG_0585.MOV converted to MP4/MKV (HEVC/AAC), WebM (VP9/Opus), MP3, M4A, WAV, and FLAC with APAC omitted and reported; the source hash remained unchanged.",
   "tool_reuse": {
     "LibreOffice": "7.6+",
-    "Pandoc": "3.1+"
+    "Pandoc": "3.1+",
+    "FFmpeg": "9+"
   },
-  "developer_validation": {
-    "platform": "Windows 11, Python 3.14.7, Qt offscreen/software for unit tests",
-    "tests_passed": 654,
-    "subtests_passed": 407,
-    "skipped": 28,
-    "additional_touchpad_tests_passed": 42,
-    "final_accent_and_lens_tests_passed": 21,
-    "color_picker_accept_cancel_reset_tests_passed": 6,
-    "changed_file_ruff": "passed",
-    "compileall": "passed",
-    "git_diff_check": "passed",
-    "color_contrast": {
-      "minimum_target": 4.5,
-      "rgb_samples": 216,
-      "desktop_extremes": [
-        "black",
-        "white"
-      ],
-      "minimum_material_alpha": 0.8470588235294118
-    },
-    "frozen_qml_matches_source": true,
-    "frozen_desktop_contains_accent_picker_and_direct_injection": true,
-    "tests_location": "ignored local tests restored from pre-cleanup commit; retained locally per repository policy"
-  },
-  "source_revision": "7de8420ecd2f305b3778f4eb6699ad1826f27f43",
-  "source_changes_uncommitted": true
+  "ffmpeg_distribution_license": "GPLv3 build; see installed tools/ffmpeg files"
 }

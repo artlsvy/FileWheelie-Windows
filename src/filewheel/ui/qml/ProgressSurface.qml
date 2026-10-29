@@ -3,6 +3,7 @@ import QtQuick
 // Separate retained surface: no resizing a native Popup while it owns input.
 Item {
     id: root
+    focus: true
     width: 272
     height: progress.surfaceExpanded ? 190 : 72
     property real entrance: 1
@@ -11,13 +12,13 @@ Item {
     transformOrigin: Item.Center
     readonly property var session: progress
     readonly property bool expanded: progress.surfaceExpanded
-    readonly property var palette: progress.colors
-    readonly property color foreground: palette.text
-    readonly property color brass: palette.accent
-    readonly property color surface: palette.surface
-    readonly property color outline: palette.outline
-    readonly property color reflection: palette.reflection
-    readonly property color hover: palette.hover
+    readonly property var glassColors: progress.colors
+    readonly property color foreground: glassColors.text
+    readonly property color brass: glassColors.accent
+    readonly property color surface: glassColors.surface
+    readonly property color outline: glassColors.outline
+    readonly property color reflection: glassColors.reflection
+    readonly property color hover: glassColors.hover
     function glass(color, alpha) {
         return Qt.rgba(color.r, color.g, color.b, progress.lowEffects ? 1 : alpha)
     }

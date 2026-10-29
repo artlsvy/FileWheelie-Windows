@@ -61,6 +61,8 @@ def default_registry() -> Registry:
     from filewheel.converters.pdf_docx import PdfDocxEngine
     from filewheel.converters.pdf_images import PdfImagesEngine
     from filewheel.converters.structured_markdown import StructuredMarkdownEngine
+    from filewheel.converters.video import VideoEngine
 
     return Registry((PillowEngine(), PdfDocxEngine(), MarkItDownEngine(), LibreOfficeEngine(),
-                     PdfImagesEngine(), StructuredMarkdownEngine(), ArchiveMarkdownEngine(), PandocEngine()))
+                     PdfImagesEngine(), StructuredMarkdownEngine(), ArchiveMarkdownEngine(), PandocEngine(),
+                     VideoEngine()))
