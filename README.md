@@ -94,6 +94,7 @@ confirmation prompt. The same file validation checks still apply.
 
 Conversions work locally. No account, internet connection or uploads are needed.
 To uninstall, open **Windows Settings > Apps > Installed apps > Filewheel**.
+See the [privacy policy](PRIVACY.md) for details about local preferences and logs.
 
 [Installer and build notes](INSTALL.md)
 
