@@ -1,0 +1,61 @@
+name: Build unsigned Windows release candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          architecture: x64
+      - name: Download and verify native tool inputs
+        id: native
+        shell: pwsh
+        run: ./scripts/prepare-signing-tools.ps1
+      - name: Install pinned Python environment
+        shell: pwsh
+        run: |
+          python -m venv .venv-build314
+          ./.venv-build314/Scripts/python.exe -m pip install --require-hashes --only-binary=:all: -r packaging/windows-py314.lock
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned Python installation failed' }
+          ./.venv-build314/Scripts/python.exe -m pip install --no-deps --no-build-isolation .
+          if ($LASTEXITCODE -ne 0) { throw 'Filewheel installation failed' }
+          ./.venv-build314/Scripts/python.exe -m pip check
+          if ($LASTEXITCODE -ne 0) { throw 'Python dependency check failed' }
+      - name: Build installer from checked-out source
+        shell: pwsh
+        env:
+          LIBREOFFICE: ${{ steps.native.outputs.libreoffice }}
+          PANDOC: ${{ steps.native.outputs.pandoc }}
+          FFMPEG: ${{ steps.native.outputs.ffmpeg }}
+        run: |
+          ./.venv-build314/Scripts/python.exe packaging/build_installer.py --libreoffice "$env:LIBREOFFICE" --pandoc "$env:PANDOC" --ffmpeg "$env:FFMPEG"
+          if ($LASTEXITCODE -ne 0) { throw 'Installer build failed' }
+      - name: Check frozen application
+        shell: pwsh
+        run: |
+          $env:QT_QPA_PLATFORM = 'offscreen'
+          & build/installer-payload/Filewheel/Filewheel.exe --self-test
+          if ($LASTEXITCODE -ne 0) { throw 'Frozen self-test failed' }
+          $signature = Get-AuthenticodeSignature releases/FilewheelSetup.exe
+          if ($signature.Status -ne 'NotSigned') { throw 'Unsigned build job produced an unexpected signature' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Filewheel-unsigned-${{ github.sha }}
+          path: |
+            releases/FilewheelSetup.exe
+            releases/INSTALLER-BUILD-INFO.json
+            releases/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7

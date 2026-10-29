@@ -96,3 +96,12 @@ Conversions work locally. No account, internet connection or uploads are needed.
 To uninstall, open **Windows Settings > Apps > Installed apps > Filewheel**.
 
 [Installer and build notes](INSTALL.md)
+
+## Source and signing
+
+Filewheel's own source code is licensed under [AGPL-3.0-or-later](LICENSE).
+The installer includes separately licensed open-source conversion tools; see
+[the build notes](INSTALL.md) for their source and license information.
+
+The current installer is unsigned. See the [code signing policy](CODE_SIGNING.md)
+for the planned SignPath Foundation release process and verification steps.

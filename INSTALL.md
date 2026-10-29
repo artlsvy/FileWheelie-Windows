@@ -52,9 +52,19 @@ file; the build records its version and GPLv3 configuration. The installer inclu
 license with the FFmpeg executable. FFmpeg's corresponding source and build
 configuration are identified in `tools/ffmpeg/BUILD-INFO.txt`.
 
+Filewheel's own code is [AGPL-3.0-or-later](LICENSE). The installed application
+includes that license. Bundled LibreOffice (MPL-2.0), Pandoc (GPL-2.0-or-later),
+and FFmpeg (the selected GPLv3 build) keep their upstream license and notice
+files. Python package versions are pinned in `packaging/windows-py314.lock`;
+their upstream license metadata is included in the frozen runtime.
+
 The builder uses a checksum-pinned private Inno Setup 6.7.3 compiler in ignored
 `build-tools`. Only the build machine may need to download that compiler.
 Output is `releases/FilewheelSetup.exe`; checksums and build details are beside it.
+For a public release candidate, `.github/workflows/release-build.yml` downloads
+the native inputs listed in `packaging/native-artifacts.json`, verifies their
+SHA-256 hashes, and builds on a GitHub-hosted Windows runner. That workflow
+currently produces an **unsigned** installer for review.
 The installed app uses a folder of private files, avoiding temporary unpacking
 on every launch. Git stores the installer using Git LFS; download the release
 asset directly, or run `git lfs pull` after cloning.

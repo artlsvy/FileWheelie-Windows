@@ -43,6 +43,7 @@ Name: "sendto"; Description: "Add Filewheel to Explorer's Send to menu"
 [Files]
 Source: "Filewheel.exe"; DestDir: "{app}"; Flags: ignoreversion; BeforeInstall: ShowComponent('Installing Filewheel...')
 Source: "DEPENDENCIES.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "_internal\*"; DestDir: "{app}\_internal"; Excludes: "\tools\libreoffice\*,\tools\pandoc\*,\tools\ffmpeg\*"; Flags: ignoreversion recursesubdirs createallsubdirs; BeforeInstall: ShowComponent('Installing private Python, Qt and conversion libraries...')
 Source: "_internal\tools\libreoffice\*"; DestDir: "{app}\_internal\tools\libreoffice"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: NeedOffice; BeforeInstall: ShowComponent('Installing private LibreOffice for Office-to-PDF...')
 Source: "_internal\tools\pandoc\*"; DestDir: "{app}\_internal\tools\pandoc"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: NeedPandoc; BeforeInstall: ShowComponent('Installing private Pandoc for document conversion...')

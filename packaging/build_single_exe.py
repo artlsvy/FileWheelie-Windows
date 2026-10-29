@@ -93,6 +93,7 @@ def main():
             stdout=log, stderr=subprocess.STDOUT, check=True)
     executable = args.output / ('Filewheel/Filewheel.exe' if args.installer_payload else 'Filewheel.exe')
     if args.installer_payload:
+        shutil.copy2(ROOT / 'LICENSE', executable.parent / 'LICENSE')
         # External tools are separate processes, not Python DLL dependencies.
         # Copy complete trees after Analysis to avoid DLL reclassification and
         # accidental collection of build-machine Java/Office dependencies.
