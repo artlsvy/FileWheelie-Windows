@@ -46,10 +46,27 @@ jobs:
         shell: pwsh
         run: |
           $env:QT_QPA_PLATFORM = 'offscreen'
+          $env:FILEWHEEL_LOG_DIR = Join-Path $env:RUNNER_TEMP 'FilewheelLogs'
           & build/installer-payload/Filewheel/Filewheel.exe --self-test
-          if ($LASTEXITCODE -ne 0) { throw 'Frozen self-test failed' }
+          if ($LASTEXITCODE -ne 0) {
+            $report = Join-Path $env:FILEWHEEL_LOG_DIR 'self-test.json'
+            $debugLog = Join-Path $env:FILEWHEEL_LOG_DIR 'conversion-debug.log'
+            if (Test-Path -LiteralPath $report) { Get-Content -LiteralPath $report }
+            if (Test-Path -LiteralPath $debugLog) { Get-Content -LiteralPath $debugLog -Tail 100 }
+            throw 'Frozen self-test failed'
+          }
           $signature = Get-AuthenticodeSignature releases/FilewheelSetup.exe
           if ($signature.Status -ne 'NotSigned') { throw 'Unsigned build job produced an unexpected signature' }
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: Filewheel-build-diagnostics-${{ github.sha }}
+          path: |
+            build/installer-payload-build.log
+            build/installer-compile.log
+            ${{ runner.temp }}/FilewheelLogs/
+          if-no-files-found: warn
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         with:
           name: Filewheel-unsigned-${{ github.sha }}
