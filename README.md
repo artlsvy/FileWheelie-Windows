@@ -15,7 +15,7 @@ types while your default stays first. No patched Dolphin or global input capture
 
 ## Version 0.3.1 — Windows and Linux
 
-[Download the release](https://github.com/artlsvy/fileconverter/releases/tag/v0.3.1).
+[Download the release](https://github.com/artlsvy/FileWheelie-Windows/releases/tag/v0.3.1).
 Both installers are built from the same tagged source by GitHub Actions. Publication
 requires both platform build/check jobs to pass. Check the release assets and
 linked workflow run rather than using a binary attached to a random comment.
@@ -38,8 +38,8 @@ Releases include `SHA256SUMS.txt` and GitHub build attestations. Verify a downlo
 
 ```sh
 sha256sum -c SHA256SUMS.txt
-gh attestation verify Filewheel-Linux-x86_64.AppImage --repo artlsvy/fileconverter
-# Windows: gh attestation verify FilewheelSetup.exe --repo artlsvy/fileconverter
+gh attestation verify Filewheel-Linux-x86_64.AppImage --repo artlsvy/FileWheelie-Windows
+# Windows: gh attestation verify FilewheelSetup.exe --repo artlsvy/FileWheelie-Windows
 ```
 
 Provenance establishes where/from which source a binary was built, **not a
@@ -66,7 +66,7 @@ These are real UI captures with transparent backgrounds.
 
 ## Download and install
 
-**[Download Filewheel v0.3.1](https://github.com/artlsvy/fileconverter/releases/tag/v0.3.1)**
+**[Download Filewheel v0.3.1](https://github.com/artlsvy/FileWheelie-Windows/releases/tag/v0.3.1)**
 
 1. Quit any older copy of Filewheel.
 2. Open **FilewheelSetup.exe** and follow the installer.

@@ -1,3 +1,9 @@
+Release v0.3.1 was pushed at416dac5; hosted build run:
+https://github.com/artlsvy/FileWheelie-Windows/actions/runs/41117762409
+Repository rename was discovered during push. Current README/release instructions
+use the canonical repository name. Both hosted platform jobs started; successful
+publication is still pending, not inferred from the local checks.
+
 # Version0.3.1 release preparation
 
 User accepted the Linux OCR AppImage and authorized committing/pushing the Linux

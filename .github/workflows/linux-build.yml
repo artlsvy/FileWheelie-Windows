@@ -17,7 +17,7 @@ jobs:
           sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet
           df -h /
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Build baseline payload, frozen smoke, AppImage and DEB
+      - name: Build baseline payload, frozen smoke and AppImage
         run: ./scripts/build-linux.sh --output build/linux-release --artifact-name Filewheel-Linux-x86_64.AppImage
       - name: Test AppImage without FUSE
         env:

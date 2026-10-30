@@ -27,8 +27,8 @@ the embedded notices/source and native tool materials.
 
 Verify downloads with SHA256SUMS.txt and:
 
-    gh attestation verify FilewheelSetup.exe --repo artlsvy/fileconverter
-    gh attestation verify Filewheel-Linux-x86_64.AppImage --repo artlsvy/fileconverter
+    gh attestation verify FilewheelSetup.exe --repo artlsvy/FileWheelie-Windows
+    gh attestation verify Filewheel-Linux-x86_64.AppImage --repo artlsvy/FileWheelie-Windows
 
 The standalone build workflows remain manually runnable on a selected branch;
 manual runs produce CI artifacts, not public releases. Future release tags must
