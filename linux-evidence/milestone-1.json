@@ -1,0 +1,144 @@
+{
+  "date": "2026-10-30",
+  "baseline": "48a28c4",
+  "system": {
+    "distribution": "Kubuntu/Ubuntu 26.04.1",
+    "session": "KDE Wayland",
+    "plasma": "6.6.6",
+    "kwin": "6.6.6",
+    "dolphin": "25.12.3",
+    "frameworks": "6.24.0",
+    "system_qt": "6.10.2",
+    "probe_qt": "6.12.0"
+  },
+  "native_probe": {
+    "gate": "incomplete",
+    "kwin": [
+      {
+        "cursorAvailable": "object",
+        "cursorSignal": "function",
+        "mouseSignal": "undefined",
+        "registerPointerShortcut": "undefined",
+        "startMousePolling": "undefined",
+        "windows": [
+          {
+            "before": [
+              819,
+              443,
+              220,
+              220
+            ],
+            "after": [
+              80,
+              90,
+              220,
+              220
+            ]
+          }
+        ],
+        "fixtureWindows": [
+          {
+            "nativeClass": "KWin::XdgToplevelWindow"
+          }
+        ]
+      }
+    ],
+    "qt": {
+      "platform": "wayland",
+      "requested": [
+        80,
+        90
+      ],
+      "qt_geometry": [
+        80,
+        90,
+        220,
+        220
+      ]
+    },
+    "fixture_items": [
+      {
+        "name": "report.csv",
+        "description": ", CSV document",
+        "attributes": {},
+        "interfaces": [
+          "Accessible",
+          "Component",
+          "TableCell"
+        ],
+        "screen_bounds": [
+          154,
+          61,
+          115,
+          87
+        ]
+      },
+      {
+        "name": "report.txt",
+        "description": ", Plain text document",
+        "attributes": {},
+        "interfaces": [
+          "Accessible",
+          "Component",
+          "TableCell"
+        ],
+        "screen_bounds": [
+          282,
+          61,
+          115,
+          87
+        ]
+      },
+      {
+        "name": "unicode-æøå.txt",
+        "description": ", Plain text document",
+        "attributes": {},
+        "interfaces": [
+          "Accessible",
+          "Component",
+          "TableCell"
+        ],
+        "screen_bounds": [
+          410,
+          61,
+          115,
+          87
+        ]
+      }
+    ],
+    "input_capture": "not demonstrated; no global input listener installed",
+    "fixture_nodes_visited": 466
+  },
+  "scripted_effect_probe": {
+    "load": {
+      "returncode": 0,
+      "stdout": "(true,)",
+      "stderr": ""
+    },
+    "own_log_lines": [
+      "js: filewheel-probe-47a9fc4fc11846438060fcdc5e0ca7e3 READY mouseChanged=function"
+    ],
+    "physical_gesture_requested": false
+  },
+  "result": "BLOCKED: exact hovered-file URI not available through tested accessibility route; no actual hardware middle-click verified",
+  "source_hashes": {
+    "scriptedeffect.h": "b7df7f6f9411b85b394d5d5a59e1ac89d5b272cbf0eb684b55313b753fad50ea",
+    "pointer_input.cpp": "d5385e1d47ec216418e8728f6232abcb4c7885c3b3f336816b64e385b988ceaf",
+    "cursor.cpp": "006f20b798dea2cb5b8ee6da663fb7efd24738980eed33dec5d8603d06433599",
+    "effecthandler.cpp": "50f26741b89a312c05c70390ffeaa00e0855932782d6ab94a3f814b905e1bf4a",
+    "scriptedeffect.cpp": "6aeaf242ad0c3664ac01c0f3aca8923cd71c76f90266db26253d49584b7b8259",
+    "window.h": "50b605ffadfe45b674b032e0384655037a16989038b3394fcb58f64b173d0360",
+    "kabstractfileitemactionplugin.h": "cd7e543f3163a3ff0e7399381de68eacb1c5da57b2bb7e48318384db8563c646",
+    "kitemlistviewaccessible.h": "4d32924e73c3b545fb5ed3349a3cd8db77a34b89bc85f732919362af42b310e0",
+    "kitemlistviewaccessible.cpp": "15c190a6ac979761831b0ec30457f3401d92bed64e30cceae4ff7147ac60b3d8",
+    "kitemlistdelegateaccessible.h": "ff45beca3314f4690b2a636e417e7ee349e3ab14d0d7d4ff6ef63a234d9beb82",
+    "kitemlistdelegateaccessible.cpp": "8ba73333aa9b6d77105486b948edbde810c574e438f034b677ebc561d1513ac2",
+    "kitemlistcontaineraccessible.h": "1419895af7c6f9076671bbe79196b18e0aa53af1c164950366b11ca1b33cd372",
+    "kitemlistcontaineraccessible.cpp": "2aa928b4ed01c44b1cee9b6eb5ecd8bdf92365ad1cf02bb280be08b368fb6271",
+    "dolphinview.cpp": "41b8bba112e21f1324e0120944870b9263fbcfa0c1df63949815db627a784391",
+    "dolphinview.h": "c337855fe24c73786c0b00b9c444354aebc4c476871c6e29cdc549512248f4ad",
+    "scripting.cpp": "18535433b6b519d7c1560fa0d4f15e05cbde2d905f0401aaa582525bf590b130",
+    "workspace_wrapper.h": "d5cae000e20001a98fe8f9ee2954999bd3526037e9037e329259a04c97adce64",
+    "effecthandler.h": "67ccb2ea0b6de313379094fe023c86cbf0f92ad3a6f3318796a081e19079fbaa"
+  }
+}
