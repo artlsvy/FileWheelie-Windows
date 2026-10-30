@@ -1,0 +1,14 @@
+{
+  "directory": "/home/lsvy/vibecoded/filetypeconverter/build/linux-demo",
+  "source_hashes": {
+    "01-image-æøå.png": "0387b8581fc7f9db007886f33082d7cd5c1aba4059b36287c634895fe5c64b41",
+    "02-video.mp4": "73a072683229076ad83b80cb13e531cb206221a265747d162aff28723e44185b",
+    "03-notes.txt": "8b71cf173cf98f22076d4a4ff7eaaca484da8e3db1030f6d828d5d02513efbef"
+  },
+  "user_confirmed_native_wheel_progress_quit": true,
+  "source_hashes_unchanged": true,
+  "outputs": [
+    "01-image-æøå.jpg",
+    "03-notes.md"
+  ]
+}

@@ -18,6 +18,12 @@ def main(args):
         return run(include_quick=args.ui_backend == "quick")
     if len(args.paths) > 1 or (args.gui and not args.paths):
         raise RuntimeError("Supply exactly one absolute file path after --")
+    if args.paths:
+        from filewheel.platforms.linux.paths import validate_paths
+
+        validation = validate_paths(args.paths)
+        if validation.path is None:
+            raise RuntimeError("Input rejected: " + str(validation.rejection))
     from PySide6.QtGui import QCursor
     from PySide6.QtWidgets import QApplication, QFileDialog, QSystemTrayIcon
 
@@ -46,10 +52,45 @@ def main(args):
     if app.platformName() == "wayland":
         point = app.primaryScreen().availableGeometry().center()
     host = None
+    kwin = None
+    generation = 0
+
+    def present(paths, fallback, *, source=None, captured=None):
+        nonlocal generation
+        from time import monotonic, monotonic_ns
+
+        check = host.controller.handle_explicit(
+            paths, point=fallback, timestamp=monotonic(), inspect_file=host.inspector
+        )
+        if check.target is None:
+            host.notify("Input rejected: " + str(check.rejection))
+            return False
+        generation += 1
+        serial = generation
+
+        def at_point(point):
+            if serial != generation or host.quitting:
+                return
+            if source == "dolphin_click" and not host.experimental_enabled:
+                return
+            if captured is not None and monotonic_ns() - captured > 2_000_000_000:
+                host.notify("Click expired; try again.")
+                return
+            if point is None:
+                host.notify("KWin cursor lookup failed; click again.")
+                return
+            host.present_explicit(paths, point, source=source)
+
+        if kwin is not None:
+            kwin.request_point(at_point)
+            return True
+        return host.present_explicit(paths, fallback, source=source)
 
     def receive(packet):
+        if host is None or host.quitting:
+            return False
         return (
-            host.present_explicit(packet["paths"], tuple(packet["point"]))
+            present(packet["paths"], tuple(packet["point"]))
             if packet["paths"]
             else host.ensure_tray()
         )
@@ -62,9 +103,53 @@ def main(args):
     try:
         host = DesktopApplication(tray=tray, ui_backend=args.ui_backend, auto_start=False)
         app._filewheel_desktop = host
-        if args.paths and not host.present_explicit(args.paths, tuple(packet["point"])):
-            host.request_quit()
-            return 2
+        if app.platformName() == "wayland":
+            from filewheel.platforms.linux.kwin import KWinBridge
+
+            try:
+                kwin = KWinBridge(host)
+            except RuntimeError:
+                if args.private_dolphin:
+                    raise
+                # Other compositors still support explicit files; placement is compositor chosen.
+
+        def start(_point=None):
+            try:
+                if kwin is not None and _point is None:
+                    raise RuntimeError("KWin placement bridge did not start")
+                if args.private_dolphin:
+                    from filewheel.platforms.linux.dolphin_bridge import DolphinBridge
+
+                    bridge = DolphinBridge(args.private_dolphin, host)
+                    bridge.clicked.connect(
+                        lambda path, captured: present(
+                            [path], (0, 0), source="dolphin_click", captured=captured
+                        )
+                    )
+                    bridge.error.connect(
+                        lambda error: host.notify(error) if not host.quitting else None
+                    )
+                    host.extra_resources.append(bridge)
+                    host.linux_bridge = bridge
+                    from filewheel import preferences
+
+                    host.set_experiment(preferences.wheel_enabled(), persist=False)
+                    bridge.start(args.dolphin_folder or str(Path.home()))
+                if args.paths:
+                    present(args.paths, tuple(packet["point"]))
+            except (RuntimeError, OSError, ImportError) as error:
+                from filewheel.converters.debugging import record_failure
+
+                record_failure("linux", "desktop_bootstrap", error)
+                host.notify(str(error))
+                host.request_quit()
+
+        if kwin is not None:
+            kwin.install_placement(start)
+        else:
+            start()
         return app.exec()
     finally:
+        if kwin is not None:
+            kwin.close()
         broker.close()

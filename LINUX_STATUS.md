@@ -161,3 +161,31 @@ POSIX-target offscreen presentation passed. Scoped Ruff and compilation pass.
 Windows-native regression and frozen Linux/mixed-DPI checks remain unperformed.
 Next: connect the accepted private Dolphin bridge and compositor-assisted wheel
 placement to this shared host, then native UI/conversion acceptance and packaging.
+
+
+## Shared native wheel/conversion integration
+
+The source Linux owner now has an explicit private-Dolphin option and a Qt D-Bus
+receiver (no PyGObject dependency in the app). Authenticated fresh click URIs are
+revalidated through the shared controller as `dolphin_click`, never Explorer hover.
+A scoped temporary KWin script positions only Filewheel-owned surfaces; cursor
+lookup and script calls are asynchronous. Tool surfaces avoid an unparented
+Wayland popup grab. Progress keeps independent job ownership. Owned private
+Dolphin is shut down asynchronously before the tray owner exits; no GUI join.
+Its XDG config/cache/state/data remain isolated from the installed Dolphin.
+
+Native automated probe: cursor (921,452), actual 240 px Quick frame (801,332),
+matching cursor centering. Native owner/private-child boot/quit returns 0. User
+then confirmed PNG→JPEG and TXT→MD, correct near-cursor wheel, progress remaining
+visible after moving away, and tray Quit. The JPEG dimensions/content and Markdown
+text were checked, all three demo source hashes remain unchanged, and no staging
+leaks remain. Evidence: `linux-evidence/native-demo-acceptance.json`.
+
+Final current portable suite: **86 passed / 4 intentional same-format skips**.
+That includes 27 Linux tests, a real Quick background job after progress collapse,
+URI policy, source/collision preservation, owned worker/tool cancellation and the
+existing media fixtures. Source Quick smoke again passes **31 checks /24 actual
+pairs**. Scoped Ruff and compilation pass. Enable wheel now controls private
+forwarding; its prototype does not restore Dolphin default middle-file opening
+when disabled. See LINUX_USE.md. Broader DPI/desktop/long-session and Windows-native
+regressions remain pending; no installer or cross-distribution claim yet.

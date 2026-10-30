@@ -270,7 +270,7 @@ class RadialPopup(QWidget):
     def _set_persistent_window(self, enabled):
         # Qt.Popup dismisses natively outside the window. A Tool window keeps
         # progress/results visible without grabbing mouse input from Explorer.
-        kind = Qt.WindowType.Tool if enabled else Qt.WindowType.Popup
+        kind = Qt.WindowType.Tool if enabled or sys.platform == "linux" else Qt.WindowType.Popup
         if self.windowType() == kind:
             return
         geometry = self.geometry()

@@ -1,4 +1,5 @@
 """Resident tray host with direct or optionally confirmed experimental invocation."""
+from dataclasses import replace
 from time import monotonic
 
 from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal, Slot
@@ -48,6 +49,8 @@ class DesktopApplication(QObject):
         self.inspector = inspector
         self.runtime_factory = runtime_factory
         self.runtime = None
+        self.extra_resources = []
+        self.linux_bridge = None
         self._startup = None
         self.experimental_enabled = False
         self.dialog = None
@@ -192,7 +195,7 @@ class DesktopApplication(QObject):
         if self.tray_mode:
             self.tray.showMessage('Filewheel', message)
 
-    def present_explicit(self, paths, point):
+    def present_explicit(self, paths, point, *, source=None):
         if QApplication.activeModalWidget() is not None:
             self.notify('Close the open dialog before selecting another file.')
             return False
@@ -205,7 +208,12 @@ class DesktopApplication(QObject):
         if result.target is None:
             self.notify(f'Input rejected: {result.rejection}')
             return False
-        return self._present(result.target)
+        target=result.target
+        if source is not None:
+            if path_flavour()!='posix' or source!='dolphin_click':
+                raise ValueError('Invalid Linux bridge provenance')
+            target=replace(target,source=source)
+        return self._present(target)
 
     def _present(self, target):
         try:
@@ -218,6 +226,19 @@ class DesktopApplication(QObject):
     @Slot(bool)
     def set_experiment(self, enabled, *, persist=True):
         if self.quitting:
+            return
+        if self.linux_bridge is not None:
+            self.linux_bridge.enabled = bool(enabled)
+            self.experimental_enabled = bool(enabled)
+            self._check_action(bool(enabled))
+            self.tray.setToolTip('Filewheel — private Dolphin bridge '+('enabled' if enabled else 'disabled'))
+            if persist:
+                try:
+                    preferences.save_wheel_enabled(enabled)
+                except OSError as error:
+                    record_failure('desktop','save_preferences',error)
+            if not enabled and self.popup.job is None:
+                self.popup.dismiss()
             return
         if self._startup is not None:
             self._check_action(False)
@@ -422,6 +443,8 @@ class DesktopApplication(QObject):
 
     def _finish_quit(self):
         if self.popup.job is not None or self._startup is not None:
+            return
+        if any(not resource.close(timeout=0) for resource in self.extra_resources):
             return
         if self.runtime is not None and not self.runtime.close(timeout=0):
             if self.runtime.threads_alive:

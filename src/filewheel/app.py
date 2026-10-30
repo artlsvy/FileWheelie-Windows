@@ -10,6 +10,8 @@ from filewheel.runtime import require_runtime
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Filewheel local converter')
     parser.add_argument('--tray', action='store_true')
+    parser.add_argument('--private-dolphin', metavar='EXECUTABLE', help='Linux only: explicitly launch the private Dolphin URI prototype')
+    parser.add_argument('--dolphin-folder', default=None, help='Initial folder for the private Linux prototype')
     parser.add_argument('--gui', action='store_true')
     parser.add_argument('--ui-backend', choices=('widgets', 'quick'),
                         help='startup-only renderer; widgets remains default')
@@ -30,6 +32,8 @@ def main(argv=None):
         if sys.platform == 'linux':
             from filewheel.platforms.linux.app import main as linux_main
             return linux_main(args)
+        if args.private_dolphin:
+            parser.error('--private-dolphin is Linux-only')
         if args.ui_stress_test:
             if not 1 <= args.ui_stress_cycles <= 1000:
                 parser.error('--ui-stress-cycles must be between 1 and 1000')

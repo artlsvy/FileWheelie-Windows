@@ -1,6 +1,7 @@
 """Optional scenegraph popup. Controller DTOs and conversion jobs stay unchanged."""
 import math
 import os
+import sys
 from dataclasses import replace
 from html import escape
 from pathlib import Path
@@ -603,7 +604,7 @@ class GlassPopup(QQuickView):
             self.rootObject().setProperty('morphingAllowed', bool(enabled))
         if enabled and hasattr(self, 'leave_timer'):
             self.leave_timer.stop()
-        kind = Qt.WindowType.Tool if enabled else Qt.WindowType.Popup
+        kind = Qt.WindowType.Tool if enabled or sys.platform == "linux" else Qt.WindowType.Popup
         flags = (kind | Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
                  | Qt.WindowType.NoDropShadowWindowHint)
         if self.flags() == flags:
@@ -974,6 +975,7 @@ class ProgressSurface(QQuickView):
         super().__init__()
         self.render_diagnostics = RenderDiagnostics(self, 'progress')
         self.owner = owner
+        self.setTitle('Filewheel progress')
         owner.destroyed.connect(self.deleteLater)
         self._changing = False
         self.setColor(QColor('transparent'))
