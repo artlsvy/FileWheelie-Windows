@@ -75,3 +75,25 @@ def test_frozen_release_does_not_accept_missing_converter_family():
             )
     with pytest.raises(RuntimeError, match="self-test failed"):
         module.verify({"ok": False, "results": results})
+
+
+def test_release_filename_cannot_escape_output_or_start_build(tmp_path):
+    import subprocess
+    import sys
+
+    output = tmp_path / "release"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "packaging/linux/build.py"),
+            "--output",
+            str(output),
+            "--artifact-name",
+            "../outside.AppImage",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2 and "simple .AppImage filename" in result.stderr
+    assert not output.exists()

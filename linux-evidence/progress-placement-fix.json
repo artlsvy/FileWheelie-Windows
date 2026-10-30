@@ -1,0 +1,34 @@
+{
+  "reference_screenshot_inspected": true,
+  "native_platform": "wayland",
+  "kwin_version": "6.6.6",
+  "observed_output_scale": 1.55,
+  "qt_buffer_dpr": 2.0,
+  "before_expanded_frame": [
+    1569.8064516129032,
+    1018.741935483871,
+    272.258064516129,
+    190.32258064516122
+  ],
+  "after_expanded_frame": [
+    1569.8064516129032,
+    900.6774193548388,
+    272.258064516129,
+    190.32258064516122
+  ],
+  "compositor_work_area": [
+    0,
+    0,
+    1858.0645161290322,
+    1107
+  ],
+  "before_usable_area_overflow": 102.0645161290322,
+  "after_bottom_inset": 16.0,
+  "native_dark_animated_six_stages_passed": true,
+  "native_light_reduced_six_stages_passed": true,
+  "rendered_previews": {
+    "dark": "build/progress-placement-native-dark/failed-expanded.png",
+    "light": "build/progress-placement-native-light/failed-expanded.png"
+  },
+  "scope": "Real native KWin frames and Qt Quick renders; negative/multiple output and panel permutations additionally tested in Qt JS signal mocks. No physical monitor reconfiguration or conversion-engine changes."
+}

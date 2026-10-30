@@ -342,3 +342,30 @@ Current core AppImage: `build/linux-native-dolphin/` (same converter runtime;
 `linux-evidence/dolphin-default-acceptance.json`. Build manifests record source
 and artifact hashes. Unrelated untracked user assets are excluded from source
 snapshots. The user's untracked wheel.jpg was left untouched. No push.
+
+## Progress view boundary correction
+
+User reported a cropped progress/detail view in the home-directory screenshot.
+The original image was visually inspected without modifying it. Reproduced on
+native KDE Wayland at the current1.55 output scale: the compact frame was correctly
+anchored, but changing height72→190 left its top coordinate unchanged. Expanded
+bottom exceeded KWin's usable area by102.06 logical pixels. Qt's availableGeometry
+also included the panel; client global positioning cannot repair a Wayland Tool.
+
+The scoped compositor script now re-anchors Filewheel-owned progress windows on
+actual frame size, show/reuse, output and work-area changes, using live KWin
+MaximizeArea coordinates. It retains the invoking output while the cursor moves,
+handles removed outputs, avoids geometry feedback and never focuses progress or
+moves another application's windows. No display-DPR multiplication, polling,
+conversion changes or GNOME work was added.
+
+Actual native before/after frames show expanded bottom now16 logical pixels above
+the panel. Real Quick images were generated and visually inspected. Six native
+stages each pass for dark/animated and light/reduced-motion presentations, including
+failure and repeated collapse/expand. Source suite: **127 passed/4 intentional
+skips**, including production-JS signal tests for negative/fractional coordinates,
+multiple outputs, panel edges, removal, late initial sizing and foreign-window
+protection. Scoped Ruff, compilation and whitespace checks pass. Evidence:
+linux-evidence/progress-placement-fix.json. Actual simultaneous mixed-DPI outputs
+and physical panel relocation were not exercised; those permutations have JS
+model coverage. Final single-file installer assembly follows this code checkpoint.

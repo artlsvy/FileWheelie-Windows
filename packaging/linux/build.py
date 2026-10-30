@@ -94,6 +94,7 @@ def main():
         "--skip-freeze", action="store_true", help="Reuse explicitly named Docker image"
     )
     parser.add_argument("--deb", action="store_true")
+    parser.add_argument("--artifact-name", help="Optional single AppImage basename for delivery")
     parser.add_argument(
         "--private-dolphin-prefix",
         type=Path,
@@ -101,6 +102,10 @@ def main():
     )
     args = parser.parse_args()
     os.chdir(ROOT)
+    if args.artifact_name and not re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9._-]*\.AppImage", args.artifact_name
+    ):
+        parser.error("--artifact-name must be a simple .AppImage filename")
     if args.deb and args.private_dolphin_prefix:
         parser.error("Build the broad core DEB separately from the exact-version Dolphin preview")
     if args.output.exists():
@@ -242,7 +247,9 @@ print(json.dumps({str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdig
             if path.is_file() and not path.is_relative_to(output):
                 archive.add(path, arcname="filewheel/" + name, recursive=False)
     variant = "kubuntu2604-private-dolphin" if args.private_dolphin_prefix else "linux"
-    target = output / ("Filewheel-0.3-linux-preview-" + variant + "-x86_64.AppImage")
+    target = output / (
+        args.artifact_name or ("Filewheel-0.3-linux-preview-" + variant + "-x86_64.AppImage")
+    )
     env = dict(os.environ, ARCH="x86_64")
     run(
         [

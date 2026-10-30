@@ -1,35 +1,27 @@
-# Native Dolphin complete; next: bounded GNOME feasibility
+# Current task: final single-file package after progress boundary fix
 
-User verified Plasma/stock Dolphin's second-application middle-click works.
-The default AppImage installer and --integration install now configure this
-route automatically for available engine input MIME types, preserving the first
-application. Existing normal handlers remain first; Filewheel is second.
-No private Dolphin, input hook, selected-file guessing or converter changes needed.
+Native stock-Dolphin default integration is implemented and user-tested. Preserve
+it and the existing engines/UI. User then reported expanded progress spilling past
+the screen in /home/lsvy/ui bad allignment.jpg; image was inspected and exact bug
+reproduced on native Wayland. KWin placed initial72px surface only; height190 later
+kept its old Y. It overflowed usable area by102.06 logical pixels at1.55 scale.
 
-Actual checks: 114 tests passed/4 intentional media skips; final frozen AppImage
-40 checks/32 actual pairs. Real KDE KApplicationTrader verification passes for
-PNG/PDF before/setup/remove in isolated XDG. Frozen install→disable→upgrade→
-re-enable→uninstall passes for26 MIME types, with defaults unchanged. The actual
-installed profile also has Filewheel second for26 types with every primary app
-unchanged. Source/CLI compile and scoped Ruff pass. See new native-Dolphin evidence
-and LINUX_USE.md for status/disable/re-enable commands. Symlinks, foreign ownership,
-late user edits, interrupted setup and concurrent management are protected.
+Fix is in linux/kwin_placement.py, used by KWinBridge: event-driven live KWin work
+area clamp on resize/reuse/output changes, original monitor retained, no focus
+steal or foreign-window changes. Native before/after expanded bottom now has16px
+panel clearance. Dark animated and light reduced-motion six-stage real Quick
+checks pass. 127 tests pass/4 intentional skips; Ruff/compile pass. See
+linux-evidence/progress-placement-fix.json and scripts/linux/check_progress_placement.py.
 
-Current artifact: build/linux-native-dolphin/*.AppImage. Installed copy is
-~/.local/share/filewheel/app/Filewheel.AppImage. Old private-browser artifacts and
-prototype code are preserved but no longer required for ordinary Dolphin.
-A user-created untracked assets/ui/wheel.jpg was present before this task; leave
-it untouched and uncommitted. Source archive assembly excludes unrelated untracked
-assets. No commits pushed; branch feat/linux-port.
+Finish building one final AppImage with --artifact-name Filewheel-Linux-x86_64.AppImage,
+run frozen and installer checks, place a clear final artifact under dist/ and
+record its hash. No Python/pip/private Dolphin should be needed. Automatic second
+app setup for26 MIME types stays in the installer. Preserve helpers/diagnostics.
+Do not force-kill the running tray/any worker to update it; instruct Quit/reopen
+for the new compositor script. Do not push or start GNOME work in this task.
 
-GNOME is deferred until this completed milestone. The user has no GNOME desktop.
-Next investigate exact target Nautilus/GNOME versions and whether their native
-middle-click activation can supply the actual file URI through a supported API.
-Do not assume a MenuProvider/context-menu extension supplies a Mouse3 callback,
-or that a GNOME Shell button observer knows the file. File identity and native
-Wayland popup placement are separate requirements. A container/offscreen run can
-check file-manager code but cannot prove GNOME compositor focus/placement/input.
-Do not install/replace the host desktop, change file defaults, patch Nautilus or
-add root input permissions implicitly. Report precise API/environment blockers
-if native GNOME acceptance requires a real guest/session. Preserve working Plasma,
-Windows, converter engines, Send to, UI and all private prototype infrastructure.
+User untracked assets/ui/wheel.jpg and wheel (2).pdf/.png pre-existed this task;
+leave untouched/uncommitted, exclude from distributable source snapshots.
+Branch feat/linux-port. Previous artifacts under build/linux-native-dolphin do not
+contain the progress fix. Current requested deliverable is the final corrected
+single installation file, not an additional prototype browser.

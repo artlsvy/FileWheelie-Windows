@@ -78,7 +78,7 @@ def main(args):
         _, target, _ = _paths()
         if Path(image).resolve() != target.resolve():
             box = QMessageBox()
-            box.setWindowTitle("Filewheel Linux preview")
+            box.setWindowTitle("Install Filewheel")
             box.setText("Install Filewheel for your user account?")
             box.setInformativeText(
                 "Adds a launcher and Dolphin middle-click integration for supported file types. "

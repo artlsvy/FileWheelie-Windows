@@ -141,32 +141,9 @@ class KWinBridge(QObject):
             callback(point)
 
     def install_placement(self, callback=None):
-        self.run(
-            """
-var lastArea=null;
-function place(w) {
- if(w.pid!==APP_PID)return;
- var caption=w.caption;
- if(caption.indexOf('Filewheel — ')!==0 && caption!=='Filewheel progress')return;
- var area=workspace.clientArea(KWin.MaximizeArea,w);
- var g=w.frameGeometry;
- var p=workspace.cursorPos;
- var x,y;
- if(caption==='Filewheel progress') {
-  area=lastArea||area;x=area.x+area.width-g.width-16;y=area.y+area.height-g.height-16;
- } else {
-  lastArea=area;x=p.x-g.width/2;y=p.y-g.height/2;
- }
- w.frameGeometry={x:Math.max(area.x,Math.min(x,area.x+area.width-g.width)),
-  y:Math.max(area.y,Math.min(y,area.y+area.height-g.height)),width:g.width,height:g.height};
- w.keepAbove=true;
- if(caption.indexOf('Filewheel — ')===0) workspace.activeWindow=w;
-}
-workspace.windowAdded.connect(place);
-""".replace("APP_PID", str(os.getpid())),
-            callback,
-            retain=True,
-        )
+        from filewheel.platforms.linux.kwin_placement import placement_script
+
+        self.run(placement_script(os.getpid()), callback, retain=True)
 
     def request_point(self, callback):
         self.run("", callback)
