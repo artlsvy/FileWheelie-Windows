@@ -1,0 +1,49 @@
+{
+  "artifact": "dist/Filewheel-Linux-x86_64.AppImage",
+  "artifact_bytes": 467491320,
+  "sha256": "95f70cf62f81c0e7cbd44a46081c0edbc5ef5a44806d973c5a32a6a49619241c",
+  "source_commit": "abc4fb8774e0237140ef5ae85edce71326dce13f",
+  "source_dirty_note": "Only three unrelated user assets were untracked; excluded from packaged source snapshot.",
+  "frozen_placement_module_present": true,
+  "packaged_checks": {
+    "frozen_onedir": {
+      "ok": true,
+      "checks": 40,
+      "actual_conversion_pairs": 32
+    },
+    "appimage_extract_run": {
+      "ok": true,
+      "checks": 40,
+      "actual_conversion_pairs": 32
+    },
+    "appimage_fuse": {
+      "ok": true,
+      "checks": 40,
+      "actual_conversion_pairs": 32
+    },
+    "offline_debian12_no_python_or_host_converters": {
+      "ok": true,
+      "checks": 40,
+      "actual_conversion_pairs": 32
+    }
+  },
+  "installer": {
+    "actual_appimage_install_upgrade_remove": true,
+    "configured_mime_types": 26,
+    "documents_preserved": true,
+    "isolated_xdg": true,
+    "initial_attempt": "Temporary RAM disk filled during upgrade; rerun in workspace passed"
+  },
+  "source_tests": {
+    "passed": 127,
+    "skipped": 4,
+    "skip_reason": "Intentional same-format media cases"
+  },
+  "native_progress": "linux-evidence/progress-placement-fix.json",
+  "limitations": [
+    "Actual simultaneous mixed-DPI outputs and panel relocation not physically tested.",
+    "Native GNOME Mouse3 integration not implemented; core explicit-path fallback remains.",
+    "AppImage x86_64 glibc 2.35+ desktop target; not universal Linux compatibility.",
+    "Frozen native progress interaction still merits user acceptance after quitting the prior tray; source native KWin geometry and real Quick rendering were checked."
+  ]
+}

@@ -1,8 +1,31 @@
-# Linux source preview
+# Linux installation and use
 
-This branch now supports the shared glass UI and real local conversions on Linux.
-It is a source preview, not the finished cross-distribution installer. Python 3.14
-and the desktop dependencies are required until packaging is complete.
+The single-file personal installer is `dist/Filewheel-Linux-x86_64.AppImage`
+(446 MiB). It includes Python, Qt, converter libraries, FFmpeg, Pandoc and
+LibreOffice. No Python/pip installation or private Dolphin is needed.
+
+Quit the older Filewheel tray instance first, after its conversions finish. Then
+double-click the AppImage and choose **Install for this user**, or run:
+
+```sh
+chmod +x dist/Filewheel-Linux-x86_64.AppImage
+./dist/Filewheel-Linux-x86_64.AppImage --install-user
+~/.local/share/filewheel/app/Filewheel.AppImage --tray --ui-backend quick
+```
+
+The application launcher also starts Filewheel. Ordinary Dolphin middle-click
+is configured automatically on supported Plasma installations, with your usual
+application kept first. The progress-boundary fix requires restarting the old
+tray because its compositor script belongs to that session.
+
+This release targets x86_64 glibc 2.35+ Linux. Native interaction has been tested
+on the current Plasma Wayland desktop; other desktops are not claimed Mouse3
+compatible. See [LINUX_PACKAGING.md](LINUX_PACKAGING.md) for removal, optional
+login startup, FUSE requirements and build information.
+
+## Source development
+
+Source use requires Python 3.14 and the desktop/conversion dependencies below.
 
 ## Explicit file (no custom file manager required)
 
@@ -17,7 +40,7 @@ directories and special files are rejected. Formats depend on installed codecs
 and tools. FFmpeg supplies media, LibreOffice supplies Office→PDF, and Pandoc is
 optional for Markdown publishing. Linux OCR is not implemented.
 
-## Accepted private Dolphin route (KDE Wayland)
+## Historical optional private Dolphin experiment (KDE Wayland)
 
 After building/extracting prototypes/dolphin-bridge, quit the existing Filewheel
 tray owner and run:
@@ -52,13 +75,12 @@ tray Quit. Source hashes/output content were independently checked. Mixed DPI,
 large/grouped folders, long-job cancel/retry and frozen packaging need further
 native acceptance. Detailed evidence and test counts are in LINUX_STATUS.md.
 
-## Single-file Linux preview
+## Single-file package
 
 Installer/build details and compatibility boundaries are in
-[LINUX_PACKAGING.md](LINUX_PACKAGING.md). The AppImage offers a per-user installer;
-no Python/pip is required. The optional matched private-Dolphin variant exposes
-its browser through an explicit tray action. The core AppImage's context action
-is a fallback and is not native Mouse3 parity on other file managers/desktops.
+[LINUX_PACKAGING.md](LINUX_PACKAGING.md). The optional private-Dolphin variant is
+retained for experiments; use the ordinary-Dolphin default below for normal use.
+Other file managers/desktops retain the explicit-path fallback.
 
 ## Ordinary Dolphin middle-click (default installer integration)
 
@@ -72,7 +94,7 @@ also launches it when it is not already running. Use ordinary Dolphin windows.
 After quitting the old tray instance, install/upgrade the new core AppImage:
 
 ```sh
-./build/linux-native-dolphin/*.AppImage --install-user
+./dist/Filewheel-Linux-x86_64.AppImage --install-user
 ~/.local/share/filewheel/app/Filewheel.AppImage --tray --ui-backend quick
 ```
 

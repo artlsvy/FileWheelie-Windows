@@ -1,9 +1,28 @@
-# Linux preview packaging
+# Linux personal package
 
 The AppImage contains a private Python3.14/Qt runtime, existing converters and
 native FFmpeg/Pandoc/LibreOffice. It is a portable application with an explicit
 per-user installer, not a system package. The optional DEB reuses the same onedir
 payload. Neither replaces the system Dolphin or grants global Wayland input.
+
+## Delivered single-file installer
+
+Use `dist/Filewheel-Linux-x86_64.AppImage` (467,491,320 bytes, about 446 MiB).
+Only that file is needed for installation; its checksum and build manifest are
+optional verification sidecars. SHA-256:
+
+```text
+95f70cf62f81c0e7cbd44a46081c0edbc5ef5a44806d973c5a32a6a49619241c
+```
+
+Progress placement fix source: `abc4fb8`. The build contains no private Dolphin.
+Frozen onedir, AppImage extract-and-run, ordinary FUSE AppImage and offline
+Debian12 runtime checks each passed 40 checks /32 actual conversion pairs. Actual
+AppImage install→upgrade→remove passed in isolated XDG directories, including
+26 automatic Dolphin associations and document preservation. Source tests passed
+127 /4 intentional same-format skips. Evidence: `linux-evidence/final-installer.json`.
+Native source progress placement passed at 1.55 compositor scale; the updated
+frozen GUI still warrants a normal user interaction check after tray restart.
 
 ## Build
 
@@ -12,7 +31,9 @@ DEB only). The build installs dependencies inside its container, not into the
 host. No Python development environment is needed on an end-user machine.
 
 ```sh
-./scripts/build-linux.sh --output build/linux-release --deb
+./scripts/build-linux.sh --output build/linux-release \
+  --artifact-name Filewheel-Linux-x86_64.AppImage
+# Add --deb only when a Debian/Ubuntu package is also wanted.
 ```
 
 Output must be a new directory. All build-time downloads are hash checked. The
@@ -41,22 +62,26 @@ The app never silently launches it on normal startup. The source flag remains:
 ## Run/install/remove
 
 ```sh
-chmod +x Filewheel-*.AppImage
-./Filewheel-*.AppImage
+chmod +x Filewheel-Linux-x86_64.AppImage
+./Filewheel-Linux-x86_64.AppImage
 ```
 
 The first uninstalled GUI launch offers **Install for this user**, **Run without
 installing**, and **Cancel**. Installation copies the original AppImage into
 `$XDG_DATA_HOME/filewheel/app/Filewheel.AppImage` (normally `~/.local/share`),
-creates an application entry, icon and Dolphin context action. It does not change
-MIME defaults, require sudo, download tools, or enable login startup by default.
+creates an application entry, icon and Dolphin context action. It preserves
+your normal primary/default applications. It requires no sudo or tool downloads;
+login startup is off by default. On Plasma with Dolphin/gio/kbuildsycoca6, it adds Filewheel
+as the second application for supported input MIME types. This is an owned,
+reversible association change; inspect/disable/re-enable with `--dolphin` as
+documented in LINUX_USE.md.
 Use the tray's file picker on desktops where a file action is unavailable.
 An installed app launcher starts the tray without needing a file argument.
 
 Explicit commands (replace the single filename):
 
 ```sh
-./Filewheel-preview.AppImage --install-user
+./Filewheel-Linux-x86_64.AppImage --install-user
 ~/.local/share/filewheel/app/Filewheel.AppImage --gui --ui-backend quick -- /absolute/input.png
 ~/.local/share/filewheel/app/Filewheel.AppImage --startup install
 ~/.local/share/filewheel/app/Filewheel.AppImage --startup remove
@@ -73,7 +98,7 @@ If FUSE is unavailable, prepend `--appimage-extract-and-run` to app arguments.
 For example:
 
 ```sh
-./Filewheel-preview.AppImage --appimage-extract-and-run --install-user
+./Filewheel-Linux-x86_64.AppImage --appimage-extract-and-run --install-user
 ```
 
 This extracts temporarily, whereas a working FUSE mount avoids unpacking on each
@@ -110,7 +135,7 @@ Run the actual frozen smoke without a display, network or Python installed:
 ```sh
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
 FILEWHEEL_LOG_DIR=/tmp/fw-appimage-check \
-./Filewheel-preview.AppImage --appimage-extract-and-run --self-test --ui-backend quick
+./Filewheel-Linux-x86_64.AppImage --appimage-extract-and-run --self-test --ui-backend quick
 cat /tmp/fw-appimage-check/self-test.json
 ```
 
@@ -140,7 +165,9 @@ Run the frozen AppDir with `--network none` and validate its report using
 checks, even though a partial source environment can legitimately omit tools.
 Neither this nor an offscreen container establishes native GNOME/Xfce behavior.
 
-The current default stock-Dolphin build is under `build/linux-native-dolphin`.
+The current default stock-Dolphin installer is `dist/Filewheel-Linux-x86_64.AppImage`
+(build reports and AppDir: `build/linux-final-installer`). Older artifacts under
+`build/linux-native-dolphin` predate the progress-boundary fix.
 Its installer sets Filewheel second for available input MIME types on Plasma,
 without replacing the normal first/default application. See LINUX_USE.md for
 status/disable/re-enable commands and rollback behavior. The private-browser

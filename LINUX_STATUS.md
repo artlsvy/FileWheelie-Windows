@@ -1,13 +1,47 @@
-# Current Linux checkpoint — installable preview
+# Current Linux checkpoint — single-file personal package
 
 2026-10-30, branch `feat/linux-port`. Source native Wayland private-Dolphin exact
 clicks, wheel placement, PNG→JPEG/TXT→MD, persistent progress and Quit were accepted
-by the user. This is **not stock-Dolphin or universal Wayland Mouse3 support**.
+by the user. That original private-browser test did not establish stock-Dolphin
+or universal Wayland Mouse3 support.
 The native stock-Dolphin second-application route is also user-verified; the
 installer now sets it up automatically. Current checks and artifacts are below.
 Packaged private-Dolphin interaction is now user-reported working; original
 demo hashes remain unchanged. First-run install dialog and broader DPI/desktop
 acceptance remain pending. Historical probe/checkpoint notes follow.
+
+## Final package after native progress fix
+
+Current installer: **`dist/Filewheel-Linux-x86_64.AppImage`**, 467,491,320 bytes
+(446 MiB), source fix commit `abc4fb8`. SHA-256:
+`95f70cf62f81c0e7cbd44a46081c0edbc5ef5a44806d973c5a32a6a49619241c`.
+Python3.14/Qt/converters/FFmpeg/Pandoc/full LibreOffice are bundled. No private
+Dolphin, external Python/pip setup, or root installation is required. Default
+installer sets the reversible ordinary-Dolphin second-app integration, preserving
+primary handlers. GNOME integration remains deferred.
+
+The screenshot's expanded-progress overflow was reproduced and corrected in the
+scoped KWin script. Native before/after measurements show 102.06 px usable-area
+overflow corrected to 16 px panel clearance. Dark/animated and light/reduced-motion
+six-stage native Quick checks pass. Source tests: 127 passed /4 intentional
+same-format skips; scoped Ruff, compilation and whitespace checks pass.
+
+The final binary passes 40 checks /32 real conversion pairs in each of frozen
+onedir, AppImage extract-and-run, ordinary FUSE AppImage, and network-disabled
+Debian12 with no Python or converter executables installed in that runtime.
+The new placement module is present in the frozen Python archive. Actual final
+AppImage install→upgrade→remove passed in isolated XDG directories: 26 MIME types
+configured, launcher/payload removed and user document preserved. Initial upgrade
+QA hit a full /tmp RAM disk; repeating in the workspace passed. The existing
+running tray was not killed or silently upgraded. Quit/reopen it to load this fix.
+
+Evidence: `linux-evidence/final-installer.json`,
+`linux-evidence/progress-placement-fix.json`. Full build reports remain under
+`build/linux-final-installer`. Frozen native interaction after restart, actual
+simultaneous mixed-DPI outputs and physical panel relocation still warrant user
+acceptance; modeled permutations and source-native rendering are not those tests.
+No universal distro/desktop or GNOME Mouse3 claim. Older build directories remain
+historical artifacts; distribute the file under `dist/` above. No push.
 
 ## Initial milestone 1 — historical blocker checkpoint
 

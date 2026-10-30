@@ -1,27 +1,31 @@
-# Current task: final single-file package after progress boundary fix
+# Current checkpoint: corrected single-file installer delivered
 
-Native stock-Dolphin default integration is implemented and user-tested. Preserve
-it and the existing engines/UI. User then reported expanded progress spilling past
-the screen in /home/lsvy/ui bad allignment.jpg; image was inspected and exact bug
-reproduced on native Wayland. KWin placed initial72px surface only; height190 later
-kept its old Y. It overflowed usable area by102.06 logical pixels at1.55 scale.
+The user accepted ordinary Dolphin middle-click on Plasma. Default reversible
+second-application setup is implemented. Progress overflow in the supplied home
+screenshot was reproduced and fixed (source commit abc4fb8). Native KWin now
+repositions progress on size/reuse/output/work-area changes; expanded details sit
+16 logical pixels above the current panel, with no foreign-window movement.
 
-Fix is in linux/kwin_placement.py, used by KWinBridge: event-driven live KWin work
-area clamp on resize/reuse/output changes, original monitor retained, no focus
-steal or foreign-window changes. Native before/after expanded bottom now has16px
-panel clearance. Dark animated and light reduced-motion six-stage real Quick
-checks pass. 127 tests pass/4 intentional skips; Ruff/compile pass. See
-linux-evidence/progress-placement-fix.json and scripts/linux/check_progress_placement.py.
+Deliverable: dist/Filewheel-Linux-x86_64.AppImage (446 MiB). SHA-256:
+95f70cf62f81c0e7cbd44a46081c0edbc5ef5a44806d973c5a32a6a49619241c
 
-Finish building one final AppImage with --artifact-name Filewheel-Linux-x86_64.AppImage,
-run frozen and installer checks, place a clear final artifact under dist/ and
-record its hash. No Python/pip/private Dolphin should be needed. Automatic second
-app setup for26 MIME types stays in the installer. Preserve helpers/diagnostics.
-Do not force-kill the running tray/any worker to update it; instruct Quit/reopen
-for the new compositor script. Do not push or start GNOME work in this task.
+Bundled Python/Qt/converters/FFmpeg/Pandoc/LibreOffice; no private Dolphin needed.
+Current checks: 127 source tests passed /4 intentional skips; Ruff/compile/diff
+pass. Native dark animated and light reduced-motion six-stage checks pass.
+Final frozen onedir, extracted AppImage, FUSE AppImage and offline Debian12 each
+pass 40 checks /32 conversion pairs. Actual final install/upgrade/removal passes
+in isolated XDG; 26 Dolphin MIME associations and document preservation verified.
+See linux-evidence/final-installer.json and LINUX_USE.md.
 
-User untracked assets/ui/wheel.jpg and wheel (2).pdf/.png pre-existed this task;
-leave untouched/uncommitted, exclude from distributable source snapshots.
-Branch feat/linux-port. Previous artifacts under build/linux-native-dolphin do not
-contain the progress fix. Current requested deliverable is the final corrected
-single installation file, not an additional prototype browser.
+Next user acceptance: finish current jobs, Quit the OLD tray, install the dist/
+AppImage and reopen Filewheel. In ordinary Dolphin start a conversion, expand
+progress near the bottom/taskbar, collapse/re-expand, then inspect failure details
+if available. The old tray's script cannot acquire the fix without restarting.
+Do not force-kill running jobs. Actual simultaneous mixed-DPI/other panel layouts
+remain manual acceptance; native current-host fractional-scale checks passed.
+
+This task is complete as far as automated/current-host checks permit. GNOME work
+was deferred by the user until Dolphin completion; evaluate it separately next,
+without claiming global native Wayland Mouse3 support. Preserve private browser
+experiments, all converters, Windows behavior and fallback invocation paths.
+No automatic push. Do not commit unrelated user assets under assets/ui/.
