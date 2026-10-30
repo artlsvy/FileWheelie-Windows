@@ -1,0 +1,66 @@
+{
+  "user_confirmed_stock_dolphin_middle_click": true,
+  "dolphin_version": "4:25.12.3-0ubuntu1",
+  "framework_version": "6.24.0",
+  "session": "Plasma Wayland",
+  "portable_tests": {
+    "passed": 114,
+    "intentional_skips": 4
+  },
+  "frozen_checks": 40,
+  "real_conversion_pairs": 32,
+  "isolated_frozen_lifecycle": {
+    "frozen_installer": true,
+    "configured_count": 26,
+    "configured": [
+      "application/epub+zip",
+      "application/json",
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/xml",
+      "application/zip",
+      "audio/flac",
+      "audio/mp4",
+      "audio/mpeg",
+      "audio/ogg",
+      "audio/vnd.wave",
+      "image/heif",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "text/csv",
+      "text/html",
+      "text/markdown",
+      "text/plain",
+      "video/mp4",
+      "video/quicktime",
+      "video/vnd.avi",
+      "video/webm",
+      "video/x-matroska"
+    ],
+    "all_defaults_unchanged": true,
+    "all_native_kde_second_positions_verified": true,
+    "disable_survives_upgrade": true,
+    "reenable_and_uninstall": true,
+    "isolated_xdg": true
+  },
+  "real_profile": {
+    "user_confirmed_stock_dolphin_middle_click": true,
+    "installer_configured_count": 26,
+    "real_profile_defaults_unchanged": true,
+    "real_kde_second_position_verified": true
+  },
+  "artifact": {
+    "Filewheel-0.3-linux-preview-linux-x86_64.AppImage": "fbf8b51959d121d17c8883c11a1056568e1db6c892efbf970fb2a844261e938f"
+  },
+  "source_snapshot_excludes_unrelated_untracked_asset": true,
+  "gnome_changes": false,
+  "claims_exclude": [
+    "new hardware tests beyond user-reported native middle-click test",
+    "GNOME support",
+    "mixed-DPI and first-run GUI dialog acceptance",
+    "Windows-native regression"
+  ]
+}

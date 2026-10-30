@@ -3,7 +3,8 @@
 2026-10-30, branch `feat/linux-port`. Source native Wayland private-Dolphin exact
 clicks, wheel placement, PNG→JPEG/TXT→MD, persistent progress and Quit were accepted
 by the user. This is **not stock-Dolphin or universal Wayland Mouse3 support**.
-Final AppImage/DEB artifacts and their automated checks are documented below.
+The native stock-Dolphin second-application route is also user-verified; the
+installer now sets it up automatically. Current checks and artifacts are below.
 Packaged private-Dolphin interaction is now user-reported working; original
 demo hashes remain unchanged. First-run install dialog and broader DPI/desktop
 acceptance remain pending. Historical probe/checkpoint notes follow.
@@ -299,3 +300,45 @@ association route still needs a stock-Dolphin hardware test; no user MIME settin
 have been changed. Current KWin placement can be reused on Plasma. Other
 compositors/file managers require independently verified input/identity/placement
 adapters; Nautilus's supported MenuProvider is a menu API, not a middle-click API.
+
+
+## Default native stock-Dolphin integration
+
+User confirmed that manually making Filewheel the second application works in
+ordinary Dolphin on Plasma. This is now the default per-user installer behavior,
+also included in `--integration install` for source/DEB setups. Setup discovers
+available registry input MIME types, preserves the current primary, and places
+Filewheel second using XDG Added/Default Applications order. KDE's fallback-default
+list precedence is handled explicitly. No hooks, provisional identities, patches
+to system Dolphin or conversion changes are introduced. The broad application/
+octet-stream declaration was removed from the launcher so unsupported/no-handler
+types do not acquire Filewheel as their first application. The context action
+continues to validate any explicit input through the shared controller.
+
+An owned per-entry write-ahead journal allows repeatable upgrade and removal.
+Unchanged entries restore prior values; later user edits are retained except for
+Filewheel's ID. Foreign launchers/state, symlinks, duplicate entries and concurrent
+management fail safely. Explicit disable (`--dolphin remove`) survives upgrades;
+`--dolphin install` re-enables it. Missing default handlers, existing Filewheel
+primary choices, user exclusions and unavailable desktop tools are reported and
+preserved. Automatic setup is limited to Plasma with Dolphin/gio/kbuildsycoca6;
+no GNOME integration or native GNOME claim is added. Private-browser code stays
+available, and its toggle is shown only when that experiment is in use.
+
+Actual validation: **114 passed /4 intentional same-format skips**, Ruff and
+compilation. Read-only target-built KApplicationTrader probe confirms PNG/PDF
+ordering and rollback in isolated XDG preferences, including multiple fallback
+apps. The actual frozen installer confirms all26 available MIME types keep their
+primary and place Filewheel second; disable→upgrade keeps the opt-out, re-enable
+and uninstall restore preferences. The user's installed copy was then upgraded;
+real KDE queries confirm all26 existing primary applications are unchanged and
+Filewheel is second in every configured type. The user's earlier stock-Dolphin
+hardware test is the basis for native click acceptance; ordering queries are not
+presented as new synthetic hardware tests. First-run GUI dialog and mixed-DPI /
+other desktop acceptance remain separately scoped.
+
+Current core AppImage: `build/linux-native-dolphin/` (same converter runtime;
+40 frozen checks/32 actual pairs). Current native evidence is
+`linux-evidence/dolphin-default-acceptance.json`. Build manifests record source
+and artifact hashes. Unrelated untracked user assets are excluded from source
+snapshots. The user's untracked wheel.jpg was left untouched. No push.

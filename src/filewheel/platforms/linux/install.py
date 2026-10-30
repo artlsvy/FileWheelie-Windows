@@ -74,11 +74,9 @@ def install(image):
         temporary.chmod(0o755)
         checksum = digest(temporary)
         # Integration preflight refuses edits/unowned entries before binary replacement.
-        from filewheel.platforms.linux.integration import entries
+        from filewheel.platforms.linux.integration import preflight
 
-        for path, content in entries([str(target)]).items():
-            if path.is_symlink() or (path.exists() and path.read_text() != content):
-                raise RuntimeError("Preserving conflicting desktop integration: " + str(path))
+        preflight([str(target)])
         os.replace(temporary, target)
         atomic_write(manifest, json.dumps({"schema": 1, "sha256": checksum}) + "\n", 0o600)
         configure("install", [str(target)])

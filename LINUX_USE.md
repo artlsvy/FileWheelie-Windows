@@ -59,3 +59,44 @@ Installer/build details and compatibility boundaries are in
 no Python/pip is required. The optional matched private-Dolphin variant exposes
 its browser through an explicit tray action. The core AppImage's context action
 is a fallback and is not native Mouse3 parity on other file managers/desktops.
+
+## Ordinary Dolphin middle-click (default installer integration)
+
+The user has verified the native second-application route on Plasma. New installs
+and upgrades now configure it automatically for input MIME types supported by
+available engines. Your existing normal/default app stays first; Filewheel goes
+second. No patched browser, global mouse hook or resident file-identity guess is
+needed. Start Filewheel from the app launcher to keep a warm tray owner; middle-click
+also launches it when it is not already running. Use ordinary Dolphin windows.
+
+After quitting the old tray instance, install/upgrade the new core AppImage:
+
+```sh
+./build/linux-native-dolphin/*.AppImage --install-user
+~/.local/share/filewheel/app/Filewheel.AppImage --tray --ui-backend quick
+```
+
+The first GUI install explains the association change. For source or DEB usage,
+`--integration install` performs the same setup for that launch command. No setup
+runs on every popup. Installation keeps original per-entry values in an owned
+journal under `$XDG_CONFIG_HOME/filewheel`; removal restores them if untouched,
+and preserves later user edits while removing Filewheel's ID. Legacy owned desktop
+entries migrate safely; foreign/modified entries and symlinks remain protected.
+
+Inspect, disable while keeping the launcher, or re-enable:
+
+```sh
+~/.local/share/filewheel/app/Filewheel.AppImage --dolphin status
+~/.local/share/filewheel/app/Filewheel.AppImage --dolphin remove
+~/.local/share/filewheel/app/Filewheel.AppImage --dolphin install
+```
+
+Explicit disable persists across upgrades. Uninstall restores managed associations
+without changing documents/results. Automatic setup currently requires Plasma,
+Dolphin, `gio` and `kbuildsycoca6`; skipped types/reasons print during installation.
+No existing handler → skip, so Filewheel is not installed as that type's first app.
+An existing Filewheel default or explicit user exclusion is preserved. Preferences
+are keyed by MIME, so related extensions can share a route; unsupported extensions
+still fail through the normal controller/registry. Archive browsing or file-tab
+mode can take Dolphin's folder/tab branch instead. GNOME support remains separate
+and unimplemented; this adds no GNOME hook or placement adapter.

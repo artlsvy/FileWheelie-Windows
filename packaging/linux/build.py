@@ -82,7 +82,7 @@ def desktop(exec_value):
         "Comment=Local file converter — Linux preview\nExec="
         + exec_value
         + " --ui-backend quick -- %f\nIcon=filewheel\nTerminal=false\n"
-        "Categories=Utility;\nMimeType=application/octet-stream;\n"
+        "Categories=Utility;\n"
     )
 
 
@@ -216,9 +216,25 @@ print(json.dumps({str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdig
     (appdir / "filewheel.svg").write_text(icon())
     os.symlink("filewheel.svg", appdir / ".DirIcon")
     # Include the actual source snapshot for this preview, plus the bridge patch.
-    files = subprocess.check_output(
-        ["git", "ls-files", "-co", "--exclude-standard"], text=True
+    files = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+    # Capture new implementation files without sweeping unrelated user assets
+    # into a distributable source archive merely because they are untracked.
+    new_files = subprocess.check_output(
+        ["git", "ls-files", "--others", "--exclude-standard"], text=True
     ).splitlines()
+    files += [
+        name
+        for name in new_files
+        if Path(name).parts[0]
+        in {
+            "src",
+            "packaging",
+            "scripts",
+            "tests",
+            "prototypes",
+            "linux-evidence",
+        }
+    ]
     source = payload / "FILEWHEEL-SOURCE.tar.gz"
     with tarfile.open(source, "w:gz") as archive:
         for name in files:

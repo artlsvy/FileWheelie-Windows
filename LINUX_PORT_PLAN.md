@@ -220,3 +220,9 @@ container/installer checks pass; final packaged native and broader desktop/DPI
 acceptance remain pending. The original stock-Dolphin blocker is not erased.
 Consult current LINUX_STATUS.md rather than interpreting early historical notes
 above as the current implementation state. No push or universal support claim.
+
+
+Stock-Dolphin follow-up: user verified the built-in second-associated-application
+route. Automatic native MIME ordering/restore is now implemented and validated;
+private Dolphin is optional. Other file managers and compositor placement remain
+separate future adapters, beginning with bounded GNOME feasibility when available.

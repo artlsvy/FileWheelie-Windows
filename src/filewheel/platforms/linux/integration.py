@@ -1,4 +1,4 @@
-"""Owned user desktop/Dolphin actions; no default MIME associations changed."""
+"""Owned desktop actions plus reversible stock-Dolphin middle-click setup."""
 
 import os
 import tempfile
@@ -18,7 +18,7 @@ def quote(value):
     return '"' + value.replace("\\", "\\\\").replace("%", "%%") + '"'
 
 
-def entries(command):
+def entries(command, *, legacy=False):
     if not command or any(char in str(command[0]) for char in ("=", "%")):
         raise ValueError(
             "Desktop executable paths cannot contain = or % (desktop-parser limitation)"
@@ -31,7 +31,8 @@ def entries(command):
         + "Exec="
         + executable
         + " --ui-backend quick -- %f\n"
-        "Icon=filewheel\nTerminal=false\nCategories=Utility;\nMimeType=application/octet-stream;\n"
+        "Icon=filewheel\nTerminal=false\nCategories=Utility;\n"
+        + ("MimeType=application/octet-stream;\n" if legacy else "")
     )
     service = (
         "[Desktop Entry]\nType=Service\nName=Filewheel\nMimeType=application/octet-stream;\n"
@@ -63,20 +64,42 @@ def atomic_write(path, content, mode=0o644):
             temporary.unlink(missing_ok=True)
 
 
-def configure(action, command):
-    if action not in ("install", "remove"):
-        raise ValueError("Unknown integration action")
+def preflight(command):
     expected = entries(command)
-    # Preflight every entry before mutating any, including the shared icon name.
+    old = entries(command, legacy=True)
     for path, content in expected.items():
         if path.is_symlink() or (
-            path.exists() and (not path.is_file() or path.read_text() != content)
+            path.exists() and (not path.is_file() or path.read_text() not in (content, old[path]))
         ):
             raise RuntimeError(
                 "Preserving an integration entry from another installation: " + str(path)
             )
+    return expected
+
+
+def configure(action, command):
+    if action not in ("install", "remove"):
+        raise ValueError("Unknown integration action")
+    expected = preflight(command)
+    from filewheel.platforms.linux import dolphin_associations
+
+    if action == "remove":
+        dolphin_associations.remove(command)
     for path, content in expected.items():
         if action == "remove":
             path.unlink(missing_ok=True)
         else:
             atomic_write(path, content, 0o755 if "servicemenus" in path.parts else 0o644)
+    if action == "install":
+        result = dolphin_associations.install(command)
+        print(
+            "Dolphin middle-click:",
+            len(result["configured"]),
+            "file types configured;",
+            len(result["skipped"]),
+            "skipped.",
+        )
+        for mime, reason in result["skipped"].items():
+            print("Dolphin skipped:", mime, "—", reason)
+        return result
+    return None

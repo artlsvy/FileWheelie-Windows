@@ -139,3 +139,11 @@ Run the frozen AppDir with `--network none` and validate its report using
 `packaging/linux/verify_smoke.py`. Optional-family skips are forbidden for release
 checks, even though a partial source environment can legitimately omit tools.
 Neither this nor an offscreen container establishes native GNOME/Xfce behavior.
+
+The current default stock-Dolphin build is under `build/linux-native-dolphin`.
+Its installer sets Filewheel second for available input MIME types on Plasma,
+without replacing the normal first/default application. See LINUX_USE.md for
+status/disable/re-enable commands and rollback behavior. The private-browser
+artifact remains available for experiments but is no longer the normal Dolphin
+route. `gio`/`kbuildsycoca6`/Dolphin are discovered host desktop tools and run with
+frozen library/plugin paths sanitized; they are not bundled from another KDE ABI.

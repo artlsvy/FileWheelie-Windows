@@ -1,34 +1,35 @@
-# Next: prove stock Dolphin's built-in second-application route
+# Native Dolphin complete; next: bounded GNOME feasibility
 
-User now reports the packaged private Dolphin works; demo source hashes unchanged.
-See linux-evidence/package-acceptance.json. Keep extended native acceptance scoped:
-Quit, first-run GUI install, mixed DPI and other desktops are not inferred.
+User verified Plasma/stock Dolphin's second-application middle-click works.
+The default AppImage installer and --integration install now configure this
+route automatically for available engine input MIME types, preserving the first
+application. Existing normal handlers remain first; Filewheel is second.
+No private Dolphin, input hook, selected-file guessing or converter changes needed.
 
-An overlooked existing stock-Dolphin feature should be tried FIRST. Installed
-Dolphin25.12.3's slotfileMiddleClickActivated obtains the actual clicked KFileItem
-and launches the second application returned by KApplicationTrader for that MIME,
-passing item.targetUrl(). Shift+middle uses the third. Verified in the actual
-Ubuntu source inside filewheel-dolphin-probe:25.12.3 and KDE's25.12.3 tag.
-No generic external hook or selected-file guessing is needed for this route.
-The previous claim that a private build was required for all routes was too broad.
+Actual checks: 114 tests passed/4 intentional media skips; final frozen AppImage
+40 checks/32 actual pairs. Real KDE KApplicationTrader verification passes for
+PNG/PDF before/setup/remove in isolated XDG. Frozen install→disable→upgrade→
+re-enable→uninstall passes for26 MIME types, with defaults unchanged. The actual
+installed profile also has Filewheel second for26 types with every primary app
+unchanged. Source/CLI compile and scoped Ruff pass. See new native-Dolphin evidence
+and LINUX_USE.md for status/disable/re-enable commands. Symlinks, foreign ownership,
+late user edits, interrupted setup and concurrent management are protected.
 
-Bounded next test: use the existing installed Filewheel desktop launcher and
-configure it SECOND for image/png, preserving the first/default viewer. Back up
-and restore only exact owned/user-approved MIME changes. keditfiletype is installed.
-Test a real middle-click of an unselected PNG in ordinary /usr/bin/dolphin, with
-other files selected and duplicate names in different tabs; verify path, near-cursor
-KWin placement, conversion/source integrity and unchanged normal-open behavior.
-Archives/directories and file-tab mode may take other branches; do not promise
-those automatically. Do not replace Dolphin, rewrite converters or add global hooks.
-User has asked how to achieve broader integration; no MIME preferences changed yet.
+Current artifact: build/linux-native-dolphin/*.AppImage. Installed copy is
+~/.local/share/filewheel/app/Filewheel.AppImage. Old private-browser artifacts and
+prototype code are preserved but no longer required for ordinary Dolphin.
+A user-created untracked assets/ui/wheel.jpg was present before this task; leave
+it untouched and uncommitted. Source archive assembly excludes unrelated untracked
+assets. No commits pushed; branch feat/linux-port.
 
-If this works, implement opt-in per-MIME second-app setup/restore in the installer,
-derived from working registry capabilities. Then investigate file-manager adapters
-for GNOME/Nautilus, Thunar/Nemo plus compositor placement separately. GNOME menu
-extensions alone do not expose an exact hovered-file Mouse3 callback. A compositor
-button signal alone is insufficient identity. No universal Wayland Mouse3 claim.
-
-Existing final artifacts: build/linux-delivery and build/linux-kubuntu-delivery.
-97 tests/4 intentional skips; shipped-media59/4; frozen40 checks/32 actual pairs;
-FUSE/extract-and-run, real user install and offline Debian12 DEB checks passed.
-Other packaging directories are SUPERSEDED. Branch feat/linux-port; no push.
+GNOME is deferred until this completed milestone. The user has no GNOME desktop.
+Next investigate exact target Nautilus/GNOME versions and whether their native
+middle-click activation can supply the actual file URI through a supported API.
+Do not assume a MenuProvider/context-menu extension supplies a Mouse3 callback,
+or that a GNOME Shell button observer knows the file. File identity and native
+Wayland popup placement are separate requirements. A container/offscreen run can
+check file-manager code but cannot prove GNOME compositor focus/placement/input.
+Do not install/replace the host desktop, change file defaults, patch Nautilus or
+add root input permissions implicitly. Report precise API/environment blockers
+if native GNOME acceptance requires a real guest/session. Preserve working Plasma,
+Windows, converter engines, Send to, UI and all private prototype infrastructure.

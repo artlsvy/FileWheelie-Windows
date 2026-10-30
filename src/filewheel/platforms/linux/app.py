@@ -20,6 +20,24 @@ def main(args):
 
         uninstall()
         return 0
+    if args.dolphin:
+        import json
+
+        from filewheel import preferences
+        from filewheel.paths import launch_command
+        from filewheel.platforms.linux import dolphin_associations
+
+        if args.dolphin == "install":
+            result = dolphin_associations.install(launch_command(), force=True)
+            preferences.save_dolphin_enabled(True)
+        elif args.dolphin == "remove":
+            dolphin_associations.remove(launch_command())
+            preferences.save_dolphin_enabled(False)
+            result = {"configured": [], "enabled": False}
+        else:
+            result = dolphin_associations.status()
+        print(json.dumps(result, indent=2))
+        return 0
     if args.integration:
         from filewheel.paths import launch_command
         from filewheel.platforms.linux.integration import configure
@@ -63,7 +81,8 @@ def main(args):
             box.setWindowTitle("Filewheel Linux preview")
             box.setText("Install Filewheel for your user account?")
             box.setInformativeText(
-                "Adds a launcher and file-manager actions. No administrator access is needed."
+                "Adds a launcher and Dolphin middle-click integration for supported file types. "
+                "Your normal default applications stay first. No administrator access is needed."
             )
             yes = box.addButton("Install for this user", QMessageBox.AcceptRole)
             run = box.addButton("Run without installing", QMessageBox.ActionRole)
@@ -146,6 +165,11 @@ def main(args):
     try:
         host = DesktopApplication(tray=tray, ui_backend=args.ui_backend, auto_start=False)
         app._filewheel_desktop = host
+        # The native route is configured through MIME application order, not a
+        # resident hook. Keep the old toggle only for the optional private bridge.
+        host.experiment_action.setText("Enable private-browser wheel")
+        host.experiment_action.setVisible(bool(args.private_dolphin))
+        host.tray.setToolTip("Filewheel — local file converter")
 
         def choose_file():
             if host.quitting or host.popup.job is not None:
@@ -185,6 +209,7 @@ def main(args):
                     )
                     host.extra_resources.append(bridge)
                     host.linux_bridge = bridge
+                    host.experiment_action.setVisible(True)
                     from filewheel import preferences
 
                     host.set_experiment(preferences.wheel_enabled(), persist=False)

@@ -7,6 +7,14 @@ import pytest
 from filewheel.platforms.linux import install, integration
 
 
+@pytest.fixture(autouse=True)
+def isolated_association_environment(tmp_path, monkeypatch):
+    from filewheel.platforms.linux import dolphin_associations
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    monkeypatch.setattr(dolphin_associations, "available", lambda: False)
+
+
 def image(path, version=b"one"):
     path.write_bytes(b"\x7fELF" + b"\0" * 4 + b"AI\x02" + b"\0" * 5 + version)
     return path

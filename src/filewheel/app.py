@@ -10,6 +10,8 @@ from filewheel.runtime import require_runtime
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Filewheel local converter')
     parser.add_argument('--tray', action='store_true')
+    parser.add_argument('--dolphin', choices=('install', 'remove', 'status'),
+                        help='Linux stock Dolphin middle-click associations')
     parser.add_argument('--integration', choices=('install','remove'), help='Linux desktop actions')
     parser.add_argument('--install-user', action='store_true', help='Install this AppImage for the current user')
     parser.add_argument('--uninstall-user', action='store_true', help='Remove owned Linux installation')
@@ -35,7 +37,7 @@ def main(argv=None):
         if sys.platform == 'linux':
             from filewheel.platforms.linux.app import main as linux_main
             return linux_main(args)
-        if args.private_dolphin or args.integration or args.install_user or args.uninstall_user:
+        if args.private_dolphin or args.integration or args.install_user or args.uninstall_user or args.dolphin:
             parser.error('That management option is Linux-only')
         if args.ui_stress_test:
             if not 1 <= args.ui_stress_cycles <= 1000:

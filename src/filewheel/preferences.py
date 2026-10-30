@@ -61,3 +61,11 @@ def _save(key, value):
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
+
+
+def dolphin_enabled():
+    return _read().get('dolphin_enabled', True) is not False
+
+
+def save_dolphin_enabled(enabled):
+    _save('dolphin_enabled', bool(enabled))
