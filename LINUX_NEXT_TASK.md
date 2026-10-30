@@ -1,17 +1,28 @@
-# Current task: rebuild after image-only PDF OCR repair
+# Current checkpoint: Linux PDF OCR fixed and AppImage rebuilt
 
-User accepted progress placement, then reported PDF→MD invoking Windows OCR on
-Linux. Source repair adds offline Tesseract dispatch for PDF→MD/DOCX. The baseline
-AppImage must bundle Tesseract, English/orientation models and native libraries;
-new strict frozen checks must prove recognition and original-page linkage.
-Picture-only Markdown retains original page images instead of failing on no text.
-Windows OCR helper remains in use on Windows; no changes to Mouse3/trust/UI.
+User accepted the progress-position fix. Subsequent image-only PDF→MD failure
+was caused by calling Windows native OCR on Linux. Shared PDF assembly now
+selects local Tesseract on Linux while retaining Windows recognition. The AppImage
+includes Tesseract, English/orientation models and native libraries/notices.
+Markdown preserves original page images even when OCR recognizes no text;
+scanned DOCX includes editable text and original-page references. Existing text
+PDFs, conversion safety, cancellation, UI, Dolphin/tray behavior stay in place.
 
-Finish tests/Ruff/compile, commit the focused source repair, rebuild to a fresh
-build/linux-ocr-installer directory using workspace TMPDIR (the /tmp RAM disk is
-nearly full), and run actual AppImage plus offline Debian12 OCR/content smoke.
-Replace dist/Filewheel-Linux-x86_64.AppImage only after checks pass; record new
-SHA/size/commit and update LINUX_USE/PACKAGING/STATUS/NEXT_TASK. Preserve user
-assets/ui/wheel.jpg and wheel (2).pdf/.png; do not push or force-kill the old tray.
-Final instruction: finish jobs, Quit old Filewheel, install/update the new single
-AppImage and reopen before testing PDF→To MD. GNOME remains deferred.
+Deliverable: dist/Filewheel-Linux-x86_64.AppImage (454 MiB).
+SHA-256: 56656b2dba024e4999bd9ce0b7c03002345bf6e19ecca14d6f66dd7f6d3109a1
+Source repair: 7b1cafc. Current source suite: 140 passed /4 intentional skips.
+Ruff/compilation pass. Frozen onedir, extracted AppImage, FUSE AppImage and
+network-disabled Debian12 each pass 44 checks, including real OCR content/link
+checks. Actual final install/upgrade/remove passes in isolated XDG directories;
+26 Dolphin MIME registrations and document preservation verified. See
+linux-evidence/final-installer.json and LINUX_PACKAGING.md.
+
+User next action: finish any jobs, Quit the OLD tray, install the updated dist/
+AppImage with --install-user, then start the installed --tray --ui-backend quick.
+Retest the previously failing PDF→To MD and keep its generated linked PNG page
+images beside the Markdown file. English OCR models are included; other languages
+and mixed text/scanned-page extraction are not newly claimed complete.
+
+Task complete as far as automated checks permit. GNOME remains deferred. Preserve
+all existing Windows/private-Dolphin/converter code and unrelated assets/ui/
+wheel.jpg and wheel (2).pdf/.png. No automatic push or forced tray shutdown.

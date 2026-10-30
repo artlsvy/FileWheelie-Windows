@@ -23,8 +23,26 @@ when OCR finds no letters. DOCX still requires recognized editable text.
 Tesseract executable, English/orientation models and native libraries/notices are
 now bundled by the baseline build. Recognition uses explicit bundled language data,
 no network, bounded subprocesses and existing safe staging/publication. Text-layer
-PDF extraction stays unchanged. Source regression and actual rebuilt frozen
-acceptance results will be recorded at the next checkpoint.
+PDF extraction stays unchanged. Source repair is committed as `7b1cafc`.
+
+Delivered updated `dist/Filewheel-Linux-x86_64.AppImage`: 476,301,816 bytes
+(454 MiB), SHA-256 `56656b2dba024e4999bd9ce0b7c03002345bf6e19ecca14d6f66dd7f6d3109a1`.
+All **140 source tests pass /4 intentional same-format skips**, Ruff/compile pass.
+The actual frozen onedir, extracted AppImage, ordinary FUSE AppImage and offline
+Debian12 runtime each pass **44 checks**. The new checks recognize actual scanned
+PDF text in DOCX and Markdown, verify page-image links, preserve a picture-only
+PDF, and require OCR from the bundled tree. Debian runtime has no Python,
+Tesseract or other converter tools installed; network is disabled. Actual final
+install/upgrade/remove preserves documents and 26 Dolphin associations. One test
+harness cleanup initially raced asynchronous FUSE unmount in a temporary root;
+rerun with a separate mount-temp directory completed cleanly. The installed app
+and running tray were not silently replaced/killed. No user assets modified.
+
+English recognition data is included. OCR may make mistakes; complex layouts are
+not reconstructed. PDFs with both text-layer and scanned pages keep existing
+extraction/limitations warnings. Windows dispatch has a portable regression test;
+no new native Windows test was claimed. Progress-position fix stays intact and is
+user-accepted. See linux-evidence/final-installer.json. No push.
 
 ## Previous package after native progress fix
 

@@ -1,49 +1,70 @@
 {
   "artifact": "dist/Filewheel-Linux-x86_64.AppImage",
-  "artifact_bytes": 467491320,
-  "sha256": "95f70cf62f81c0e7cbd44a46081c0edbc5ef5a44806d973c5a32a6a49619241c",
-  "source_commit": "abc4fb8774e0237140ef5ae85edce71326dce13f",
-  "source_dirty_note": "Only three unrelated user assets were untracked; excluded from packaged source snapshot.",
-  "frozen_placement_module_present": true,
+  "artifact_bytes": 476301816,
+  "sha256": "56656b2dba024e4999bd9ce0b7c03002345bf6e19ecca14d6f66dd7f6d3109a1",
+  "source_commit": "7b1cafc158810d2dcf34d009e17b7826a3bb30f9",
+  "supersedes_sha256": "95f70cf62f81c0e7cbd44a46081c0edbc5ef5a44806d973c5a32a6a49619241c",
+  "source_dirty_note": "Only unrelated user assets untracked; excluded from packaged source snapshot.",
   "packaged_checks": {
     "frozen_onedir": {
       "ok": true,
-      "checks": 40,
-      "actual_conversion_pairs": 32
+      "checks": 44,
+      "declared_conversion_pairs": 32,
+      "ocr_content_cases": 3
     },
     "appimage_extract_run": {
       "ok": true,
-      "checks": 40,
-      "actual_conversion_pairs": 32
+      "checks": 44,
+      "declared_conversion_pairs": 32,
+      "ocr_content_cases": 3
     },
     "appimage_fuse": {
       "ok": true,
-      "checks": 40,
-      "actual_conversion_pairs": 32
+      "checks": 44,
+      "declared_conversion_pairs": 32,
+      "ocr_content_cases": 3
     },
     "offline_debian12_no_python_or_host_converters": {
       "ok": true,
-      "checks": 40,
-      "actual_conversion_pairs": 32
+      "checks": 44,
+      "declared_conversion_pairs": 32,
+      "ocr_content_cases": 3
     }
   },
   "installer": {
     "actual_appimage_install_upgrade_remove": true,
     "configured_mime_types": 26,
     "documents_preserved": true,
-    "isolated_xdg": true,
-    "initial_attempt": "Temporary RAM disk filled during upgrade; rerun in workspace passed"
+    "isolated_xdg": true
   },
   "source_tests": {
-    "passed": 127,
+    "passed": 140,
     "skipped": 4,
     "skip_reason": "Intentional same-format media cases"
   },
+  "ocr": {
+    "offline": true,
+    "language": "English (eng)",
+    "original_pages_linked_in_markdown": true,
+    "picture_only_pdf_preserved_without_recognized_text": true,
+    "windows_native_recognition_retained": true,
+    "apt_versions": {
+      "ffmpeg": "7:4.4.2-0ubuntu0.22.04.1",
+      "libreoffice-core": "1:7.3.7-0ubuntu0.22.04.13",
+      "libreoffice-writer": "1:7.3.7-0ubuntu0.22.04.13",
+      "libreoffice-calc": "1:7.3.7-0ubuntu0.22.04.13",
+      "libreoffice-impress": "1:7.3.7-0ubuntu0.22.04.13",
+      "tesseract-ocr": "4.1.1-2.1build1",
+      "tesseract-ocr-eng": "1:4.00~git30-7274cfa-1.1",
+      "tesseract-ocr-osd": "1:4.00~git30-7274cfa-1.1"
+    }
+  },
   "native_progress": "linux-evidence/progress-placement-fix.json",
+  "native_progress_user_accepted": true,
   "limitations": [
-    "Actual simultaneous mixed-DPI outputs and panel relocation not physically tested.",
-    "Native GNOME Mouse3 integration not implemented; core explicit-path fallback remains.",
-    "AppImage x86_64 glibc 2.35+ desktop target; not universal Linux compatibility.",
-    "Frozen native progress interaction still merits user acceptance after quitting the prior tray; source native KWin geometry and real Quick rendering were checked."
+    "OCR accuracy and complex layout vary; English recognition data is included.",
+    "Mixed text/scanned PDFs retain existing text extraction and limitations warnings.",
+    "Windows OCR code dispatch tested portably; no new native Windows run.",
+    "GNOME Mouse3 integration remains deferred; existing Plasma integration unchanged."
   ]
 }

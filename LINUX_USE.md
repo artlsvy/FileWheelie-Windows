@@ -1,8 +1,8 @@
 # Linux installation and use
 
 The single-file personal installer is `dist/Filewheel-Linux-x86_64.AppImage`
-(446 MiB). It includes Python, Qt, converter libraries, FFmpeg, Pandoc and
-LibreOffice. No Python/pip installation or private Dolphin is needed.
+(454 MiB). It includes Python, Qt, converter libraries, FFmpeg, Pandoc,
+LibreOffice and offline Tesseract OCR (English). No Python/pip installation or private Dolphin is needed.
 
 Quit the older Filewheel tray instance first, after its conversions finish. Then
 double-click the AppImage and choose **Install for this user**, or run:

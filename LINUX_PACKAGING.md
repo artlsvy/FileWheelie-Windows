@@ -5,7 +5,24 @@ native FFmpeg/Pandoc/LibreOffice/Tesseract. It is a portable application with an
 per-user installer, not a system package. The optional DEB reuses the same onedir
 payload. Neither replaces the system Dolphin or grants global Wayland input.
 
-## OCR repair build
+## Current single-file installer — OCR repair
+
+Use `dist/Filewheel-Linux-x86_64.AppImage` (476,301,816 bytes, 454 MiB).
+SHA-256:
+
+```text
+56656b2dba024e4999bd9ce0b7c03002345bf6e19ecca14d6f66dd7f6d3109a1
+```
+
+Source repair: `7b1cafc`. Frozen onedir, extracted AppImage, ordinary FUSE launch
+and offline Debian12 each pass **44 checks**, including the existing 32 conversion
+pairs and three real OCR/picture-only conversion cases. Actual final install,
+upgrade and removal pass in isolated XDG directories, preserving documents and
+26 Dolphin registrations. Source suite: **140 passed /4 intentional skips**;
+Ruff/compilation pass. Evidence: `linux-evidence/final-installer.json`. Older build
+artifacts below are historical; distribute the file under dist/ above.
+
+## OCR implementation
 
 The new Linux build bundles Tesseract, English recognition data, orientation data
 and its non-glibc ELF dependencies. Image-only PDF→MD/DOCX dispatches to this local
