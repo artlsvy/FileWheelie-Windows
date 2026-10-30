@@ -1,21 +1,30 @@
-# Next: resolve the native Dolphin file-identity contract
+# Next: physically test the authorized private Dolphin URI bridge
 
-Milestone 1 ends at the precise blocker in LINUX_STATUS.md. Do not proceed to
-milestone 2 under the current instruction, or claim laptop Mouse3 parity.
+User approved the isolated Dolphin prototype. It compiled successfully in Docker;
+see LINUX_STATUS.md and prototypes/dolphin-bridge/README.md. The installed Dolphin,
+Windows application and host packages were not replaced or modified.
 
-KWin 6.6.6 scripted effects expose the button signal, and a compositor script can
-place an owned native Wayland surface. Actual hardware capture still needs a
-deliberate live test. The harder blocker is authoritative hovered-file identity:
-Dolphin 25.12.3's tested AT-SPI items expose no URI. Ordinary context actions do
-not implement middle-click. Do not substitute selected files or guessed paths.
+Run on the actual KDE Wayland desktop (new report path required):
 
-The next decision is whether to authorize a specifically supported Dolphin-side
-integration/extension that exports the actual clicked KFileItem URL, or revise
-the interaction. A Dolphin patch, private widget hook or ABI-dependent compositor
-plugin is not implicitly authorized by this checkpoint. If another documented
-URI provider is proposed, test it against the installed version and active tab,
-not just display names. A successful hardware event alone does not close the gate.
+```bash
+/usr/bin/python3 prototypes/dolphin-bridge/receiver.py \
+  --dolphin build/dolphin-probe/bin/dolphin \
+  --library-dir build/dolphin-probe/lib/x86_64-linux-gnu \
+  --seconds 240 --report /tmp/fw-clicked-uri-next.json
+```
 
-Use `linux-evidence/milestone-1.json` and the two bounded scripts to avoid repeating
-research. Preserve the finalized Windows application and the Linux branch/plan.
-No push. No packaging or converter work until a subsequent instruction expands scope.
+In both private scratch tabs, left-click `previous selection.txt`, then physically
+middle-click `report.txt`, `report.csv` and `unicode-æøå.txt` without preselecting
+those targets. Compare each accepted relative path with the actual tab/file clicked.
+Record user confirmation and the report, including failures. No conversion runs.
+The receiver automatically closes only its private child and removes scratch
+files. Ctrl+C also closes it and writes the report. If the chat laptop is a
+separate host, the native test must run there; the workspace's windows are not
+visible on an unrelated machine.
+
+If those tests pass, the authoritative URI contract is demonstrated for this
+patched Dolphin only. Then test large/grouped folders and stale events before
+integrating an experimental Linux invocation adapter. Do not count compiler/API
+smokes as physical acceptance. Do not infer stock-Dolphin, GNOME or general Wayland
+support, or start packaging/converter work under this bounded prototype task.
+Do not replace the system file manager or install a binary KWin plugin. No push.

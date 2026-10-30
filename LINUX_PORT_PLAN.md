@@ -205,3 +205,7 @@ surface placement and the scripted-effect button API are demonstrated. Exact
 hovered-file URI is blocked through the tested Dolphin accessibility route;
 hardware click/end-to-end acceptance is not claimed. No application port has
 started. The probed workspace desktop does not identify a separate chat device.
+
+Subsequent user approval authorizes the isolated private Dolphin prototype now
+documented in LINUX_STATUS.md. It compiles; deliberate physical-click acceptance
+is pending. This does not authorize replacing the installed file manager.

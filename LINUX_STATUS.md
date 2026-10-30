@@ -2,6 +2,8 @@
 
 2026-10-30, Windows source baseline `48a28c4`, branch `feat/linux-port`.
 **Native Wayland Mouse3 parity is NOT demonstrated. Milestone 2 has not started.**
+The user subsequently authorized an isolated patched-Dolphin prototype; see the
+new checkpoint below. Stock Dolphin's accessibility limitation remains.
 
 ## Environment actually examined
 
@@ -99,3 +101,36 @@ after adding `KWin/Effect`, native load/READY/unload succeeded.
 Upstream exact-release sources were compared with installed package versions;
 Ubuntu downstream patches were not exhaustively audited. Live runtime and
 accessibility observations take priority over assumptions from upstream docs.
+
+## Authorized private Dolphin prototype (2026-10-30)
+
+User explicitly approved: "Yes, isolated Dolphin prototype". Implemented a small
+opt-in patch against Ubuntu's Dolphin 25.12.3 source and compiled it successfully
+inside a disposable Ubuntu 26.04 Docker build. Qt 6.10.2 / KIO 6.24.0 match the
+host versions. No host packages or installed Dolphin files were changed;
+`dpkg -V dolphin` reports no changed package files. Windows app code is untouched.
+
+The private handler gets `m_model->fileItem(index).url()` from the real middle
+press/release path. A directed session-bus signal carries that exact URI, a
+per-process sequence and CLOCK_MONOTONIC timestamp. It is disabled without this
+run's destination/secret environment variables. The receiver only accepts its
+own child PID/executable, matching secret, fresh nonreplayed payload and an
+existing non-symlink scratch fixture. No application target/conversion is emitted.
+This bypasses the AT-SPI URI gap by changing a private file-manager build;
+it does not establish a supported stock-Dolphin extension or universal support.
+
+Private artifacts are in ignored `build/dolphin-probe/`. Source patch, Dockerfile,
+safe extractor, test receiver and instructions are in `prototypes/dolphin-bridge/`.
+Image ID, compiled binary/library hashes and build-package versions are recorded
+in `linux-evidence/dolphin-prototype-build.json`. The private binary version smoke
+passes. Three portable boundary tests pass (Unicode/spaces/same names across tabs,
+invalid tokens/URIs, stale/future/replay, missing files and symlinks). Scoped Ruff,
+compilation and exact-source patch dry-run without fuzz pass.
+
+A bounded native test was launched with private XDG config/cache/state/data and
+scratch Tab A/Tab B. **Hardware click/active-tab acceptance remains pending user
+input**. The 240-second run timed out with zero accepted/rejected messages and
+closed its owned child; evidence is `linux-evidence/dolphin-prototype-live.json`.
+Zero observed messages must not be called success. No wheel/converter
+integration or packaging milestone has started. Prototype maintenance and a
+supported integration strategy still need evaluation after the physical test.

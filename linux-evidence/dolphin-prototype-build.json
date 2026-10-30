@@ -1,0 +1,17 @@
+{
+  "image_id": "sha256:50f31e5296f6f545fb1c6bf236c4fca49ccdf368af7470df13a65e98b249e17c",
+  "source_version": "25.12.3 (Ubuntu apt source)",
+  "build_exit": 0,
+  "build_log": "/tmp/filewheel-dolphin-build.log",
+  "artifacts": {
+    "build/dolphin-probe/bin/dolphin": "32a5016d3b73181deea13d9b3216e2af432ecbe5281c5e1f1130609dc34b0cd9",
+    "build/dolphin-probe/lib/x86_64-linux-gnu/libdolphinprivate.so.25.12.3": "3e8ecb0db27c1eb77638e165b86d0ca449269233072c81f7905a119bec6eda1a",
+    "prototypes/dolphin-bridge/clicked-uri.patch": "f6ed4828731eda64425e5e11c97e13bed3d08da855a34f4e38f1dfe01dd1e86c"
+  },
+  "container_packages": [
+    "libkf6kio-dev\t6.24.0-0ubuntu1",
+    "qt6-base-dev:amd64\t6.10.2+dfsg-7"
+  ],
+  "tests": "3 receiver boundary tests passed",
+  "native_input": "240-second native probe ended with zero messages; deliberate physical test pending"
+}

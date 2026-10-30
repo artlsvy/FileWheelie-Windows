@@ -1,0 +1,41 @@
+--- a/src/views/dolphinview.cpp
++++ b/src/views/dolphinview.cpp
+@@ -63,6 +63,10 @@
+ #include <QApplication>
+ #include <QClipboard>
+ #include <QDropEvent>
++#include <QDBusConnection>
++#include <QDBusMessage>
++#include <QFileInfo>
++#include <time.h>
+ #include <QGraphicsOpacityEffect>
+ #include <QGraphicsSceneDragDropEvent>
+ #include <QLabel>
+@@ -1179,6 +1183,27 @@
+ void DolphinView::slotItemMiddleClicked(int index)
+ {
+     const KFileItem &item = m_model->fileItem(index);
++    // Private opt-in prototype: never enabled in the system Dolphin.
++    // Identity comes from this view's actual clicked model item, not selection.
++    const QString probeDestination = qEnvironmentVariable("FILEWHEEL_DOLPHIN_PROBE_DEST");
++    const QString probeToken = qEnvironmentVariable("FILEWHEEL_DOLPHIN_PROBE_TOKEN");
++    const QFileInfo probeFile(item.url().toLocalFile());
++    if (probeDestination.startsWith(QLatin1Char(':')) && probeToken.size() == 64
++        && item.url().isLocalFile() && probeFile.isFile() && !probeFile.isSymLink()) {
++        timespec captured{};
++        if (clock_gettime(CLOCK_MONOTONIC, &captured) == 0) {
++            static qulonglong sequence = 0;
++            auto message = QDBusMessage::createTargetedSignal(probeDestination,
++                QStringLiteral("/org/filewheel/DolphinProbe"),
++                QStringLiteral("org.filewheel.DolphinProbe"), QStringLiteral("MiddleClicked"));
++            message.setArguments({probeToken, item.url().toString(QUrl::FullyEncoded),
++                QVariant::fromValue(++sequence),
++                QVariant::fromValue(qulonglong(captured.tv_sec) * 1000000000ULL + captured.tv_nsec)});
++            if (QDBusConnection::sessionBus().send(message)) {
++                return; // Only this opt-in file click; folders/other apps stay unchanged.
++            }
++        }
++    }
+     const QUrl &url = openItemAsFolderUrl(item, GeneralSettings::browseThroughArchives());
+     const auto modifiers = QGuiApplication::keyboardModifiers();
+     if (!url.isEmpty()) {
