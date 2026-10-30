@@ -1,7 +1,8 @@
 # Filewheel Linux port — execution plan
 
 Planning baseline: `48a28c4` (Windows v0.3 release line), 2026-10-30.
-Branch: `feat/linux-port`. Linux support is not implemented yet.
+Branch: `feat/linux-port`. This is the original plan; current progress is recorded
+in LINUX_STATUS.md and the checkpoint below.
 Implement one numbered milestone at a time; test and commit it before continuing.
 Keep one shared codebase and merge the port back when stable; do not maintain a
 separate permanent Linux fork. Do not push or change the Windows release workflow.
@@ -209,3 +210,13 @@ started. The probed workspace desktop does not identify a separate chat device.
 Subsequent user approval authorizes the isolated private Dolphin prototype now
 documented in LINUX_STATUS.md. It compiles; deliberate physical-click acceptance
 is pending. This does not authorize replacing the installed file manager.
+
+## Current execution checkpoint
+
+Milestones2–4 are implemented and source-native accepted on the tested KDE session.
+Milestone5 provides real AppImage/user installation and an optional DEB, plus a
+separate exact-version private-Dolphin variant. Milestone6 portable/frozen/offline
+container/installer checks pass; final packaged native and broader desktop/DPI
+acceptance remain pending. The original stock-Dolphin blocker is not erased.
+Consult current LINUX_STATUS.md rather than interpreting early historical notes
+above as the current implementation state. No push or universal support claim.

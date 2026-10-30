@@ -51,3 +51,11 @@ private tabs, near-cursor Quick wheel, PNG→JPEG, TXT→MD, persistent progress
 tray Quit. Source hashes/output content were independently checked. Mixed DPI,
 large/grouped folders, long-job cancel/retry and frozen packaging need further
 native acceptance. Detailed evidence and test counts are in LINUX_STATUS.md.
+
+## Single-file Linux preview
+
+Installer/build details and compatibility boundaries are in
+[LINUX_PACKAGING.md](LINUX_PACKAGING.md). The AppImage offers a per-user installer;
+no Python/pip is required. The optional matched private-Dolphin variant exposes
+its browser through an explicit tray action. The core AppImage's context action
+is a fallback and is not native Mouse3 parity on other file managers/desktops.

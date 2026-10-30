@@ -1,0 +1,58 @@
+{
+  "recorded_utc": "2026-10-30T16:55:06.165720+00:00",
+  "source_head": "4ae9031d846c8cf381e36948668ef25e4e486edd",
+  "source_dirty_at_build": true,
+  "core_glibc_ceiling": "2.35",
+  "core_artifacts": {
+    "Filewheel-0.3-linux-preview-linux-x86_64.AppImage": "e070803428e892ad6bc94356490f34c92367690fbbf10e1ec3f9bbe0e03606ff",
+    "filewheel_0.3.0~linux1_amd64.deb": "afc9680d60d2680a5fb65a2b672648d68630fbbd29ef1e7122ba5628ea5120e9"
+  },
+  "matched_kubuntu_artifact": {
+    "Filewheel-0.3-linux-preview-kubuntu2604-private-dolphin-x86_64.AppImage": "11e19be3aba45945fb68076e5733a422607289aa0965f3c6bd9094138e2b46d4"
+  },
+  "core_frozen_checks": 40,
+  "real_conversion_pairs": 32,
+  "appimage_normal_fuse_smoke": {
+    "passed": true,
+    "checks": 40
+  },
+  "appimage_extract_and_run_smoke": {
+    "passed": true,
+    "checks": 40
+  },
+  "debian12_offline_runtime": {
+    "python_or_converter_tools_installed": false,
+    "standard_desktop_libraries_installed": true,
+    "passed": true,
+    "checks": 40
+  },
+  "deb_install_smoke_remove": {
+    "passed": true,
+    "checks": 40,
+    "test_document_preserved": true
+  },
+  "portable_tests": {
+    "passed": 97,
+    "skipped": 4,
+    "skips": "same-format media combinations are intentionally not advertised"
+  },
+  "shipped_ffmpeg_media_suite": {
+    "passed": 59,
+    "skipped": 4
+  },
+  "user_install": {
+    "real_appimage_install_upgrade_remove": true,
+    "installed_startup_removed_from_download_invocation": true,
+    "desktop_file_validate": true,
+    "user_document_preserved": true,
+    "isolated_xdg": true
+  },
+  "source_native_acceptance": "linux-evidence/native-demo-acceptance.json",
+  "packaged_native_user_acceptance": "pending",
+  "limits": [
+    "Private Dolphin requires matching Qt/KF6 system stack; not stock Dolphin support",
+    "No native GNOME/Xfce/X11/mixed-DPI acceptance",
+    "Windows-native regression not run",
+    "Unsigned personal preview; redistribution source/license audit pending"
+  ]
+}

@@ -1,0 +1,12 @@
+**
+!src/
+!src/**
+!packaging/
+!packaging/**
+!pyproject.toml
+!README.md
+!LICENSE
+!build-tools/
+!build-tools/linux/
+!build-tools/linux/Python-3.14.10.tar.xz
+!build-tools/linux/pandoc-linux.tar.gz

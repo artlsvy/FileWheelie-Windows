@@ -1,0 +1,41 @@
+name: Build Linux preview (no publishing)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build baseline payload, frozen smoke, AppImage and DEB
+        run: ./scripts/build-linux.sh --output build/linux-release --deb
+      - name: Test AppImage without FUSE
+        env:
+          QT_QPA_PLATFORM: offscreen
+          QT_QUICK_BACKEND: software
+          FILEWHEEL_LOG_DIR: /tmp/filewheel-appimage-smoke
+        run: build/linux-release/*.AppImage --appimage-extract-and-run --self-test --ui-backend quick
+      - name: Check Debian 12 without Python or system converter tools
+        run: |
+          docker build -f packaging/linux/RuntimeSmoke.Dockerfile -t filewheel-runtime-check .
+          mkdir -p build/debian-smoke
+          docker run --rm --network none --user "$(id -u):$(id -g)" \
+            -v "$PWD/build/linux-release/AppDir:/opt/app:ro" \
+            -v "$PWD/build/debian-smoke:/evidence" -e FILEWHEEL_LOG_DIR=/evidence \
+            filewheel-runtime-check /opt/app/AppRun --self-test --ui-backend quick
+          python3 packaging/linux/verify_smoke.py build/debian-smoke/self-test.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: filewheel-linux-x86_64-preview
+          path: |
+            build/linux-release/*.AppImage
+            build/linux-release/*.deb
+            build/linux-release/BUILD-INFO.json
+            build/linux-release/elf-requirements.json
+            build/linux-release/frozen-smoke/
+            build/linux-release/appimage-smoke/
+            build/debian-smoke/
+            /tmp/filewheel-appimage-smoke/
+          retention-days: 14

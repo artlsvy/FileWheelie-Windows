@@ -1,0 +1,31 @@
+{
+  "python": {
+    "version": "3.14.10",
+    "url": "https://www.python.org/ftp/python/3.14.10/Python-3.14.10.tar.xz",
+    "sha256": "de414a57119abef52784d8993e341d53aed635fc2b05c2607d9f98a2c5b72032"
+  },
+  "appimagetool": {
+    "url": "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage",
+    "asset_id": 689628040,
+    "sha256": "793fca0ce4bcc309dc65d3f66669f58e3755643e4dadbe03932e7b436128494f",
+    "tag": "continuous",
+    "source_commit": "b082d2ecf7fed993f672b297e168de182a7c7437"
+  },
+  "runtime": {
+    "url": "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64",
+    "asset_id": 657374641,
+    "sha256": "617aa77314d57c8b8e4fae9c3f0b35af7b30d5529cb69e98f64f92510ed98a46",
+    "tag": "continuous",
+    "source_commit": "fedfad51acc2860b2916a1eef32ba4a500ff31ef"
+  },
+  "pandoc_notices": {
+    "COPYING": {
+      "url": "https://raw.githubusercontent.com/jgm/pandoc/3.12.1/COPYING.md",
+      "sha256": "3ebfbf9235b049d384cdba5a66a1a3434bb544391e720b76faa8e1b3ee61a4e5"
+    },
+    "COPYRIGHT": {
+      "url": "https://raw.githubusercontent.com/jgm/pandoc/3.12.1/COPYRIGHT",
+      "sha256": "842e33ef01625e93f85bebb8bac83aa570186b7aa77a09971257cc29f8f60740"
+    }
+  }
+}

@@ -7,6 +7,10 @@ Your original file stays in place.
 This project was fully **vibecoded with OpenAI Codex**. It was created as an
 experiment to see what Codex could build, from the app itself to its installer.
 
+Linux work is on `feat/linux-port`: see [Linux usage](LINUX_USE.md),
+[packaging](LINUX_PACKAGING.md) and [actual validation status](LINUX_STATUS.md).
+The private KDE Wayland prototype is separate from stock file-manager support.
+
 ## What's new in v0.3
 
 - Convert supported video combinations across MP4, MOV, MKV and WebM. AVI and

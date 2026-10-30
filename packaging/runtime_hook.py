@@ -28,3 +28,7 @@ if getattr(sys, "frozen", False) and sys.platform == "win32":
         sys.stdout = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115 - process-lifetime stream
     if sys.stderr is None:
         sys.stderr = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115 - process-lifetime stream
+
+if getattr(sys, "frozen", False) and sys.platform == "linux":
+    os.environ.setdefault('FILEWHEEL_UI_BACKEND','quick')
+    os.environ.setdefault('FILEWHEEL_BUNDLED_TOOLS_ONLY','1')

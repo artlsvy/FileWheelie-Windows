@@ -1,4 +1,13 @@
-# Linux milestone 1 — precise blocker checkpoint
+# Current Linux checkpoint — installable preview
+
+2026-10-30, branch `feat/linux-port`. Source native Wayland private-Dolphin exact
+clicks, wheel placement, PNG→JPEG/TXT→MD, persistent progress and Quit were accepted
+by the user. This is **not stock-Dolphin or universal Wayland Mouse3 support**.
+Final AppImage/DEB artifacts and their automated checks are documented below.
+Packaged native interaction, first-run install dialog and broader DPI/desktop
+acceptance remain pending. Historical probe/checkpoint notes follow.
+
+## Initial milestone 1 — historical blocker checkpoint
 
 2026-10-30, Windows source baseline `48a28c4`, branch `feat/linux-port`.
 **Native Wayland Mouse3 parity is NOT demonstrated. Milestone 2 has not started.**
@@ -215,3 +224,53 @@ dynamically loaded NSS modules, and cross-distro launcher library contamination.
 Intermediate build/linux-preview, linux-final and linux-kubuntu-preview artifacts
 are marked SUPERSEDED, not accepted deliverables. The final delivery build is
 rebuilding against this source; no final package acceptance is claimed yet.
+
+## Installable Linux preview (milestones 5–6)
+
+Built from CPython3.14.10 on a digest-pinned Ubuntu22.04 container, using a
+51-distribution hashed Linux lock and a Linux-only PyInstaller onedir spec.
+The one downloaded AppImage includes Python/Qt, existing image/PDF/Markdown/media
+engines, complete relocated LibreOffice, Pandoc3.12.1 and FFmpeg4.4.2. Added fonts,
+NSS runtime modules, native dependency closure, package notices and a source
+snapshot. Tool launchers avoid host utilities under bundled library paths and use
+LibreOffice's native restart helper. Host GPU drivers and glibc are not bundled.
+Build inputs are pinned/recorded; native apt mirrors remain mutable, so no
+bit-for-bit reproducibility or signature claim. A separate manual Linux CI exists;
+the Windows release workflow and conversion algorithms are preserved.
+
+Actual artifacts (ignored build outputs, not committed binaries):
+
+- `build/linux-delivery/Filewheel-0.3-linux-preview-linux-x86_64.AppImage` — 445.8MiB.
+- `build/linux-delivery/filewheel_0.3.0~linux1_amd64.deb` — 497.8MiB.
+- `build/linux-kubuntu-delivery/Filewheel-0.3-linux-preview-kubuntu2604-private-dolphin-x86_64.AppImage` — 452.3MiB.
+
+The last includes the isolated browser prefix, **not its system Qt/KF6 stack**.
+It is only a matched Kubuntu26.04/KWin6.6.6/Qt6.10.2/KF6.24/Dolphin25.12.3 preview.
+An explicit tray action opens it; default startup does not replace/patch Dolphin.
+The compiled ELF GLIBC requirements do not certify those additional KDE APIs.
+Core ELF audit ceiling is GLIBC2.35. ARM64/musl and other desktop Mouse3 adapters
+are not provided. GNOME/Thunar have explicit Open With invocation, not a tested
+custom global middle-click route. See LINUX_PACKAGING.md and LINUX_USE.md.
+
+Actual checks: **97 passed /4 intentional same-format media skips**; separate
+suite against the *shipped* FFmpeg: **59 passed /4 same skips**. Both final
+AppImages pass **40 frozen checks /32 real pairs**, including actual Quick wheel
+and pill rendering, transparent corners, dialog input, owned workers, cancellation
+and retry. Normal FUSE AppImage launch passes the same checks on Kubuntu; the
+builder also checks extract-and-run. Runtime-only Debian12 (standard GL/fonts/
+D-Bus/Wayland libraries, no Python or converter tools) passes all40 offline with
+network disabled. Real DEB install→40 checks→remove passes in that container and
+preserves a test document. Real AppImage install→upgrade→startup→uninstall passes
+in isolated XDG directories; desktop-file-validate passes and the test document
+survives. Strict package checks fail if a required converter silently disappears.
+Scoped Ruff, compilation and patch whitespace checks pass.
+
+Evidence: `linux-evidence/package-acceptance.json`; build manifests, source hash,
+per-ELF requirements and actual frozen reports beside each artifact. Intermediate
+packaging prototypes are marked SUPERSEDED and must not be installed. Final
+packaged native mouse/focus/tray acceptance is separately pending user feedback;
+source acceptance is not promoted to frozen acceptance. First-run GUI install,
+long sessions, large/grouped folders, fractional/mixed DPI, GNOME/Xfce/X11 and
+Windows-native regression remain unverified. Copyleft corresponding-source and
+license redistribution audit is required before public release; this is a local
+unsigned personal preview. No commits were pushed.
