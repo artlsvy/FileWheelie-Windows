@@ -97,8 +97,8 @@ def uninstall():
     # Preserve startup entries from another interpreter/installation.
     from filewheel.platforms.linux import startup
 
-    if startup.is_enabled():
-        startup.configure("remove")
+    if startup.is_enabled([str(target)]):
+        startup.configure("remove", [str(target)])
     target.unlink()
     manifest.unlink()
     try:

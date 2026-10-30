@@ -205,3 +205,13 @@ executable paths containing `=` or `%` are rejected explicitly due to desktop
 parser limitations; input filenames can contain these characters. The native
 first-run install dialog and frozen integration still need packaging acceptance.
 No host integration or startup was installed during automated tests (isolated XDG).
+
+Installer follow-up: same-session login actions now use the stable installed
+AppImage path; removal also checks that exact installed startup command when
+invoked from the downloaded copy. A foreign startup entry remains untouched.
+38 Linux tests pass, including this regression and strict frozen-family gates.
+Packaging prototypes identified and corrected Ubuntu LibreOffice FHS relocation,
+dynamically loaded NSS modules, and cross-distro launcher library contamination.
+Intermediate build/linux-preview, linux-final and linux-kubuntu-preview artifacts
+are marked SUPERSEDED, not accepted deliverables. The final delivery build is
+rebuilding against this source; no final package acceptance is claimed yet.

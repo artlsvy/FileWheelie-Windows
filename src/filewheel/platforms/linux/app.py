@@ -70,7 +70,9 @@ def main(args):
             box.addButton(QMessageBox.Cancel)
             box.exec()
             if box.clickedButton() is yes:
-                install(image)
+                installed = install(image)
+                # Startup/desktop actions must point at the stable installed copy.
+                os.environ["APPIMAGE"] = str(installed)
             elif box.clickedButton() is not run:
                 return 0
     tray = args.tray or not args.paths

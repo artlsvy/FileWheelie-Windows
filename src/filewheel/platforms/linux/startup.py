@@ -12,25 +12,31 @@ def _entry():
     return config_root().parent / "autostart/org.filewheel.Filewheel.desktop"
 
 
-def _content():
+def _content(command=None):
     return (
         "[Desktop Entry]\nType=Application\nName=Filewheel\n"
         "X-Filewheel-Owned=true\nExec="
-        + " ".join(map(quote, launch_command("--tray", "--ui-backend", "quick")))
+        + " ".join(
+            map(
+                quote,
+                (launch_command() if command is None else command)
+                + ["--tray", "--ui-backend", "quick"],
+            )
+        )
         + "\n"
     )
 
 
-def is_enabled():
+def is_enabled(command=None):
     path = _entry()
-    return path.is_file() and not path.is_symlink() and path.read_text() == _content()
+    return path.is_file() and not path.is_symlink() and path.read_text() == _content(command)
 
 
-def configure(action):
+def configure(action, command=None):
     if action not in ("install", "remove"):
         raise ValueError("Unknown startup action")
     path = _entry()
-    if path.is_symlink() or (path.exists() and not is_enabled()):
+    if path.is_symlink() or (path.exists() and not is_enabled(command)):
         raise RuntimeError("Preserving startup entry owned by another installation")
     if action == "remove":
         path.unlink(missing_ok=True)
@@ -42,7 +48,7 @@ def configure(action):
             mode="w", encoding="utf-8", dir=path.parent, delete=False
         ) as output:
             temporary = output.name
-            output.write(_content())
+            output.write(_content(command))
         os.replace(temporary, path)
     finally:
         if temporary and os.path.exists(temporary):

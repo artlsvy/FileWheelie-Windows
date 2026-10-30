@@ -124,3 +124,22 @@ def test_desktop_argv_round_trip_with_gio(tmp_path, monkeypatch):
     while not result.exists() and time.monotonic() < deadline:
         time.sleep(0.01)
     assert json.loads(Path(result).read_text()) == ["--ui-backend", "quick", "--", str(source)]
+
+
+def test_uninstall_removes_only_installed_startup_from_another_invocation(tmp_path, monkeypatch):
+    from filewheel.platforms.linux import startup
+
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    source = image(tmp_path / "download.AppImage")
+    target = install.install(source)
+    startup.configure("install", [str(target)])
+    # Uninstall invoked from the downloaded copy must remove the installed entry.
+    monkeypatch.setattr(startup, "launch_command", lambda: [str(source)])
+    install.uninstall()
+    assert not startup._entry().exists()
+    target = install.install(source)
+    startup.configure("install", ["/other/independent/filewheel"])
+    install.uninstall()
+    assert "independent" in startup._entry().read_text()
+    assert not target.exists()
