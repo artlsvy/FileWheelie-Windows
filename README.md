@@ -37,7 +37,7 @@ and Markdown preserves page images even when there is no recognized text.
 Releases include `SHA256SUMS.txt` and GitHub build attestations. Verify a download:
 
 ```sh
-sha256sum -c SHA256SUMS.txt
+sha256sum --ignore-missing -c SHA256SUMS.txt
 gh attestation verify Filewheel-Linux-x86_64.AppImage --repo artlsvy/FileWheelie-Windows
 # Windows: gh attestation verify FilewheelSetup.exe --repo artlsvy/FileWheelie-Windows
 ```

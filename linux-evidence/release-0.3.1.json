@@ -1,0 +1,51 @@
+{
+  "release": "https://github.com/artlsvy/FileWheelie-Windows/releases/tag/v0.3.1",
+  "published_at": "2026-10-30T21:48:54Z",
+  "tag": "v0.3.1",
+  "application_source_commit": "416dac54cfb65488c1f2f9c81b767a1f51397c50",
+  "producer_run": "https://github.com/artlsvy/FileWheelie-Windows/actions/runs/41131902385",
+  "publisher_run": "https://github.com/artlsvy/FileWheelie-Windows/actions/runs/41133689982",
+  "both_platform_jobs_success": true,
+  "publish_success": true,
+  "assets": [
+    {
+      "name": "Filewheel-Linux-x86_64.AppImage",
+      "size": 476301816,
+      "digest": "sha256:e51206095a23545a25500e515ee991c9dc0959dad507cfe2c76f90d039b3ef7d",
+      "browser_download_url": "https://github.com/artlsvy/FileWheelie-Windows/releases/download/v0.3.1/Filewheel-Linux-x86_64.AppImage"
+    },
+    {
+      "name": "FilewheelSetup.exe",
+      "size": 635321322,
+      "digest": "sha256:04d7d31acbaf62f0cebda8b8b9f1ffd48efe1dae7990ea713ac04609ed1f2d42",
+      "browser_download_url": "https://github.com/artlsvy/FileWheelie-Windows/releases/download/v0.3.1/FilewheelSetup.exe"
+    },
+    {
+      "name": "LINUX-BUILD-INFO.json",
+      "size": 589,
+      "digest": "sha256:e71dc374353ae3ffe9b3ecdab040ac617e178a9a1fdd53b3d6979b4196c18158",
+      "browser_download_url": "https://github.com/artlsvy/FileWheelie-Windows/releases/download/v0.3.1/LINUX-BUILD-INFO.json"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size": 183,
+      "digest": "sha256:f1c3bd4e24f847affcf1f0d5eb675da1aad86eaf4cb1fb026e01ce02f3dca59e",
+      "browser_download_url": "https://github.com/artlsvy/FileWheelie-Windows/releases/download/v0.3.1/SHA256SUMS.txt"
+    },
+    {
+      "name": "WINDOWS-BUILD-INFO.json",
+      "size": 1035,
+      "digest": "sha256:ab4958714fa49ec130643c96e3e97394f8f7f68aa681ea7bceb0a815222eed57",
+      "browser_download_url": "https://github.com/artlsvy/FileWheelie-Windows/releases/download/v0.3.1/WINDOWS-BUILD-INFO.json"
+    }
+  ],
+  "attestations": {
+    "linux": "https://github.com/artlsvy/FileWheelie-Windows/attestations/61948340",
+    "windows": "https://github.com/artlsvy/FileWheelie-Windows/attestations/61949108"
+  },
+  "local_tests": {
+    "passed": 143,
+    "skipped": 4
+  },
+  "note": "Only hosted build artifacts published; immutable original source tag preserved. First Linux host smoke and first artifact assembly attempts failed and were corrected in CI orchestration; both producer platform jobs and final publisher pass. No antivirus or Authenticode certification claimed."
+}

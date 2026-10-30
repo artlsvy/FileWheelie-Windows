@@ -1,3 +1,23 @@
+# Published: Filewheel0.3.1 for Windows and Linux
+
+https://github.com/artlsvy/FileWheelie-Windows/releases/tag/v0.3.1
+Published2026-10-30T21:48:54Z. Both hosted platform jobs in run41131902385
+passed, including frozen conversion/UI checks and provenance attestations. Linux
+also passed the offline Debian12 runtime checks. Original v0.3.1 source tag416dac5
+was preserved; CI-only retry tags supplied runner setup/diagnostic fixes.
+
+First publisher expected a flat Linux artifact, but upload preserved nested
+folders. The assembly helper now discovers unique named files and has regression
+tests. Recovery publisher41133689982 verified both producer job successes and
+attestation steps, downloaded their artifacts, checked actual installer digests
+against the attested hashes, and successfully published the originalv0.3.1.
+No workstation installers were uploaded. Release has the AppImage, Windows Setup,
+both platform manifests and SHA256SUMS.txt. GitHub asset digests match attestations.
+Evidence: linux-evidence/release-0.3.1.json. Local checks143 passed /4 intentional
+skips; Ruff/Actionlint passed. README updated on feat/linux-port; main unchanged.
+Windows remains unsigned; provenance does not certify absence of malware.
+Historical failure/retry checkpoints follow.
+
 ## Hosted release retry
 
 Initial run41117762409 completed: Windows passed, including frozen Quick/real

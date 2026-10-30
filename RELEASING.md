@@ -43,3 +43,15 @@ explicitly check out v0.3.1, while their orchestration comes from the build tag.
 The publish job still targets the original v0.3.1 release. Manifests record the
 checked-out application source; attestations record the orchestrating workflow.
 No version tag is rewritten and no workstation binaries replace CI output.
+
+## Completed publication recovery
+
+Both builds succeeded in producer run41131902385. Its publishing step failed on
+a nested Linux artifact layout. scripts/assemble_release.py now accepts flat and
+nested layouts and rejects missing/ambiguous files. The narrowly scoped
+publish-031-artifacts.yml is triggered by publish-v0.3.1-* tags. It verifies the
+fixed producer SHA/event, both successful platform jobs/attestations, downloads
+those exact run artifacts, and checks installer hashes against the recorded
+attestation digests before creating v0.3.1. Run41133689982 published successfully.
+This avoids rebuilding or retagging accepted application source. Future versions
+should use the ordinary gated pipeline, not these fixed-version recovery paths.
