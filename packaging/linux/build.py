@@ -276,7 +276,7 @@ print(json.dumps({str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdig
         control = package / "DEBIAN"
         control.mkdir()
         (control / "control").write_text(
-            "Package: filewheel\nVersion: 0.3.0~linux1\nArchitecture: amd64\n"
+            "Package: filewheel\nVersion: 0.3.1\nArchitecture: amd64\n"
             "Maintainer: Filewheel contributors\nSection: utils\nPriority: optional\n"
             "Depends: libc6 (>= 2.35), libgl1, libegl1, libdbus-1-3, libfontconfig1, "
             "libxkbcommon0, libwayland-client0\n"
@@ -309,7 +309,7 @@ print(json.dumps({str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdig
                 "--root-owner-group",
                 "--build",
                 str(package),
-                str(output / "filewheel_0.3.0~linux1_amd64.deb"),
+                str(output / "filewheel_0.3.1_amd64.deb"),
             ]
         )
     # Test the final container, not just its unfrozen source or pre-assembly tree.

@@ -79,7 +79,7 @@ def main():
     executable = ROOT / 'releases/FilewheelSetup.exe'
     digest = sha256(executable)
     manifest = {'file': executable.name, 'sha256': digest,
-                'bytes': executable.stat().st_size, 'version': '0.2.7',
+                'bytes': executable.stat().st_size, 'version': '0.3.1',
                 'built_utc': datetime.now(UTC).isoformat(),
                 'compiler': 'Inno Setup ' + INNO_VERSION,
                 'payload': json.loads((output / 'BUILD-INFO.json').read_text(encoding='utf-8')),

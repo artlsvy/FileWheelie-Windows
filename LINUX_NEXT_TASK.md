@@ -1,3 +1,13 @@
+# Current task: GitHub Actions cross-platform v0.3.1 release
+
+The user has accepted Linux OCR and authorized push/release. Commit/push
+feat/linux-port and tag v0.3.1 after local checks. Monitor publish-release.yml;
+both independent hosted Windows and Linux builds/checks/attestations must pass
+before release assets publish. Do not upload the workstation AppImage in place
+of CI output. Report precise hosted failures if any; do not claim publication
+before the release exists. See RELEASING.md and RELEASE_NOTES_0.3.1.md.
+Previous local implementation evidence follows.
+
 # Current checkpoint: Linux PDF OCR fixed and AppImage rebuilt
 
 User accepted the progress-position fix. Subsequent image-only PDF→MD failure

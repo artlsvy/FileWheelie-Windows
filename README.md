@@ -1,15 +1,50 @@
 # Filewheel
 
-Convert files straight from Windows File Explorer. Middle-click a file, choose
+Convert files from Windows File Explorer or Dolphin on KDE Plasma Linux.
+Middle-click a file, choose
 an output format from the wheel, and let Filewheel create a converted copy.
 Your original file stays in place.
 
 This project was fully **vibecoded with OpenAI Codex**. It was created as an
 experiment to see what Codex could build, from the app itself to its installer.
 
-Linux work is on `feat/linux-port`: see [Linux usage](LINUX_USE.md),
-[packaging](LINUX_PACKAGING.md) and [actual validation status](LINUX_STATUS.md).
-The private KDE Wayland prototype is separate from stock file-manager support.
+This branch, `feat/linux-port`, includes the Linux application and preserves the
+Windows implementation. Ordinary Dolphin middle-click is configured automatically
+at installation: Filewheel becomes the second application for supported MIME
+types while your default stays first. No patched Dolphin or global input capture.
+
+## Version 0.3.1 — Windows and Linux
+
+[Download the release](https://github.com/artlsvy/fileconverter/releases/tag/v0.3.1).
+Both installers are built from the same tagged source by GitHub Actions. Publication
+requires both platform build/check jobs to pass. Check the release assets and
+linked workflow run rather than using a binary attached to a random comment.
+
+- **Linux:** download `Filewheel-Linux-x86_64.AppImage`, make it executable, run it
+  and choose **Install for this user**. Quit older Filewheel tray instances first.
+  Python, Qt, FFmpeg, Pandoc, LibreOffice and offline English Tesseract OCR are
+  included. Requires x86_64 glibc2.35+ and normal desktop libraries/FUSE. Tested on
+  Plasma Wayland; GNOME/native Mouse3 and every Linux distribution are not claimed.
+- **Windows11 x64:** download `FilewheelSetup.exe`, quit older instances and run
+  the installer. Conversion tools and Python are included; scanned PDFs use local
+  Windows OCR languages. The installer is unsigned; SmartScreen warnings may occur.
+
+Linux details: [usage/install/remove](LINUX_USE.md),
+[packaging/requirements](LINUX_PACKAGING.md), [actual verification](LINUX_STATUS.md).
+Linux progress stays inside the monitor work area; image-only PDFs use local OCR
+and Markdown preserves page images even when there is no recognized text.
+
+Releases include `SHA256SUMS.txt` and GitHub build attestations. Verify a download:
+
+```sh
+sha256sum -c SHA256SUMS.txt
+gh attestation verify Filewheel-Linux-x86_64.AppImage --repo artlsvy/fileconverter
+# Windows: gh attestation verify FilewheelSetup.exe --repo artlsvy/fileconverter
+```
+
+Provenance establishes where/from which source a binary was built, **not a
+virus-free certification**. Builds use pinned/hash-checked inputs; published logs,
+checksums and source allow independent inspection. [Release process](RELEASING.md).
 
 ## What's new in v0.3
 
@@ -31,7 +66,7 @@ These are real UI captures with transparent backgrounds.
 
 ## Download and install
 
-**[Download Filewheel v0.3 for Windows](https://github.com/artlsvy/fileconverter/releases/tag/v0.3)**
+**[Download Filewheel v0.3.1](https://github.com/artlsvy/fileconverter/releases/tag/v0.3.1)**
 
 1. Quit any older copy of Filewheel.
 2. Open **FilewheelSetup.exe** and follow the installer.

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "filewheel"
-version = "0.2.7"
-description = "Private local Windows radial file converter"
+version = "0.3.1"
+description = "Private local Windows and Linux radial file converter"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.14,<3.15"
 dependencies = []

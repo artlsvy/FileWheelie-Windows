@@ -1,3 +1,15 @@
+# Version0.3.1 release preparation
+
+User accepted the Linux OCR AppImage and authorized committing/pushing the Linux
+branch plus publishing both platforms through Actions. Version metadata is now
+0.3.1 across Python, Windows installer/PE and optional Linux DEB. README describes
+ordinary Dolphin integration and Linux installation. A v0.3.1 tag runs both build
+workflows at one source commit; release publication is gated on both succeeding.
+Actions are pinned by SHA. Build attestations/checksums are required; no claim of
+virus-free certification or Authenticode signing. Workstation binaries are not
+uploaded. Local validation:140 passed /4 intentional skips, Ruff/diff and
+Actionlint1.7.12 pass. Hosted build outcomes must be checked separately.
+
 # Current Linux checkpoint — single-file personal package
 
 2026-10-30, branch `feat/linux-port`. Source native Wayland private-Dolphin exact
