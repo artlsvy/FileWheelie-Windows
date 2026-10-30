@@ -43,15 +43,7 @@ jobs:
           path: artifacts/windows
       - name: Assemble release and checksums
         shell: bash
-        run: |
-          set -euo pipefail
-          mkdir release
-          cp artifacts/linux/Filewheel-Linux-x86_64.AppImage release/
-          cp artifacts/linux/BUILD-INFO.json release/LINUX-BUILD-INFO.json
-          cp artifacts/windows/FilewheelSetup.exe release/
-          cp artifacts/windows/INSTALLER-BUILD-INFO.json release/WINDOWS-BUILD-INFO.json
-          cd release
-          sha256sum Filewheel-Linux-x86_64.AppImage FilewheelSetup.exe > SHA256SUMS.txt
+        run: python3 scripts/assemble_release.py
       - name: Publish only after both platforms pass
         env:
           GH_TOKEN: ${{ github.token }}

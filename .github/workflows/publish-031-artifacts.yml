@@ -1,0 +1,63 @@
+name: Publish verified 0.3.1 artifacts
+on:
+  push:
+    tags: ['publish-v0.3.1-*']
+permissions:
+  contents: read
+concurrency:
+  group: publish-031
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Verify the exact producer run and both platform checks
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api "repos/$REPO/actions/runs/41131902385" > producer.json
+          gh api "repos/$REPO/actions/runs/41131902385/jobs" > producer-jobs.json
+          python3 - <<'PYCODE'
+          import json
+          run = json.load(open('producer.json'))
+          assert run['head_sha'] == '1ac72596adc8df58cb6d5bd2e0c46f6f5b06bd33'
+          assert run['event'] == 'push'
+          jobs = {j['name']: j for j in json.load(open('producer-jobs.json'))['jobs']}
+          for name in ('linux / build', 'windows / build'):
+              job = jobs[name]
+              assert job['conclusion'] == 'success', name
+              assert any(s['name'] == 'Attest installer build provenance' and s['conclusion'] == 'success' for s in job['steps'])
+          PYCODE
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 41131902385
+          name: filewheel-linux-x86_64
+          path: artifacts/linux
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 41131902385
+          name: Filewheel-unsigned-1ac72596adc8df58cb6d5bd2e0c46f6f5b06bd33
+          path: artifacts/windows
+      - name: Assemble release and checksums
+        shell: bash
+        run: python3 scripts/assemble_release.py
+      - name: Verify installers against attested producer digests
+        run: |
+          cd release
+          echo 'e51206095a23545a25500e515ee991c9dc0959dad507cfe2c76f90d039b3ef7d  Filewheel-Linux-x86_64.AppImage' | sha256sum -c -
+          echo '04d7d31acbaf62f0cebda8b8b9f1ffd48efe1dae7990ea713ac04609ed1f2d42  FilewheelSetup.exe' | sha256sum -c -
+      - name: Publish only after both platforms pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v0.3.1
+          REPO: ${{ github.repository }}
+        run: |
+          gh release create "$TAG" release/* --repo "$REPO" --verify-tag \
+            --title 'Filewheel 0.3.1 — Windows and Linux' --notes-file RELEASE_NOTES_0.3.1.md
