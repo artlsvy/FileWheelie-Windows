@@ -1,11 +1,26 @@
-# Current task: GitHub Actions cross-platform v0.3.1 release
+# Current task: finish hosted v0.3.1 release retry
 
-The user has accepted Linux OCR and authorized push/release. Commit/push
-feat/linux-port and tag v0.3.1 after local checks. Monitor publish-release.yml;
-both independent hosted Windows and Linux builds/checks/attestations must pass
-before release assets publish. Do not upload the workstation AppImage in place
-of CI output. Report precise hosted failures if any; do not claim publication
-before the release exists. See RELEASING.md and RELEASE_NOTES_0.3.1.md.
+Branch feat/linux-port; original v0.3.1 source tag remains416dac5 (immutable).
+First Actions run41117762409: Windows build/frozen smoke/attestation/upload passed;
+Linux container checks passed but extracted AppImage smoke on host exited1, with
+logs not printed/uploaded by that workflow. Release publication correctly skipped.
+
+Retry orchestration commit1ac7259 / tagbuild-v0.3.1-1 explicitly checks out
+v0.3.1 application source in BOTH jobs. It provisions documented desktop libs on
+the Ubuntu host, prints smoke logs/reports on failure, and uploads diagnostics.
+Current retry: https://github.com/artlsvy/FileWheelie-Windows/actions/runs/41131902385
+Monitor jobs via GitHub connector; on failure fetch logs and PRINT ONLY RELEVANT
+TAIL/ERRORS (full logs exceed300k tokens). Diagnose before changing application
+code. Build tags build-v0.3.1-* allow CI-only retries without rewriting v0.3.1;
+publish targets that original tag and requires both jobs to pass.
+
+User authorized push AND publication. Do not upload workstation installers or
+claim release exists until GitHub confirms published assets. README/release docs
+updated; version metadata0.3.1. Repo was renamed; canonical repository is
+artlsvy/FileWheelie-Windows (old origin redirects). Preserve unrelated untracked
+assets/ui/wheel.jpg and wheel (2).pdf/.png. No forced tray quit. After success,
+record actual asset hashes/run and push docs checkpoint; provide release link.
+
 Previous local implementation evidence follows.
 
 # Current checkpoint: Linux PDF OCR fixed and AppImage rebuilt

@@ -1,3 +1,14 @@
+## Hosted release retry
+
+Initial run41117762409 completed: Windows passed, including frozen Quick/real
+conversion smoke, unsigned-installer check, build provenance and artifact upload.
+Linux completed its baseline-container44 checks and built the AppImage, but its
+hosted extracted-AppImage smoke exited1. The original workflow did not surface
+those logs; no release was published. Retry run41131902385 uses build-v0.3.1-1
+for CI setup/diagnostic changes while explicitly checking out immutablev0.3.1
+application source. Host desktop dependencies are provisioned and failure logs
+retained. Outcome pending; no virus-free certification is claimed.
+
 Release v0.3.1 was pushed at416dac5; hosted build run:
 https://github.com/artlsvy/FileWheelie-Windows/actions/runs/41117762409
 Repository rename was discovered during push. Current README/release instructions
