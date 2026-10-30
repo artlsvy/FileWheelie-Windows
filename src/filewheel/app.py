@@ -27,6 +27,9 @@ def main(argv=None):
     configure_quick_graphics('quick' if args.ui_stress_test else args.ui_backend)
     try:
         require_runtime()
+        if sys.platform == 'linux':
+            from filewheel.platforms.linux.app import main as linux_main
+            return linux_main(args)
         if args.ui_stress_test:
             if not 1 <= args.ui_stress_cycles <= 1000:
                 parser.error('--ui-stress-cycles must be between 1 and 1000')

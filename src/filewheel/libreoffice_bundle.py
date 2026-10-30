@@ -44,15 +44,15 @@ def validate_bundle(root: Path, *, platform: str | None = None) -> LibreOfficeLo
     failures = []
     for layout, installation in (("flat", root), ("portableapps", root / "App/libreoffice")):
         program = installation / "program"
-        names = ("soffice.com", "soffice.exe")
+        names = ("soffice.com", "soffice.exe") if platform == "win32" else ("soffice", "libreoffice")
         executable = next(
             (program / name for name in names if _nonempty_file(program / name)), None
         )
         if executable is None:
             continue
-        bootstrap = program / "bootstrap.ini"
-        fundamental = program / "fundamental.ini"
-        libraries = tuple(program.glob("*.dll"))
+        bootstrap = program / ("bootstrap.ini" if platform == "win32" else "bootstraprc")
+        fundamental = program / ("fundamental.ini" if platform == "win32" else "fundamentalrc")
+        libraries = tuple(program.glob("*.dll" if platform == "win32" else "*.so*"))
         license_files = [
             path
             for path in installation.iterdir()
@@ -92,7 +92,7 @@ def _system_location(platform, excluded_root):
     def excluded(path):
         return path.resolve().is_relative_to(excluded_root)
 
-    names = ("soffice.com", "soffice.exe")
+    names = ("soffice.com", "soffice.exe") if platform == "win32" else ("soffice", "libreoffice")
     for name in names:
         candidate = shutil.which(name)
         if candidate:
@@ -114,7 +114,7 @@ def find_libreoffice(*, app_root: Path | None = None, platform: str | None = Non
     platform = sys.platform if platform is None else platform
     from filewheel.installation import selected_tool
     selected = selected_tool('LibreOffice') if app_root is None else None
-    if selected is not None and selected.name.lower() in ('soffice.com', 'soffice.exe'):
+    if selected is not None and selected.name.lower() in ('soffice.com', 'soffice.exe', 'soffice', 'libreoffice'):
         return LibreOfficeLocation(selected, 'system', selected.parent.parent, 'system')
     bundle = (bundled_tool_root() if app_root is None else Path(app_root)) / "tools/libreoffice"
     try:
@@ -178,6 +178,17 @@ def external_tool_environment(*, _windows_backend=None):
     change is serialized and restored even when process creation fails.
     """
     environment = os.environ.copy()
+    if sys.platform == 'linux':
+        if getattr(sys, 'frozen', False):
+            original = environment.pop('LD_LIBRARY_PATH_ORIG', None)
+            if original:
+                environment['LD_LIBRARY_PATH'] = original
+            else:
+                environment.pop('LD_LIBRARY_PATH', None)
+            for key in ('QT_PLUGIN_PATH', 'QT_QPA_PLATFORM_PLUGIN_PATH', 'QML2_IMPORT_PATH'):
+                environment.pop(key, None)
+        yield environment
+        return
     if not getattr(sys, "frozen", False):
         yield environment
         return

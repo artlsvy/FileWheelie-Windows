@@ -25,7 +25,10 @@ class InvocationController:
     """
 
     def __init__(self, resolver: TargetResolver | None = None, debounce_seconds: float = 0.15,
-                 *, allow_injected_candidates: bool = False):
+                 *, allow_injected_candidates: bool = False, path_flavour: str = "windows"):
+        if path_flavour not in ("windows", "posix"):
+            raise ValueError("Unknown path flavour")
+        self.path_flavour = path_flavour
         if debounce_seconds < 0:
             raise ValueError("debounce_seconds must be nonnegative")
         self._resolver = resolver
@@ -60,7 +63,11 @@ class InvocationController:
             or timestamp < 0
         ):
             return ExplicitInvocationResult(None, "invalid_invocation_context")
-        validation = validate_explicit_paths(arguments, inspect_file)
+        if self.path_flavour == 'posix':
+            from filewheel.platforms.linux.paths import validate_paths
+            validation = validate_paths(arguments, inspect_file)
+        else:
+            validation = validate_explicit_paths(arguments, inspect_file)
         with self._lock:
             if generation != self._generation:
                 return ExplicitInvocationResult(None, "invocation_cancelled")
@@ -68,7 +75,7 @@ class InvocationController:
                 return ExplicitInvocationResult(None, validation.rejection)
             target = TargetResolution(
                 validation.path, window_id=0, point=tuple(point), timestamp=timestamp,
-                source="shell_explicit",
+                source="linux_explicit" if self.path_flavour == "posix" else "shell_explicit",
             )
             return ExplicitInvocationResult(target, None)
 

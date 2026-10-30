@@ -1,6 +1,7 @@
 """Private rotating local diagnostics, never telemetry or a conversion dependency."""
 import logging
 import os
+import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from threading import Lock
@@ -12,6 +13,9 @@ def debug_log_path():
     override = os.environ.get('FILEWHEEL_LOG_DIR')
     if override:
         root = Path(override)
+    elif sys.platform == 'linux':
+        from filewheel.platforms.linux.xdg import state_root
+        root = state_root() / 'logs'
     else:
         root = Path(os.environ.get('LOCALAPPDATA', Path.home() / 'AppData/Local')) / 'Filewheel/logs'
     return root / 'conversion-debug.log'

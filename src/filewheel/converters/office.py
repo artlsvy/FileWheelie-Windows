@@ -3,7 +3,9 @@
 import os
 import re
 import shutil
+import signal
 import subprocess
+import sys
 from importlib.util import find_spec
 from pathlib import Path
 from threading import Event
@@ -28,6 +30,16 @@ _PDF_INPUTS = {
 
 
 def _stop_office_tree(process, environment):
+    if sys.platform == 'linux':
+        try:
+            if os.getpgid(process.pid) == process.pid:
+                os.killpg(process.pid, signal.SIGKILL)
+            else:
+                process.kill()
+        except ProcessLookupError:
+            pass
+        process.communicate(timeout=5)
+        return
     executable = Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32/taskkill.exe'
     try:
         subprocess.run(
@@ -68,6 +80,7 @@ def run_office(arguments, *, workdir, timeout, cancel=None, tool_name='LibreOffi
                 stderr=subprocess.PIPE,
                 env=environment,
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                **({"process_group": 0} if sys.platform == "linux" else {}),
             )
     except OSError:
         # If restoring the parent's DLL directory failed after Popen succeeded,

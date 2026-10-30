@@ -1,0 +1,43 @@
+{
+  "user_confirmed": true,
+  "scope": "private patched Dolphin 25.12.3 / KDE Wayland; exact URI; no conversions",
+  "report": {
+    "accepted": [
+      {
+        "relative_path": "Tab B/report.csv",
+        "sequence": 1,
+        "source": "patched_dolphin_click"
+      },
+      {
+        "relative_path": "Tab B/report.txt",
+        "sequence": 2,
+        "source": "patched_dolphin_click"
+      },
+      {
+        "relative_path": "Tab B/unicode-æøå.txt",
+        "sequence": 3,
+        "source": "patched_dolphin_click"
+      },
+      {
+        "relative_path": "Tab A/report.csv",
+        "sequence": 4,
+        "source": "patched_dolphin_click"
+      },
+      {
+        "relative_path": "Tab A/report.txt",
+        "sequence": 5,
+        "source": "patched_dolphin_click"
+      },
+      {
+        "relative_path": "Tab A/unicode-æøå.txt",
+        "sequence": 6,
+        "source": "patched_dolphin_click"
+      }
+    ],
+    "rejections": [],
+    "hardware_source": "requires user confirmation",
+    "conversion_started": false,
+    "startup_or_exit_note": "Private Dolphin exited before deadline",
+    "child_exit": 0
+  }
+}

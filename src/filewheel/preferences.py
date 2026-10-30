@@ -1,6 +1,7 @@
 """Small per-user preferences, independent of Qt and startup registration."""
 import json
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -8,6 +9,9 @@ from filewheel.ui.theme import normalize_accent
 
 
 def _path():
+    if sys.platform == 'linux':
+        from filewheel.platforms.linux.xdg import config_root
+        return config_root() / 'preferences.json'
     return Path(os.environ['LOCALAPPDATA']) / 'Filewheel' / 'preferences.json'
 
 

@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from time import monotonic
 from typing import NamedTuple
@@ -137,7 +138,7 @@ class FfmpegEngine:
             except OSError, ValueError:
                 pass
             candidates.append(shutil.which("ffmpeg"))
-        candidates.append(str(bundled_tool_root() / "tools/ffmpeg/ffmpeg.exe"))
+        candidates.append(str(bundled_tool_root() / ("tools/ffmpeg/ffmpeg.exe" if sys.platform == "win32" else "tools/ffmpeg/ffmpeg")))
         for candidate in candidates:
             if candidate and Path(candidate).is_file():
                 return Path(candidate).resolve()
@@ -231,6 +232,7 @@ class FfmpegEngine:
                 env=environment,
                 shell=False,
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                **({"process_group": 0} if sys.platform == "linux" else {}),
             )
             deadline = monotonic() + timeout
             last_progress = 0

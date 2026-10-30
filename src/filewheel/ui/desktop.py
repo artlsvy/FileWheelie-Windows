@@ -10,8 +10,7 @@ from filewheel.converters import ConversionManager
 from filewheel.converters.debugging import record_failure
 from filewheel.core.controller import InvocationController
 from filewheel.performance import get_recorder
-from filewheel.platforms.windows import startup as login_startup
-from filewheel.platforms.windows.explicit_path_diagnostics import inspect_file
+from filewheel.platforms.services import inspect_file, path_flavour, startup
 from filewheel.ui.backend import create_popup
 from filewheel.ui.conversion_controller import ConversionController
 
@@ -44,7 +43,8 @@ class DesktopApplication(QObject):
         self.manager = manager or ConversionManager()
         if started is not None:
             timing.record('registry_startup', (monotonic() - started) * 1000)
-        self.controller = InvocationController()
+        self.controller = InvocationController(path_flavour=path_flavour())
+        self.login_startup = startup()
         self.inspector = inspector
         self.runtime_factory = runtime_factory
         self.runtime = None
@@ -150,7 +150,7 @@ class DesktopApplication(QObject):
     def _refresh_login(self):
         self.login_action.blockSignals(True)
         try:
-            self.login_action.setChecked(login_startup.is_enabled())
+            self.login_action.setChecked(self.login_startup.is_enabled())
         except (OSError, RuntimeError):
             self.login_action.setChecked(False)
         finally:
@@ -159,7 +159,7 @@ class DesktopApplication(QObject):
     @Slot(bool)
     def set_start_on_login(self, enabled):
         try:
-            login_startup.configure('install' if enabled else 'remove')
+            self.login_startup.configure('install' if enabled else 'remove')
         except (OSError, RuntimeError) as error:
             record_failure('desktop', 'start_on_login', error)
             self.notify('Could not change Start on login. An entry from another installation is preserved.')
@@ -246,6 +246,10 @@ class DesktopApplication(QObject):
         self.experimental_enabled = False
         if enabled:
             factory = self.runtime_factory
+            if factory is None and path_flavour() == 'posix':
+                self._check_action(False)
+                self.notify('Linux middle-click requires the opt-in private Dolphin bridge.')
+                return
             if factory is None:
                 from filewheel.platforms.windows.mouse_runtime import MouseRuntime
                 factory = MouseRuntime

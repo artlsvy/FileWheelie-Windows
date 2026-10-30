@@ -11,6 +11,7 @@ import math
 import multiprocessing
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -43,6 +44,12 @@ def configure_child():
     os.environ['ORT_DISABLE_TELEMETRY'] = '1'
     # Native libraries have additional private pools; this is not a guarantee
     # that every third-party library uses exactly one thread.
+    if sys.platform == 'linux':
+        os.setsid()
+        try:
+            os.nice(5)
+        except OSError:
+            pass
     try:
         import ctypes as c
         from ctypes import wintypes as w
@@ -52,7 +59,7 @@ def configure_child():
         kernel.SetPriorityClass.argtypes = [w.HANDLE, w.DWORD]
         kernel.SetPriorityClass.restype = w.BOOL
         kernel.SetPriorityClass(kernel.GetCurrentProcess(), 0x4000)  # BELOW_NORMAL
-    except OSError:
+    except (OSError, AttributeError):
         pass  # Best-effort scheduling; isolation remains effective without it.
     if sys.stdout is None:
         sys.stdout = open(os.devnull, 'w', encoding='utf-8')  # noqa: SIM115 - child lifetime
@@ -225,6 +232,36 @@ def _poll_reader(connection, timeout):
 def _stop_owned_worker(process):
     """Stop this still-owned child's tree before publication; never by image name."""
     if not process.is_alive():
+        return
+    if sys.platform == 'linux':
+        # Children use dedicated process groups inside this owned worker session.
+        # Never signal another user's/session's processes or kill by image name.
+        try:
+            session = os.getsid(process.pid)
+        except ProcessLookupError:
+            process.join(3)
+            return
+        if session != process.pid:
+            process.kill()
+        else:
+            groups = set()
+            for entry in Path('/proc').iterdir():
+                if not entry.name.isdecimal():
+                    continue
+                try:
+                    fields = (entry/'stat').read_text().rsplit(')', 1)[1].split()
+                    if int(fields[3]) == process.pid:
+                        groups.add(int(fields[2]))
+                except (OSError, ValueError, IndexError):
+                    continue
+            for group in sorted(groups, key=lambda g: g == process.pid):
+                try:
+                    os.killpg(group, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+        process.join(3)
+        if process.is_alive():
+            raise ConversionError('Owned Linux worker could not be stopped')
         return
     executable = Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32' / 'taskkill.exe'
     try:

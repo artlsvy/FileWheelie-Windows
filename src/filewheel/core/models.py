@@ -1,7 +1,7 @@
 """Physical screen coordinates and monotonic timestamps cross the platform seam."""
 
 from dataclasses import dataclass
-from pathlib import PureWindowsPath
+from pathlib import PurePosixPath, PureWindowsPath
 from typing import Literal, Protocol
 
 LLMHF_INJECTED = 0x00000001
@@ -71,17 +71,19 @@ class TargetResolution:
     PureWindowsPath keeps Windows path semantics explicit in controller contracts.
     """
 
-    path: PureWindowsPath
+    path: PureWindowsPath | PurePosixPath
     window_id: int
     point: tuple[int, int]
     timestamp: float
     source: Literal[
-        "explorer_hover", "shell_explicit", "user_confirmed_candidate", "experimental_candidate"
+        "explorer_hover", "shell_explicit", "user_confirmed_candidate", "experimental_candidate",
+        "linux_explicit", "dolphin_click"
     ] = "explorer_hover"
 
     def __post_init__(self) -> None:
-        if not isinstance(self.path, PureWindowsPath) or not self.path.is_absolute():
-            raise ValueError("resolution requires an absolute Windows path")
+        expected = PurePosixPath if self.source in ('linux_explicit', 'dolphin_click') else PureWindowsPath
+        if not isinstance(self.path, expected) or not self.path.is_absolute():
+            raise ValueError("resolution requires an absolute path matching invocation provenance")
 
 
 class TargetResolver(Protocol):

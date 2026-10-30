@@ -36,3 +36,7 @@ artifacts/
 !/tests/unit/
 /tests/unit/*
 !/tests/unit/test_media_ffmpeg.py
+
+# Linux port regression tests are part of the shared source tree.
+!/tests/linux/
+!/tests/linux/*.py

@@ -134,3 +134,30 @@ closed its owned child; evidence is `linux-evidence/dolphin-prototype-live.json`
 Zero observed messages must not be called success. No wheel/converter
 integration or packaging milestone has started. Prototype maintenance and a
 supported integration strategy still need evaluation after the physical test.
+
+
+## Human acceptance and Linux platform foundation
+
+User confirmed all physical tests passed. `/tmp/fw-human-test-1.json` contains
+six accepted exact URIs (three filenames in both tabs), sequences 1–6, zero
+rejections, and normal private-child exit. The preserved evidence is
+`linux-evidence/dolphin-human-acceptance.json`. This verifies only the private
+patched Dolphin route on the tested KDE Wayland desktop, not stock Dolphin,
+other desktops, large/grouped folders or actual wheel/conversion integration.
+
+The next foundation is implemented: source-aware POSIX target validation through
+InvocationController, Linux entry/services, XDG preferences/logs/login ownership,
+and per-session single-instance routing. Windows lexical/provenance rules stay
+separate. Linux worker sessions/tool groups support owned pre-publication stop;
+LibreOffice/Pandoc/FFmpeg discovery and subprocess environment have Linux paths.
+No mouse adapter or compositor script is silently installed at application startup.
+
+Actual Linux checks: **78 tests passed / 4 skipped** (same-format media cases are
+not advertised), including 19 new Linux tests. Real spawned PNG conversion checks
+Unicode paths, source hashes and collisions; an uncooperative session/tool-group
+stop test passes. Actual source Quick self-test: **31 checks / 24 real pairs**,
+with system FFmpeg/LibreOffice, no Pandoc installed. A shared DesktopApplication
+POSIX-target offscreen presentation passed. Scoped Ruff and compilation pass.
+Windows-native regression and frozen Linux/mixed-DPI checks remain unperformed.
+Next: connect the accepted private Dolphin bridge and compositor-assisted wheel
+placement to this shared host, then native UI/conversion acceptance and packaging.

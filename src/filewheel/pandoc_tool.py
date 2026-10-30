@@ -48,7 +48,8 @@ def _invoke(executable, arguments, *, workdir, timeout, cancel=None):
             with external_tool_environment() as environment:
                 process = subprocess.Popen([str(executable), *arguments], shell=False, cwd=workdir,
                                            stdout=stdout, stderr=stderr, env=environment,
-                                           creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+                                           creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
+                                           **({'process_group': 0} if sys.platform == 'linux' else {}))
         except OSError as error:
             if process is not None:
                 _stop_office_tree(process, environment)
@@ -162,7 +163,7 @@ def validate_bundle(directory, *, platform=None, execute=True, output_root=None)
             if (member.is_symlink() or member.is_junction() or not member.is_file()):
                 raise ValueError('Portable Pandoc must be a flat release without filesystem aliases')
     platform = sys.platform if platform is None else platform
-    executable = directory / 'pandoc.exe'
+    executable = directory / ('pandoc.exe' if platform == 'win32' else 'pandoc')
     licenses = ('COPYRIGHT.txt', 'COPYRIGHT')
     copying = ('COPYING.rtf', 'COPYING', 'LICENSE')
     if (not directory.is_dir() or directory.is_symlink() or directory.is_junction() or not executable.is_file()
