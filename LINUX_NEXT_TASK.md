@@ -1,29 +1,34 @@
-# Next: final packaged native acceptance and compatibility hardening
+# Next: prove stock Dolphin's built-in second-application route
 
-The accepted native source route is complete. Final core AppImage, optional DEB
-and matched private-Dolphin AppImage exist; see LINUX_STATUS.md / LINUX_PACKAGING.md.
-97 portable tests pass (4 intentional skips), shipped-media suite59/4, frozen40
-checks/32 actual pairs. Normal FUSE, extract-and-run, real AppImage installation/
-upgrade/removal/startup ownership, and offline minimal Debian12 DEB install/smoke/
-remove pass. Do not rebuild/retest these unchanged checks unnecessarily.
+User now reports the packaged private Dolphin works; demo source hashes unchanged.
+See linux-evidence/package-acceptance.json. Keep extended native acceptance scoped:
+Quit, first-run GUI install, mixed DPI and other desktops are not inferred.
 
-A **packaged** matched-Kubuntu AppImage was launched on the native Wayland session
-with private Dolphin at build/linux-demo. An async question asks the user to check
-PNG→JPEG, TXT→MD, near-cursor wheel, progress persistence and tray Quit. Source
-acceptance already passed; do not confuse that earlier answer with this new test.
-Read any new user reply and /tmp/fw-packaged-native.log; verify output/source hashes
-and clean exit, then update linux-evidence/package-acceptance.json. If no reply,
-keep frozen native acceptance pending and provide the exact runnable artifact.
+An overlooked existing stock-Dolphin feature should be tried FIRST. Installed
+Dolphin25.12.3's slotfileMiddleClickActivated obtains the actual clicked KFileItem
+and launches the second application returned by KApplicationTrader for that MIME,
+passing item.targetUrl(). Shift+middle uses the third. Verified in the actual
+Ubuntu source inside filewheel-dolphin-probe:25.12.3 and KDE's25.12.3 tag.
+No generic external hook or selected-file guessing is needed for this route.
+The previous claim that a private build was required for all routes was too broad.
 
-Then test first-run GUI installation, tray browser action, cancel/retry, repeated
-invocations, tabs/grouped/large folders, touchpad, fractional/mixed DPI and resume.
-Do not infer those from container or basic source tests. Stock Dolphin still has
-no supported exact-file external Mouse3 API; the private prefix is version-specific
-and does not bundle system Qt/KF6. Other desktops currently use explicit file
-invocation. Do not advertise universal Wayland parity or replace system Dolphin.
+Bounded next test: use the existing installed Filewheel desktop launcher and
+configure it SECOND for image/png, preserving the first/default viewer. Back up
+and restore only exact owned/user-approved MIME changes. keditfiletype is installed.
+Test a real middle-click of an unselected PNG in ordinary /usr/bin/dolphin, with
+other files selected and duplicate names in different tabs; verify path, near-cursor
+KWin placement, conversion/source integrity and unchanged normal-open behavior.
+Archives/directories and file-tab mode may take other branches; do not promise
+those automatically. Do not replace Dolphin, rewrite converters or add global hooks.
+User has asked how to achieve broader integration; no MIME preferences changed yet.
 
-The delivered files are under build/linux-delivery and build/linux-kubuntu-delivery;
-other earlier packaging directories are SUPERSEDED. No Python/pip is needed on
-end-user systems. No public distribution until license/source audit; no push or
-Windows release changes without authorization. The existing Windows source,
-converters and diagnostics must remain intact. Branch: feat/linux-port.
+If this works, implement opt-in per-MIME second-app setup/restore in the installer,
+derived from working registry capabilities. Then investigate file-manager adapters
+for GNOME/Nautilus, Thunar/Nemo plus compositor placement separately. GNOME menu
+extensions alone do not expose an exact hovered-file Mouse3 callback. A compositor
+button signal alone is insufficient identity. No universal Wayland Mouse3 claim.
+
+Existing final artifacts: build/linux-delivery and build/linux-kubuntu-delivery.
+97 tests/4 intentional skips; shipped-media59/4; frozen40 checks/32 actual pairs;
+FUSE/extract-and-run, real user install and offline Debian12 DEB checks passed.
+Other packaging directories are SUPERSEDED. Branch feat/linux-port; no push.

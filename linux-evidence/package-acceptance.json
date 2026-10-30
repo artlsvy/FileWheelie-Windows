@@ -48,7 +48,12 @@
     "isolated_xdg": true
   },
   "source_native_acceptance": "linux-evidence/native-demo-acceptance.json",
-  "packaged_native_user_acceptance": "pending",
+  "packaged_native_user_acceptance": {
+    "reported_working": true,
+    "user_report": "all works in private dolphin",
+    "source_hashes_unchanged": true,
+    "quit_separately_confirmed": false
+  },
   "limits": [
     "Private Dolphin requires matching Qt/KF6 system stack; not stock Dolphin support",
     "No native GNOME/Xfce/X11/mixed-DPI acceptance",

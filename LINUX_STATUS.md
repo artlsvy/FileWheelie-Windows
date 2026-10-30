@@ -4,7 +4,8 @@
 clicks, wheel placement, PNG→JPEG/TXT→MD, persistent progress and Quit were accepted
 by the user. This is **not stock-Dolphin or universal Wayland Mouse3 support**.
 Final AppImage/DEB artifacts and their automated checks are documented below.
-Packaged native interaction, first-run install dialog and broader DPI/desktop
+Packaged private-Dolphin interaction is now user-reported working; original
+demo hashes remain unchanged. First-run install dialog and broader DPI/desktop
 acceptance remain pending. Historical probe/checkpoint notes follow.
 
 ## Initial milestone 1 — historical blocker checkpoint
@@ -274,3 +275,27 @@ long sessions, large/grouped folders, fractional/mixed DPI, GNOME/Xfce/X11 and
 Windows-native regression remain unverified. Copyleft corresponding-source and
 license redistribution audit is required before public release; this is a local
 unsigned personal preview. No commits were pushed.
+
+
+## Packaged acceptance and stock-Dolphin route correction
+
+User reports: "all works in private dolphin". The three demo source hashes remain
+unchanged. This accepts the basic packaged private-browser workflow, without
+inventing a separate Quit/first-install/mixed-DPI result.
+
+Further review found an overlooked **built-in stock Dolphin route**. The installed
+Ubuntu source (4:25.12.3-0ubuntu1) has `slotfileMiddleClickActivated`, which queries
+KApplicationTrader by the clicked KFileItem MIME type and launches its second
+associated application, passing `item.targetUrl()`. Shift selects the third.
+Regular file clicks reach this branch; directory/archive/tab-as-file behavior
+can take a different branch. Confirmed against the actual container source and
+[KDE25.12.3 source](https://github.com/KDE/dolphin/blob/v25.12.3/src/dolphinviewcontainer.cpp).
+
+The earlier lack of an external generic Mouse3 plugin remains accurate, but the
+broader implication that a private build was necessary was **too broad**. Registering
+Filewheel as the second application for supported MIME types could provide exact
+file invocation in ordinary Dolphin, preserving the existing default app. That
+association route still needs a stock-Dolphin hardware test; no user MIME settings
+have been changed. Current KWin placement can be reused on Plasma. Other
+compositors/file managers require independently verified input/identity/placement
+adapters; Nautilus's supported MenuProvider is a menu API, not a middle-click API.
