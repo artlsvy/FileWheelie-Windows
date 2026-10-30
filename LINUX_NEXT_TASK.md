@@ -1,17 +1,19 @@
-# Next: Linux desktop integration and installable packaging
+# Next: complete and validate baseline Linux packaging
 
-The six-click private Dolphin identity test and native wheel/PNG→JPEG/TXT→MD,
-persistent progress and Quit are user-verified. Source hashes and outputs verified;
-see linux-evidence/native-demo-acceptance.json. Do not repeat these basic tests.
-The shared Linux controller/desktop/process foundation and opt-in Qt D-Bus/KWin
-bridge are implemented. Current portable suite: 86 passed /4 intentional skips;
-source Quick smoke 31 checks /24 actual pairs. Commands: LINUX_USE.md.
+Native private-Dolphin exact clicks and PNG→JPEG/TXT→MD/progress/Quit are accepted.
+Shared Linux desktop integration and owned per-user installer are implemented;
+33 Linux tests include the real GIO desktop argv parser. Do not repeat accepted
+source tests. No Windows behavior or installed system Dolphin is replaced.
 
-Continue the remaining LINUX_PORT_PLAN.md milestones: owned file-manager actions,
-single-file AppImage with per-user install/remove, optional DEB, Linux dependency
-lock and reproducible baseline-container build. Preserve Windows code/release
-workflow. Private Dolphin was compiled on Ubuntu 26.04 and is version-specific;
-it cannot silently become a universal binary or stock-Dolphin Mouse3 support.
-Determine compatibility and package only what is genuinely runnable. The shared
-core should target an older glibc baseline, independently of this native bridge.
-Keep broad native acceptance honest. No push without instruction.
+Finish the in-progress Ubuntu22.04/CPython3.14.10 frozen bundle, AppImage installer
+and optional DEB. Packaging code, lock, driver and CI are in the working tree.
+Frozen PNG/PDF/Markdown/Pandoc tests passed until bundled LibreOffice failed during
+MD→PDF; investigate native library/bootstrap lookup (wrappers must put the office
+program directory before common native libraries). Do not ship a broken engine
+or claim a successful frozen smoke. Current logs: /tmp/fw-linux-debug-build.log,
+/tmp/fw-linux-frozen-build.log. Current debug Docker build targets freeze.
+
+Keep core GLIBC2.35 goal separate from optional exact-version private Dolphin
+(Ubuntu26.04/KF6 stack). Audit every shipped ELF, preserve notices/source snapshot,
+test real AppImage install/remove in isolated XDG, then request packaged native
+acceptance only when ready. No push without instruction.

@@ -5,6 +5,27 @@ from pathlib import Path
 
 
 def main(args):
+    if args.install_user and args.uninstall_user:
+        raise RuntimeError("Choose install or uninstall, not both")
+    if args.install_user:
+        from filewheel.platforms.linux.install import install
+
+        image = os.environ.get("APPIMAGE")
+        if not image:
+            raise RuntimeError("This command requires the original AppImage")
+        print("Installed:", install(image))
+        return 0
+    if args.uninstall_user:
+        from filewheel.platforms.linux.install import uninstall
+
+        uninstall()
+        return 0
+    if args.integration:
+        from filewheel.paths import launch_command
+        from filewheel.platforms.linux.integration import configure
+
+        configure(args.integration, launch_command())
+        return 0
     if args.sendto or args.diagnostic or args.ui_stress_test:
         raise RuntimeError("That Windows-specific entry point is unavailable on Linux")
     if args.startup:
@@ -25,13 +46,33 @@ def main(args):
         if validation.path is None:
             raise RuntimeError("Input rejected: " + str(validation.rejection))
     from PySide6.QtGui import QCursor
-    from PySide6.QtWidgets import QApplication, QFileDialog, QSystemTrayIcon
+    from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QSystemTrayIcon
 
     from filewheel.ui.desktop import DesktopApplication
     from filewheel.ui.single_instance import SingleInstance
 
     app = QApplication.instance() or QApplication(["Filewheel"])
     app.setQuitOnLastWindowClosed(False)
+    image = os.environ.get("APPIMAGE")
+    if image and not args.paths and not args.tray and not args.private_dolphin:
+        from filewheel.platforms.linux.install import _paths, install
+
+        _, target, _ = _paths()
+        if Path(image).resolve() != target.resolve():
+            box = QMessageBox()
+            box.setWindowTitle("Filewheel Linux preview")
+            box.setText("Install Filewheel for your user account?")
+            box.setInformativeText(
+                "Adds a launcher and file-manager actions. No administrator access is needed."
+            )
+            yes = box.addButton("Install for this user", QMessageBox.AcceptRole)
+            run = box.addButton("Run without installing", QMessageBox.ActionRole)
+            box.addButton(QMessageBox.Cancel)
+            box.exec()
+            if box.clickedButton() is yes:
+                install(image)
+            elif box.clickedButton() is not run:
+                return 0
     tray = args.tray or not args.paths
     if tray and not QSystemTrayIcon.isSystemTrayAvailable():
         path, _ = QFileDialog.getOpenFileName(None, "Filewheel — choose one file")
@@ -103,6 +144,17 @@ def main(args):
     try:
         host = DesktopApplication(tray=tray, ui_backend=args.ui_backend, auto_start=False)
         app._filewheel_desktop = host
+
+        def choose_file():
+            if host.quitting or host.popup.job is not None:
+                host.notify("Finish or cancel the running conversion first.")
+                return
+            selected, _ = QFileDialog.getOpenFileName(None, "Filewheel — choose one file")
+            if selected:
+                present([selected], (point.x(), point.y()))
+
+        open_action = host.menu.addAction("Convert a file…")
+        open_action.triggered.connect(choose_file)
         if app.platformName() == "wayland":
             from filewheel.platforms.linux.kwin import KWinBridge
 
@@ -144,6 +196,22 @@ def main(args):
                 host.notify(str(error))
                 host.request_quit()
 
+        from filewheel.paths import bundled_tool_root
+
+        bundled_dolphin = bundled_tool_root() / "tools/dolphin/bin/dolphin"
+        if args.private_dolphin == "bundled":
+            args.private_dolphin = str(bundled_dolphin)
+        if bundled_dolphin.is_file() and not args.private_dolphin and kwin is not None:
+
+            def open_private():
+                if host.linux_bridge is not None:
+                    host.linux_bridge.start(args.dolphin_folder or str(Path.home()))
+                    return
+                args.private_dolphin = str(bundled_dolphin)
+                kwin.request_point(start)
+
+            action = host.menu.addAction("Open Filewheel file browser (experimental)")
+            action.triggered.connect(open_private)
         if kwin is not None:
             kwin.install_placement(start)
         else:

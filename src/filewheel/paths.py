@@ -1,4 +1,5 @@
 """Frozen executable siblings and package resources have different roots."""
+import os
 import sys
 from pathlib import Path
 
@@ -20,6 +21,11 @@ def bundled_tool_root():
 
 def launch_command(*arguments):
     if getattr(sys, 'frozen', False):
+        if sys.platform == 'linux' and os.getenv('APPIMAGE'):
+            image=Path(os.environ['APPIMAGE']).resolve(strict=True)
+            if not image.is_file():
+                raise RuntimeError('AppImage launch path is unavailable')
+            return [str(image), *arguments]
         return [sys.executable, *arguments]
     python = Path(sys.executable)
     if sys.platform == 'win32' and python.name.lower() == 'python.exe':

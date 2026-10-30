@@ -4,6 +4,7 @@ import os
 import tempfile
 
 from filewheel.paths import launch_command
+from filewheel.platforms.linux.integration import quote
 from filewheel.platforms.linux.xdg import config_root
 
 
@@ -12,11 +13,6 @@ def _entry():
 
 
 def _content():
-    def quote(value):
-        for char in ("\\", '"', "`", "$"):
-            value = value.replace(char, "\\" + char)
-        return '"' + value.replace("%", "%%") + '"'
-
     return (
         "[Desktop Entry]\nType=Application\nName=Filewheel\n"
         "X-Filewheel-Owned=true\nExec="

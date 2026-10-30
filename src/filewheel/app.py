@@ -10,6 +10,9 @@ from filewheel.runtime import require_runtime
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Filewheel local converter')
     parser.add_argument('--tray', action='store_true')
+    parser.add_argument('--integration', choices=('install','remove'), help='Linux desktop actions')
+    parser.add_argument('--install-user', action='store_true', help='Install this AppImage for the current user')
+    parser.add_argument('--uninstall-user', action='store_true', help='Remove owned Linux installation')
     parser.add_argument('--private-dolphin', metavar='EXECUTABLE', help='Linux only: explicitly launch the private Dolphin URI prototype')
     parser.add_argument('--dolphin-folder', default=None, help='Initial folder for the private Linux prototype')
     parser.add_argument('--gui', action='store_true')
@@ -32,8 +35,8 @@ def main(argv=None):
         if sys.platform == 'linux':
             from filewheel.platforms.linux.app import main as linux_main
             return linux_main(args)
-        if args.private_dolphin:
-            parser.error('--private-dolphin is Linux-only')
+        if args.private_dolphin or args.integration or args.install_user or args.uninstall_user:
+            parser.error('That management option is Linux-only')
         if args.ui_stress_test:
             if not 1 <= args.ui_stress_cycles <= 1000:
                 parser.error('--ui-stress-cycles must be between 1 and 1000')

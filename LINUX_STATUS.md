@@ -189,3 +189,19 @@ pairs**. Scoped Ruff and compilation pass. Enable wheel now controls private
 forwarding; its prototype does not restore Dolphin default middle-file opening
 when disabled. See LINUX_USE.md. Broader DPI/desktop/long-session and Windows-native
 regressions remain pending; no installer or cross-distribution claim yet.
+
+## Desktop integration and per-user installer checkpoint
+
+Added owned XDG application/icon and Dolphin service entries, source/frozen launch
+commands, AppImage install/upgrade/remove by manifest+SHA256, explicit first-run
+install choice and a tray file picker. Login startup remains opt-in. Foreign or
+modified launchers/binaries and symlinks are preserved; uninstall leaves source
+files, converted results, preferences and logs untouched. Install source must
+have a real AppImage ELF marker. Linux-only management is rejected on Windows.
+
+33 Linux tests pass at this checkpoint, including actual GIO argument-boundary
+round-trip with Unicode, spaces, quotes, backslashes and metacharacters. Launcher
+executable paths containing `=` or `%` are rejected explicitly due to desktop
+parser limitations; input filenames can contain these characters. The native
+first-run install dialog and frozen integration still need packaging acceptance.
+No host integration or startup was installed during automated tests (isolated XDG).
