@@ -165,9 +165,15 @@ def run(*, include_quick=False):
             with pymupdf.open() as document:
                 document.new_page().insert_text((50, 60), "Editable Filewheel smoke text")
                 document.save(pdf)
-            if sys.platform == "win32":
-                # A real image-only fixture exercises Windows OCR and its
-                # packaged helper, not just Python imports or text-layer PDFs.
+            if sys.platform in {"win32", "linux"}:
+                # Real raster-only PDF: exercise the selected native OCR tool,
+                # language data, editable text and linked images in frozen mode.
+                ocr_platform = "windows" if sys.platform == "win32" else "linux"
+                if sys.platform == "linux":
+                    from filewheel.converters.tesseract_ocr import location
+
+                    ocr_executable, _, ocr_source = location()
+                    results.append({"ocr_source": ocr_source, "ocr_executable": str(ocr_executable), "ok": True})
                 scanned = root / "scanned.pdf"
                 with pymupdf.open() as text_source, pymupdf.open() as image_pdf:
                     page = text_source.new_page(width=600, height=180)
@@ -179,9 +185,9 @@ def run(*, include_quick=False):
                 ocr_result = manager.convert(scanned, ".docx")
                 text = "\n".join(p.text for p in Document(ocr_result.path).paragraphs)
                 if "Filewheel" not in text or not ocr_result.warnings:
-                    raise RuntimeError("Local Windows OCR smoke failed to recognize fixture text")
+                    raise RuntimeError("Local OCR smoke failed to recognize fixture text")
                 results.append(
-                    {"windows_local_ocr": True, "source_has_text_layer": False, "ok": True}
+                    {ocr_platform + "_local_ocr": True, "source_has_text_layer": False, "ok": True}
                 )
                 markdown_result = manager.convert(scanned, ".md")
                 markdown_text = markdown_result.path.read_text(encoding="utf-8")
@@ -191,10 +197,20 @@ def run(*, include_quick=False):
                     or not markdown_result.outputs[1].is_file()
                     or markdown_result.outputs[1].name not in markdown_text
                 ):
-                    raise RuntimeError("Local Windows OCR Markdown smoke failed")
+                    raise RuntimeError("Local OCR Markdown smoke failed")
                 results.append(
-                    {"windows_local_ocr_markdown": True, "page_image_linked": True, "ok": True}
+                    {ocr_platform + "_local_ocr_markdown": True, "page_image_linked": True, "ok": True}
                 )
+            if sys.platform == "linux":
+                picture_pdf = root / "pictures-only.pdf"
+                with pymupdf.open() as document:
+                    page = document.new_page(width=320, height=240)
+                    page.draw_circle((160, 120), 65, color=(.1, .5, .2), fill=(.1, .5, .2))
+                    document.save(picture_pdf)
+                picture_result = manager.convert(picture_pdf, ".md")
+                if len(picture_result.outputs) != 2 or not picture_result.warnings:
+                    raise RuntimeError("Picture-only PDF Markdown lost its source page")
+                results.append({"linux_picture_only_markdown": True, "ok": True})
             docx = root / "document.docx"
             document = Document()
             document.add_heading("Filewheel heading", 1)

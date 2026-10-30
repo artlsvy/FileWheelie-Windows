@@ -10,7 +10,23 @@ Packaged private-Dolphin interaction is now user-reported working; original
 demo hashes remain unchanged. First-run install dialog and broader DPI/desktop
 acceptance remain pending. Historical probe/checkpoint notes follow.
 
-## Final package after native progress fix
+## Image-only PDF OCR repair
+
+User accepted the progress positioning fix on Plasma, then reported PDF→MD failing
+with "Image-only PDF conversion requires Windows local OCR." Confirmed in the
+installed debug log: a platform-specific helper was called for image-only PDFs
+on Linux. Shared PDF OCR assembly now dispatches recognition by platform. Linux
+uses local Tesseract; Windows native recognition and compatibility entry points
+are retained. Picture-only Markdown preserves linked original-page images even
+when OCR finds no letters. DOCX still requires recognized editable text.
+
+Tesseract executable, English/orientation models and native libraries/notices are
+now bundled by the baseline build. Recognition uses explicit bundled language data,
+no network, bounded subprocesses and existing safe staging/publication. Text-layer
+PDF extraction stays unchanged. Source regression and actual rebuilt frozen
+acceptance results will be recorded at the next checkpoint.
+
+## Previous package after native progress fix
 
 Current installer: **`dist/Filewheel-Linux-x86_64.AppImage`**, 467,491,320 bytes
 (446 MiB), source fix commit `abc4fb8`. SHA-256:

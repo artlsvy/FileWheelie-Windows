@@ -24,11 +24,20 @@ def verify(value):
     engines = {item.get("engine") for item in results if item.get("ok") is True}
     if missing := REQUIRED - engines:
         raise RuntimeError("Frozen converter families missing: " + ", ".join(sorted(missing)))
-    for key in ("quick_qml_render", "quick_progress_render", "frozen_spawn_cancel_retry"):
+    for key in (
+        "quick_qml_render",
+        "quick_progress_render",
+        "frozen_spawn_cancel_retry",
+        "linux_local_ocr",
+        "linux_local_ocr_markdown",
+        "linux_picture_only_markdown",
+    ):
         if not any(item.get(key) is True and item.get("ok") is True for item in results):
             raise RuntimeError("Frozen check missing: " + key)
     if not any(item.get("libreoffice_source") == "bundled" for item in results):
         raise RuntimeError("LibreOffice must be bundled")
+    if not any(item.get("ocr_source") == "bundled" for item in results):
+        raise RuntimeError("Tesseract and its recognition data must be bundled")
     if not any(item.get("pandoc_source") == "bundled" for item in results):
         raise RuntimeError("Pandoc must be bundled")
     if not any("bundled_ffmpeg" in item for item in results):

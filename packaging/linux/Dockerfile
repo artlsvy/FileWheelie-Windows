@@ -19,7 +19,8 @@ RUN python3.14 -m pip install --index-url https://pypi.org/simple \
     --require-hashes --only-binary=:all: -r /tmp/python.lock
 FROM dependencies AS freeze
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation2
+    libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation2 \
+    tesseract-ocr tesseract-ocr-eng tesseract-ocr-osd
 WORKDIR /work
 COPY src /work/src
 COPY packaging /work/packaging

@@ -161,7 +161,7 @@ class MarkItDownEngine:
         output.write_text(markdown.rstrip() + "\n", encoding="utf-8")
         return (EngineOutput(output, source.with_suffix(extension).name, tuple(warnings)),)
 
-    def _check_document(self, source: Path, cancel: Event | None) -> list[str]:
+    def _check_document(self, source: Path, cancel: Event | None) -> tuple[list[str], bool]:
         warnings = [
             (
                 "Markdown is lossy content extraction: page layout, styling, images and some "
@@ -219,7 +219,7 @@ class MarkItDownEngine:
         return warnings, False
 
     def _ocr_pdf_markdown(self, source, workdir, progress, cancel):
-        from filewheel.converters.windows_ocr import ocr_pdf_pages
+        from filewheel.converters.local_ocr import backend_name, ocr_pdf_pages
 
         sections = []
         images = []
@@ -238,8 +238,8 @@ class MarkItDownEngine:
             sections.append(f'## Page {number}\n\n' + '\n'.join(useful)
                             + f'\n\n![Original page {number}]({quote(name)})')
             images.append(EngineOutput(image, name))
-        if not recognized:
-            raise ConversionError('Local OCR could not recognize any text in this PDF. No Markdown was created.')
+        if not images:
+            raise ConversionError('The PDF has no pages to extract.')
         markdown = ('# ' + source.stem + '\n\n'
                     + '\n\n'.join(sections).rstrip() + '\n')
         if len(markdown.encode('utf-8')) > self.max_bytes * 2:
@@ -248,9 +248,12 @@ class MarkItDownEngine:
         progress(.8, 'Writing OCR Markdown and page images')
         output = workdir / 'output.md'
         output.write_text(markdown, encoding='utf-8')
-        warning = (f'Local Windows OCR ({", ".join(sorted(languages))}) was used. '
+        warning = (f'Local {backend_name()} OCR ({", ".join(sorted(languages))}) was used. '
                    'Review recognized text; original page images are linked beside the Markdown file.')
-        return (EngineOutput(output, source.with_suffix('.md').name, (warning,)), *images)
+        warnings = [warning]
+        if not recognized:
+            warnings.append('No text was recognized; original PDF pages are preserved as linked images.')
+        return (EngineOutput(output, source.with_suffix('.md').name, tuple(warnings)), *images)
 
     def _check_epub(self, source, cancel):
         from defusedxml import ElementTree as SafeXML

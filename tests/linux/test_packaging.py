@@ -62,6 +62,10 @@ def test_frozen_release_does_not_accept_missing_converter_family():
             {"quick_qml_render": True, "ok": True},
             {"quick_progress_render": True, "ok": True},
             {"frozen_spawn_cancel_retry": True, "ok": True},
+            {"linux_local_ocr": True, "ok": True},
+            {"linux_local_ocr_markdown": True, "ok": True},
+            {"linux_picture_only_markdown": True, "ok": True},
+            {"ocr_source": "bundled", "ok": True},
             {"libreoffice_source": "bundled", "ok": True},
             {"pandoc_source": "bundled", "ok": True},
             {"bundled_ffmpeg": "/bundle/ffmpeg", "ok": True},
@@ -75,6 +79,11 @@ def test_frozen_release_does_not_accept_missing_converter_family():
             )
     with pytest.raises(RuntimeError, match="self-test failed"):
         module.verify({"ok": False, "results": results})
+    for missing in ("linux_local_ocr", "linux_local_ocr_markdown", "linux_picture_only_markdown"):
+        with pytest.raises(RuntimeError, match="Frozen check missing"):
+            module.verify({"ok": True, "results": [item for item in results if missing not in item]})
+    with pytest.raises(RuntimeError, match="recognition data must be bundled"):
+        module.verify({"ok": True, "results": [item for item in results if "ocr_source" not in item]})
 
 
 def test_release_filename_cannot_escape_output_or_start_build(tmp_path):

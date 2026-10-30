@@ -66,6 +66,19 @@ def main():
     shutil.copyfile("/usr/bin/ffmpeg", ffmpeg / "ffmpeg.real")
     (ffmpeg / "ffmpeg.real").chmod(0o755)
     shutil.copyfile("/usr/share/doc/ffmpeg/copyright", ffmpeg / "LICENSE.debian")
+    ocr = tools / "tesseract"
+    ocr.mkdir()
+    shutil.copyfile("/usr/bin/tesseract", ocr / "tesseract.real")
+    (ocr / "tesseract.real").chmod(0o755)
+    # Locate the installed version's data tree, rather than assuming a 4/5 layout.
+    english_files = subprocess.check_output(
+        ["dpkg-query", "-L", "tesseract-ocr-eng"], text=True
+    ).splitlines()
+    english = next(Path(name) for name in english_files if name.endswith("/eng.traineddata"))
+    shutil.copytree(english.parent, ocr / "tessdata", symlinks=False)
+    if not (ocr / "tessdata/osd.traineddata").is_file():
+        raise RuntimeError("Tesseract orientation data was not bundled")
+    shutil.copyfile("/usr/share/doc/tesseract-ocr/copyright", ocr / "LICENSE.debian")
     data = Path("/tmp/pandoc.tar.gz").read_bytes()
     expected = json.loads(Path("packaging/pandoc-artifacts.json").read_text())["artifacts"][
         "linux-amd64"
@@ -113,6 +126,7 @@ def main():
     for wrapper, real, relative in (
         (ffmpeg / "ffmpeg", "ffmpeg.real", "../native-libs"),
         (pandoc / "pandoc", "pandoc.real", "../native-libs"),
+        (ocr / "tesseract", "tesseract.real", "../native-libs"),
         (office / "program/soffice", "soffice.upstream", "../../native-libs"),
     ):
         if wrapper.exists():
@@ -121,7 +135,8 @@ def main():
         wrapper.write_text(
             '#!/bin/sh\nHERE=$(CDPATH= cd -- "${0%/*}" && pwd -P)\n'
             'export LD_LIBRARY_PATH="$HERE:$HERE/' + relative + '"\n'
-            'exec "$HERE/' + launch + '" "$@"\n'
+            + ('export OMP_THREAD_LIMIT=1\n' if wrapper == ocr / "tesseract" else '')
+            + 'exec "$HERE/' + launch + '" "$@"\n'
         )
         wrapper.chmod(0o755)
     notices = tools / "distribution-notices"
@@ -136,6 +151,9 @@ def main():
         "libreoffice-writer",
         "libreoffice-calc",
         "libreoffice-impress",
+        "tesseract-ocr",
+        "tesseract-ocr-eng",
+        "tesseract-ocr-osd",
     ):
         manifest[package] = subprocess.check_output(
             ["dpkg-query", "-W", "-f=${Version}", package], text=True

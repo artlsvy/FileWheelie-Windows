@@ -38,7 +38,14 @@ PYTHONPATH=src .venv-ui/bin/python -m filewheel --gui --ui-backend quick -- "$HO
 Use a real absolute regular-file path. One file at a time; source symlinks,
 directories and special files are rejected. Formats depend on installed codecs
 and tools. FFmpeg supplies media, LibreOffice supplies Office→PDF, and Pandoc is
-optional for Markdown publishing. Linux OCR is not implemented.
+optional for Markdown publishing. Image-only PDF→MD/DOCX uses offline Tesseract OCR on Linux. The AppImage
+includes the executable and English recognition/orientation data. Source use
+requires `tesseract-ocr` and `tesseract-ocr-eng`. No runtime download or cloud API
+is used. OCR quality varies; review the text. Markdown links the original page
+images and preserves them even when no text is recognized. DOCX includes editable
+recognized paragraphs plus original-page references; complex layout is simplified.
+Mixed text/scanned PDFs still use existing text extraction with limitations
+reported; this is not an OCR-every-image or full-layout reconstruction feature.
 
 ## Historical optional private Dolphin experiment (KDE Wayland)
 

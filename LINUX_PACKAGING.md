@@ -1,11 +1,27 @@
 # Linux personal package
 
 The AppImage contains a private Python3.14/Qt runtime, existing converters and
-native FFmpeg/Pandoc/LibreOffice. It is a portable application with an explicit
+native FFmpeg/Pandoc/LibreOffice/Tesseract. It is a portable application with an explicit
 per-user installer, not a system package. The optional DEB reuses the same onedir
 payload. Neither replaces the system Dolphin or grants global Wayland input.
 
-## Delivered single-file installer
+## OCR repair build
+
+The new Linux build bundles Tesseract, English recognition data, orientation data
+and its non-glibc ELF dependencies. Image-only PDF→MD/DOCX dispatches to this local
+backend; Windows keeps its native OCR helper. External-tool library isolation,
+process-group cancellation, per-page 60s deadline, existing page/image/output limits,
+staging cleanup and collision-safe publication stay in use. The wrapper caps OCR
+OpenMP threads at 1. Language data is passed explicitly from the bundled tree; no
+host Tesseract or runtime network download is needed.
+
+The release gate now requires real scanned-PDF DOCX and Markdown content checks,
+page image linkage, a picture-only PDF check, and `ocr_source=bundled`.
+Tesseract/English/orientation apt versions and distribution copyright notices are
+included in tools/BUILD-INFO.json and tools/distribution-notices. Tesseract usage
+was checked against its [official command-line documentation](https://tesseract-ocr.github.io/tessdoc/Command-Line-Usage.html).
+
+## Previous single-file installer (superseded by OCR repair)
 
 Use `dist/Filewheel-Linux-x86_64.AppImage` (467,491,320 bytes, about 446 MiB).
 Only that file is needed for installation; its checksum and build manifest are
