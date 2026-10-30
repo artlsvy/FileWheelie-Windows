@@ -2,6 +2,11 @@ name: Build Linux AppImage
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      source_ref:
+        type: string
+        required: false
+        default: ''
 permissions:
   contents: read
   id-token: write
@@ -17,8 +22,16 @@ jobs:
           sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet
           df -h /
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.source_ref || github.sha }}
+      - name: Install documented desktop runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libegl1 fontconfig fonts-liberation libdbus-1-3 libxkbcommon0 libwayland-client0
       - name: Build baseline payload, frozen smoke and AppImage
-        run: ./scripts/build-linux.sh --output build/linux-release --artifact-name Filewheel-Linux-x86_64.AppImage
+        run: |
+          trap 'find build/linux-release -type f \( -name "*.log" -o -name "self-test.json" \) -exec tail -100 {} \;' ERR
+          ./scripts/build-linux.sh --output build/linux-release --artifact-name Filewheel-Linux-x86_64.AppImage
       - name: Test AppImage without FUSE
         env:
           QT_QPA_PLATFORM: offscreen
@@ -34,6 +47,14 @@ jobs:
             -v "$PWD/build/debian-smoke:/evidence" -e FILEWHEEL_LOG_DIR=/evidence \
             filewheel-runtime-check /opt/app/AppRun --self-test --ui-backend quick
           python3 packaging/linux/verify_smoke.py build/debian-smoke/self-test.json
+      - name: Preserve failed build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: linux-failure-${{ github.run_id }}
+          path: |
+            build/linux-release/**/*.log
+            build/linux-release/**/self-test.json
       - name: Attest installer build provenance
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:

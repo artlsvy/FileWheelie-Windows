@@ -1,7 +1,7 @@
 name: Release Windows and Linux
 on:
   push:
-    tags: ['v0.3.1']
+    tags: ['v0.3.1', 'build-v0.3.1-*']
 permissions:
   contents: read
 concurrency:
@@ -15,6 +15,8 @@ jobs:
       attestations: write
       artifact-metadata: write
     uses: ./.github/workflows/linux-build.yml
+    with:
+      source_ref: v0.3.1
   windows:
     permissions:
       contents: read
@@ -22,6 +24,8 @@ jobs:
       attestations: write
       artifact-metadata: write
     uses: ./.github/workflows/release-build.yml
+    with:
+      source_ref: v0.3.1
   publish:
     needs: [linux, windows]
     runs-on: ubuntu-24.04
@@ -51,7 +55,7 @@ jobs:
       - name: Publish only after both platforms pass
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: v0.3.1
           REPO: ${{ github.repository }}
         run: |
           gh release create "$TAG" release/* --repo "$REPO" --verify-tag \

@@ -33,3 +33,13 @@ Verify downloads with SHA256SUMS.txt and:
 The standalone build workflows remain manually runnable on a selected branch;
 manual runs produce CI artifacts, not public releases. Future release tags must
 be explicitly added to the publish workflow's tag allowlist.
+
+## CI-only retries of 0.3.1
+
+The initial Windows job passed; the Linux container checks passed but its hosted
+AppImage smoke failed. Build tags `build-v0.3.1-*` allow CI configuration/runtime
+fixes without moving the original v0.3.1 source tag. Both reusable workflows
+explicitly check out v0.3.1, while their orchestration comes from the build tag.
+The publish job still targets the original v0.3.1 release. Manifests record the
+checked-out application source; attestations record the orchestrating workflow.
+No version tag is rewritten and no workstation binaries replace CI output.
